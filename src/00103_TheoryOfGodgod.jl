@@ -41,7 +41,6 @@ function ∃!(g::god, Φ, ω=Ω)
     μ = SA[μt, ϵ.μ[2:end]...]
     ρ = SA[ρt, ϵ.ρ[2:end]...]
     ϵ = ∃(ϵ, ϵ.d, μ, ρ, ϵ.∂, Φ)
-    # ϵ = ∃(ϵ, ϵ.d, ϵ.μ, ϵ.ρ, ϵ.∂, ℼ(Φ))
     ∃!(ϵ, ω)
 end
 
@@ -59,7 +58,7 @@ function ∃̇(g::god, ∇̄=1, ω=Ω)
     !trivial(ϵ) && push!(Φ̃Φ̃, ϵ.Φ)
     owners!(g, ϵ, i, Φ̃Φ̃, 0, ∇̄, ex, ey, wx, wy, ω)
     ΦΦ = ΦTuple(ntuple(i -> Φ̃Φ̃[i], length(Φ̃Φ̃)))
-    out = project(g, ΦΦ, i, c, d, ex, ey, wx, wy)
+    project(g, ΦΦ, i, c, d, ex, ey, wx, wy)
 end
 function owners!(g, ϵ, i, ΦΦ, ∇, ∇̄, ex, ey, wx, wy, ω)
     if 0 < ∇ && ϵ isa ∃ && !trivial(ϵ)
@@ -84,9 +83,6 @@ function calc_ew(z, o)
     u = u / norm(u)
     v = cross(d, u)
     v = v / norm(v)
-    # dot(d, u)
-    # dot(d, v)
-    # dot(u, v)
     a = abs.(u)
     b = abs.(v)
     L = abs.(d)
@@ -159,12 +155,10 @@ end
 @kernel function project!(out, ΦΦ, i, c, d, ex, ey, wx, wy, nx, ny)
     o = zero(T)
     ĩ = @index(Global, NTuple)
-    # zi = 1
-    # ϕi = 1
     for zi = 1:GL_N
         ϕi = i[ĩ..., zi]
         if iszero(ϕi)
-            o += ○
+            o += ○ * GL_WEIGHTS[zi]
             continue
         end
         t = zi / (GL_N + one(T))
@@ -174,51 +168,10 @@ end
         sj = (2 * ĩ[2] - one(T) - ny) / (ny - one(T))
         ck = c .+ t * d
         x = ck .+ si * wxk * ex .+ sj * wyk * ey
-        o += Φ̇(ΦΦ, ϕi, x)
-        # out[1,1] = x[1]
-        # out[1,2] = x[2]
-        # out[1,3] = x[3]
-        # out[1,4] = x[4]
-        #  o=x[1]
+        o += Φ̇(ΦΦ, ϕi, x) * GL_WEIGHTS[zi]
     end
     out[ĩ...] = one(T) - exp(-o)
-    # out[ĩ...] = o
 end
-# const WHITE = (one(T), one(T), one(T), one(T))
-# const BLACK = (zero(T), zero(T), zero(T), one(T))
-# ∃̇(g::god) = ∃̇(g.ône - g.ẑero, g.♯, g.∇)
-# # ϵ=g.ône - g.ẑero
-# function ∃̇(ϵ::∃, ♯, ∇)
-#     ϵ̂ = X(ϵ, ♯, ∇)
-#     ϵ∃ = filter(ϵ -> ϵ !== God, vec(ϵ̂))
-#     isempty(ϵ∃) && return fill(WHITE, ♯[2], ♯[3])
-#     unique!(t, ϵ∃)
-#     sort!(ϵ∃, by=t)
-#     ϵt = map(t, ϵ∃)
-#     t_to_tag = Dict(ϵt[i] => UInt32(i) for i in eachindex(ϵt))
-#     Φi = zeros(UInt32, ♯[2], ♯[3], ♯[4])
-#     for i in CartesianIndices(ϵ̂)
-#         ϵ̂ᵢ = ϵ̂[i]
-#         ϵ̂ᵢ === God && continue
-#         Φi[i[2], i[3], i[4]] = t_to_tag[t(ϵ̂ᵢ)]
-#     end
-#     φ = ΦSet(ntuple(i -> ϵ∃[i].Φ, length(ϵ∃)))
-#     rgba = render(φ, Φi, ♯)
-#     ℼ̂(rgba)
-# end
-# ℼ̂(ϕ) = begin
-#     pixel = fill(WHITE, size(ϕ, 2), size(ϕ, 3))
-#     # i = collect(CartesianIndices(pixel))[1]
-#     for i = CartesianIndices(pixel)
-#         r = ϕ[1, Tuple(i)...]
-#         g = ϕ[2, Tuple(i)...]
-#         b = ϕ[3, Tuple(i)...]
-#         a = ϕ[4, Tuple(i)...]
-#         pixel[i] = r == g == b == a == ○ ? WHITE : (r, g, b, a)
-#     end
-#     pixel
-# end
-# # ρ(μ) = min(μ, 1 - μ)
 function step(g::god, dt̂=one(T))
     if g.∂t₀
         ṫ = t()
@@ -281,98 +234,8 @@ jerkup(g) = jerk(g, T(0.01))
 scaledown(g) = scale(g, T(-0.01))
 scaleup(g) = scale(g, T(0.01))
 
-# home(g::god) = god(g.ẑero, g.ône, true, zero(T), g.ρ, g.Ω, g.⚷, g.♯, g.∇)
-
-# struct ΦSet{Fs}
-#     fs::Fs  # Tuple of Φ functions
-# end
-# # eval_Φ(φ,1,0.5,0.5,0.5,0.4)
-# # @generated function eval_Φ(φ::ΦSet{Fs}, idx, t, x, y, z) where Fs
-# @generated function eval_Φ(φ::ΦSet{Fs}, idx, x) where Fs
-#     N = length(Fs.parameters)
-#     branches = []
-#     for i in 1:N
-#         push!(branches, quote
-#             if idx == $i
-#                 # return φ.fs[$i](t, x, y, z)
-#                 return φ.fs[$i](x)
-#             end
-#         end)
-#     end
-#     quote
-#         $(branches...)
-#         return (zero(T), zero(T), zero(T), zero(T))
-#     end
-# end
-# @kernel function κ!(rgba, φ::ΦSet, Φi, ♯)
-#     xi, yi = @index(Global, NTuple)
-#     # xi, yi = 2,2
-#     _, W, H, D = ♯
-#     x = isone(W) ? ○ : (T(xi) - 1) / T(W - 1)
-#     y = isone(H) ? ○ : (T(yi) - 1) / T(H - 1)
-#     r, g, b, a = zero(T), zero(T), zero(T), zero(T)
-#     # zi = collect(1:D)[2]
-#     for zi = 1:D
-#         one(T) ≤ a && break
-#         z = isone(D) ? ○ : T(zi - 1) / T(D - 1)
-#         idx = Φi[xi, yi, zi]
-#         iszero(idx) && continue
-#         # ṙ, ġ, ḃ, ȧ = eval_Φ(φ, idx, ○, x, y, z)
-#         ṙ, ġ, ḃ, ȧ = eval_Φ(φ, idx, (○, x, y, z))
-#         iszero(ȧ) && continue
-#         rem = one(T) - a
-#         r += ṙ * ȧ * rem
-#         g += ġ * ȧ * rem
-#         b += ḃ * ȧ * rem
-#         a += ȧ * rem
-#     end
-#     rgba[1, xi, yi] = r
-#     rgba[2, xi, yi] = g
-#     rgba[3, xi, yi] = b
-#     rgba[4, xi, yi] = a
-# end
-# # ♯=g.♯
-# # φ, Φi, ♯
-# function render(φ::ΦSet, Φi, ♯)
-#     rgba = KernelAbstractions.zeros(GPU_BACKEND, T, 4, ♯[2], ♯[3])
-#     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt32, size(Φi))
-#     copyto!(i̇, Φi)
-#     Base.invokelatest() do
-#         κ!(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
-#             rgba, φ, i̇, ♯,
-#             ndrange=(♯[2], ♯[3])
-#         )
-#     end
-#     KernelAbstractions.synchronize(GPU_BACKEND)
-#     Array(rgba)
-# end
-
-# # i = collect(CartesianIndices(Ξ))[2678]
-# # Ξ[i].Φ(1)
-# # ∇=typemax(UInt32)
-# function X(ϵ::∃, ♯, ∇)
-#     Ξ = Array{∀}(undef, ♯...)
-#     ρ₀ = zero(ϵ.ρ)
-#     # for i in CartesianIndices(Ξ)
-#     # î = collect(1:length(Ξ))[1]
-#     @time Threads.@threads for î in 1:length(Ξ)
-#         # @time begin 
-#         i = CartesianIndices(Ξ)[î]
-#         x = X(i, ♯)
-#         # xϵ = ∃(God, ϵ.d, x, ρ₀, ϵ.∂, ϵ.Φ)
-#         xϵ = ∃(God, ϵ.d, SVector(x), ρ₀, ϵ.∂, ϵ.Φ)
-#         Ξ[i], _ = X(xϵ, ∇)
-#         # end;
-#     end
-#     Ξ
-# end
-
-
-# sum([0.707,-0.707,0] .* [1,1,1])
-# sum([0.408,0.408,-0.816] .* [1,1,1])
-
 const GL_N = 8
-const GL_NODES = SVector{GL_N,T}(
+const GL_NODES_RAW = SVector{GL_N,T}(
     -0.9602898564975363,
     -0.7966664774136267,
     -0.5255324099163290,
@@ -382,6 +245,7 @@ const GL_NODES = SVector{GL_N,T}(
     0.7966664774136267,
     0.9602898564975363
 )
+const GL_NODES = ○ .+ GL_NODES_RAW ./ (GL_NODES_RAW[end] - GL_NODES_RAW[1])
 const GL_WEIGHTS = SVector{GL_N,T}(
     0.1012285362903763,
     0.2223810344533745,

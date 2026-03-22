@@ -1,14 +1,12 @@
-using StaticArrays
-
 """
 Tighten an interval [lo, hi] given constraint L ≤ s*coeff + s_other*coeff_other ≤ U,
 relaxing over s_other ∈ [-1,1]. Returns (lo, hi, empty).
 """
-@inline function tighten(lo::Float64, hi::Float64, coeff::Float64, abs_other::Float64, L::Float64, U::Float64)
-    if coeff > 0
+@inline function tighten(lo, hi, coeff, abs_other, L, U)
+    if zero(T) < coeff
         lo = max(lo, (L - abs_other) / coeff)
         hi = min(hi, (U + abs_other) / coeff)
-    elseif coeff < 0
+    elseif coeff < zero(T)
         lo = max(lo, (U + abs_other) / coeff)
         hi = min(hi, (L - abs_other) / coeff)
     else
@@ -22,10 +20,10 @@ Convert continuous s ∈ [-1,1] bounds to 1-based grid indices on an axis of siz
 s_i = (2i - 1 - ns) / (ns - 1)  ⟹  i = (s*(ns-1) + ns + 1) / 2
 Returns (ilo, ihi) or (0, 0) if empty.
 """
-@inline function s_to_indices(slo::Float64, shi::Float64, ns::Int)
-    h = (ns - 1) * 0.5
-    mid = (ns + 1) * 0.5
-    ilo = clamp(ceil( Int, slo * h + mid), 1, ns)
+@inline function s_to_indices(slo, shi, ns)
+    h = (ns - 1) * ○
+    mid = (ns + 1) * ○
+    ilo = clamp(ceil(Int, slo * h + mid), 1, ns)
     ihi = clamp(floor(Int, shi * h + mid), 1, ns)
     ilo > ihi && return (0, 0)
     return (ilo, ihi)
@@ -51,32 +49,28 @@ points inside axis-aligned box [a,b]. Empty slices → (0,0,0,0). Cost: O(nz·n)
 # ny=g.♯[2]
 # nz=GL_N
 function pyramid_box_intersection(
-    i,ĩ,
+    i, ĩ,
     z::SVector{N,T}, o::SVector{N,T},
-    ex,ey,wx,wy,a,b,nx,ny,nz
-    # ex::SVector{N}, ey::SVector{N},
-    # wx::Float64, wy::Float64,
-    # a::SVector{N}, b::SVector{N},
-    # nx::Int, ny::Int, nz::Int
+    ex, ey, wx, wy, a, b, nx, ny, nz
 ) where {N}
-    c = (z + o) * 0.5
-    doc = o - c
+    c = (z + o) * ○
+    d = o - c
 
-    # out = Matrix{Int}(undef, 4, nz)
     intersects = false
 
-    @inbounds for k in 1:nz
+    @inbounds for k = 1:nz
         t = k / (nz + 1)
+        t = GL_NODES[k]
         omt = 1 - t
         wxk = wx * omt
         wyk = wy * omt
 
-        si_lo, si_hi = -1.0, 1.0
-        sj_lo, sj_hi = -1.0, 1.0
+        si_lo, si_hi = -one(T), one(T)
+        sj_lo, sj_hi = -one(T), one(T)
         empty = false
 
-        for m in 1:N
-            ck = c[m] + t * doc[m]
+        for m = 1:N
+            ck = c[m] + t * d[m]
             α = wxk * ex[m]
             β = wyk * ey[m]
             L = a[m] - ck
@@ -87,20 +81,13 @@ function pyramid_box_intersection(
             sj_lo, sj_hi, empty = tighten(sj_lo, sj_hi, β, abs(α), L, U)
             empty && break
         end
+        empty && continue
 
-        if empty
-            # out[1,k] = 0; out[2,k] = 0; out[3,k] = 0; out[4,k] = 0
-        else
-            ilo, ihi = s_to_indices(si_lo, si_hi, nx)
-            jlo, jhi = s_to_indices(sj_lo, sj_hi, ny)
-            if ilo == 0 || jlo == 0
-                # out[1,k] = 0; out[2,k] = 0; out[3,k] = 0; out[4,k] = 0
-            else
-                # out[1,k] = ilo; out[2,k] = ihi; out[3,k] = jlo; out[4,k] = jhi
-                i[ilo:ihi,jlo:jhi,k] .= ĩ
-                intersects = true
-            end
-        end
+        ilo, ihi = s_to_indices(si_lo, si_hi, nx)
+        jlo, jhi = s_to_indices(sj_lo, sj_hi, ny)
+        (iszero(ilo) || iszero(jlo)) && continue
+        i[ilo:ihi, jlo:jhi, k] .= ĩ
+        intersects = true
     end
 
     intersects
