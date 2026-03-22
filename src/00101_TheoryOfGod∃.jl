@@ -276,25 +276,25 @@ function rm!(ω::𝕋)
     delete!(ω.ϵ̃, ϵ̂̂)
     delete!(ω.Ο, ϵ̂̂)
 end
-function Base.:(-)(ϵ₁::∃, ϵ₂::∃, ω=Ω)
-    d̂ = sort!(ϵ₂.d ∪ ϵ₁.d)
-    N = length(d̂)
-    μ = MVector{N,T}(undef)
-    ρ = MVector{N,T}(undef)
-    ∂out = MVector{N,Tuple{Bool,Bool}}(undef)
-    Threads.@threads for i in eachindex(d̂)
-        d = d̂[i]
-        ϵ₂μ, ϵ₂ρ, ϵ₂∂ = μρ(ϵ₂, d)
-        ϵ₁μ, ϵ₁ρ, ϵ₁∂ = μρ(ϵ₁, d)
-        żero = ϵ₂μ - ϵ₂ρ
-        ȯne = ϵ₁μ + ϵ₁ρ
-        ρ[i] = abs(ȯne - żero) / 2
-        μ[i] = żero + ρ[i]
-        ∂out[i] = (ϵ₂∂[1], ϵ₁∂[2])
-    end
-    ϵ̂ = α(ϵ₁, ϵ₂, ω)
-    ∃(ϵ̂, SVector{N}(d̂), SVector{N}(μ), SVector{N}(ρ), SVector{N}(∂out), ϵ₁.Φ)
-end
+# function Base.:(-)(ϵ₁::∃, ϵ₂::∃, ω=Ω)
+#     d̂ = sort!(ϵ₂.d ∪ ϵ₁.d)
+#     N = length(d̂)
+#     μ = MVector{N,T}(undef)
+#     ρ = MVector{N,T}(undef)
+#     ∂out = MVector{N,Tuple{Bool,Bool}}(undef)
+#     Threads.@threads for i in eachindex(d̂)
+#         d = d̂[i]
+#         ϵ₂μ, ϵ₂ρ, ϵ₂∂ = μρ(ϵ₂, d)
+#         ϵ₁μ, ϵ₁ρ, ϵ₁∂ = μρ(ϵ₁, d)
+#         żero = ϵ₂μ - ϵ₂ρ
+#         ȯne = ϵ₁μ + ϵ₁ρ
+#         ρ[i] = abs(ȯne - żero) / 2
+#         μ[i] = żero + ρ[i]
+#         ∂out[i] = (ϵ₂∂[1], ϵ₁∂[2])
+#     end
+#     ϵ̂ = α(ϵ₁, ϵ₂, ω)
+#     ∃(ϵ̂, SVector{N}(d̂), SVector{N}(μ), SVector{N}(ρ), SVector{N}(∂out), ϵ₁.Φ)
+# end
 
 function gpu_safe(Φ, N)
     try
@@ -305,4 +305,29 @@ function gpu_safe(Φ, N)
     catch
         false
     end
+end
+
+function √(ϵ::∃)
+    n = 0
+    p = ϵ
+    while !(p.ϵ̂ isa 𝕋)
+        p = p.ϵ̂
+        n += 1
+    end
+    p, n
+end
+function X(x::∃, ∇, ω=Ω)
+    ϵ = β(x, ω, ω)
+    ϵ === ω && return ω, true
+    ∂(x, ϵ) && return ω, true
+    x ∩ ϵ && return ϵ, true # ?
+    _, n = √(ϵ)
+    ∇ < n && return ω, false
+    ϵ̃ = ω.ϵ̃[ϵ]
+    Threads.@threads for ϵ̃ = filter(ϵ̃ -> x ⫉ ϵ̃, ϵ̃)
+        x ∩ ϵ̃ && return ϵ̃, true
+        ϵ̂, found = X(x, ∇)
+        found && return ϵ̂, true
+    end
+    ω, false
 end
