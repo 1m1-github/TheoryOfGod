@@ -1,4 +1,9 @@
-using MiniFB
+const MAX_RGB = T(mfb_rgb(255, 255, 255))
+rgb2c(r, g, b) = T(mfb_rgb(r * 255, g * 255, b * 255)) / MAX_RGB
+c2rgb(c2) = begin
+    c = floor(UInt32, c2 * MAX_RGB)
+    ((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF) ./ 255
+end
 
 window = mfb_open_ex("tog", g.♯..., MiniFB.WF_RESIZABLE)
 buffer = zeros(UInt32, prod(g.♯))
@@ -21,39 +26,39 @@ function keyboard_cb(window::Ptr{Cvoid}, key::Int32, mod::Int32, is_pressed::Boo
         println("ẑero.μ=$(g.ẑero.μ)")
         println("ône.μ=$(g.ône.μ)")
         if is_pressed
-            if key == 48
+            update = false
+            if key == 48 # 0
                 viewer_zero_vs_one_mode = 1 - viewer_zero_vs_one_mode
-            elseif 49 ≤ key ≤ 49 + 8
+            elseif 49 ≤ key ≤ 49 + 8 # numbers
                 viewer_dim = g.ẑero.d[key+1-49]
-            elseif key == 265
+            elseif key == 265 # up
                 if iszero(viewer_zero_vs_one_mode)
                     g = moveup(g, viewer_dim)
                 else
                     g = focusup(g, viewer_dim)
                 end
-                # p♯ = calc_p♯(g)
-                # buffer = floor.(UInt32, reshape(p♯, prod(g.♯)) .* MAX_RGB)
-                # global buffer = c2rgb.(buffer)
-                # global buffer = ifelse.(buffer .> 0, 0xFFFFFFFF, 0x00000000)
-            elseif key == 264
+                update = true
+            elseif key == 264 # down
                 if iszero(viewer_zero_vs_one_mode)
                     g = movedown(g, viewer_dim)
                 else
                     g = focusdown(g, viewer_dim)
                 end
-                # p♯ = calc_p♯(g)
-                # buffer = floor.(UInt32, reshape(p♯, prod(g.♯)) .* MAX_RGB)
-                # global buffer = c2rgb.(buffer)
-                # global buffer = ifelse.(buffer .> 0, 0xFFFFFFFF, 0x00000000)
-            elseif key == 81
+                update = true
+            elseif key == 81 # q
                 g = jerkdown(g)
-            elseif key == 87
+                update = true
+            elseif key == 87 # w
                 g = jerkup(g)
-            elseif key == 69
+                update = true
+            elseif key == 69 # e
                 g = scaledown(g)
-            elseif key == 82
+                update = true
+            elseif key == 82 # r
                 g = scaleup(g)
+                update = true
             end
+            update && ( global buffer = floor.(UInt32, reshape(∃̇(g, 10), prod(g.♯)) .* MAX_RGB) )
         end
     catch e
         bt = catch_backtrace()
@@ -72,33 +77,3 @@ ccall((:mfb_set_keyboard_callback, MiniFB.libminifb), Cvoid,
     window, kb_cfunc)
 # schedule(MINIFBTASK, InterruptException(), error=true)
 # mfb_close(window)
-
-
-# using MiniFB
-
-# const WIDTH = 800
-# const HEIGHT = 600
-
-# buffer = zeros(UInt32, WIDTH * HEIGHT)
-
-# window = mfb_open("Key Press Viewer", WIDTH, HEIGHT)
-
-# function keyboard_cb(window::Ptr{Cvoid}, key::Int32, mod::Int32, is_pressed::Int32)::Cvoid
-#     if is_pressed != 0
-#         println("Key pressed: key=$key  mod=$mod")
-#     else
-#         println("Key released: key=$key  mod=$mod")
-#     end
-#     return nothing
-# end
-
-# const kb_cfun = @cfunction(keyboard_cb, Cvoid, (Ptr{Cvoid}, Int32, Int32, Int32))
-
-# mfb_set_keyboard_callback(window, kb_cfun)
-
-# while mfb_wait_sync(window)
-#     state = mfb_update(window, buffer)
-#     if state != MiniFB.STATE_OK
-#         break
-#     end
-# end

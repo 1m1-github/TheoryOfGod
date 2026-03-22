@@ -21,7 +21,6 @@ function god(; d, μ, ρ, ⚷=zero(UInt), Φ=○̂, ♯=SA[1], ∇=typemax(UInt)
     ône = ∃(Ω, d, ones, zeros, ∂₁, ○̂)
     god(ẑero, ône, true, zero(T), zero(T), 𝕋(), ⚷, ♯, ∇, (x, y) -> sqrt.(x .^ 2 .+ y .^ 2))
 end
-# isreal(ϵ::∃) = √(ϵ) === Ω
 dh(⚷, g, n) = powermod(g, ⚷, n)
 ⚷⚷(⚷, dh) = powermod(dh, ⚷, DH_N)
 ⚷i(i, ⚷, ♯) =
@@ -49,13 +48,16 @@ function ∃̇(g::god, ∇̄=1, ω=Ω)
     ϵ = β(-(g.ône, g.ẑero, ω), ω)
     # todo dim==2
     ẽx, ẽy, wx, wy = calc_ew(g.ẑero.μ[end-2:end], g.ône.μ[end-2:end])
-    ex = SVector(zeros(T, typeof(ϵ).parameters[1] - 3)..., ẽx...)
-    ey = SVector(zeros(T, typeof(ϵ).parameters[1] - 3)..., ẽy...)
+    istrivial = trivial(ϵ)
+    N = length(g.ẑero.μ)
+    ex = SVector(zeros(T, N - 3)..., ẽx...)
+    ey = SVector(zeros(T, N - 3)..., ẽy...)
     c = (g.ẑero.μ .+ g.ône.μ) * ○
     d = g.ône.μ .- g.ẑero.μ
-    i = fill(trivial(ϵ) ? 0 : 1, g.♯..., GL_N)
+    @show c d ẽx ẽy wx wy
+    i = fill(istrivial ? 0 : 1, g.♯..., GL_N)
     Φ̃Φ̃ = []
-    !trivial(ϵ) && push!(Φ̃Φ̃, ϵ.Φ)
+    !istrivial && push!(Φ̃Φ̃, ϵ.Φ)
     owners!(g, ϵ, i, Φ̃Φ̃, 0, ∇̄, ex, ey, wx, wy, ω)
     ΦΦ = ΦTuple(ntuple(i -> Φ̃Φ̃[i], length(Φ̃Φ̃)))
     project(g, ΦΦ, i, c, d, ex, ey, wx, wy)
@@ -75,49 +77,6 @@ function owners!(g, ϵ, i, ΦΦ, ∇, ∇̄, ex, ey, wx, wy, ω)
     for ϵ̃ = ω.ϵ̃[ϵ]
         owners!(g, ϵ̃, i, ΦΦ, ∇ + 1, ∇̄, ex, ey, wx, wy, ω)
     end
-end
-# z, o=SVector{3}(g.ẑero.μ[end-2:end]), SVector{3}(g.ône.μ[end-2:end])
-function calc_ew(z, o)
-    d = o - z
-    u = SVector(d[1] == d[2] == 0 ? (0, d[3], -d[2]) : (d[2], -d[1], 0))
-    u = u / norm(u)
-    v = cross(d, u)
-    v = v / norm(v)
-    a = abs.(u)
-    b = abs.(v)
-    L = abs.(d)
-    A = []
-    # i = 1
-    for i = 1:3
-        0 < a[i] || continue
-        0 < b[i] || continue
-        wx = L[i] / a[i] / 4
-        wy = L[i] / b[i] / 4
-        a[i] * wx + b[i] * wy ≤ L[i] / 2 || continue
-        j = (i + 1) % 3 + 1
-        a[j] * wx + b[j] * wy ≤ L[j] / 2 || continue
-        j = (j + 1) % 3 + 1
-        a[j] * wx + b[j] * wy ≤ L[j] / 2 || continue
-        push!(A, (wx, wy, wx * wy))
-    end
-    # i = 1
-    # j = 2
-    for i = 1:2, j = i+1:3
-        D = a[i] * b[j] - a[j] * b[i]
-        wx = (L[i] * b[j] - L[j] * b[i]) / D / 2
-        wy = (L[j] * a[i] - L[i] * a[j]) / D / 2
-        0 < wx || continue
-        0 < wy || continue
-        k = 6 - i - j
-        a[k] * wx + b[k] * wy ≤ L[k] / 2 || continue
-        push!(A, (wx, wy, wx * wy))
-    end
-    _, maxi = findmax(a -> a[3], A)
-    wx = A[maxi][1]
-    wy = A[maxi][2]
-    ex = u * wx
-    ey = v * wy
-    ex, ey, wx, wy
 end
 
 struct ΦTuple{ΦT}
@@ -191,18 +150,15 @@ accelerate(g::god, δ) = speed(g, iszero(g.v) ? δ : g.v * exp(δ))
 speed(g::god, v) = god(g.ẑero, g.ône, g.∂t₀, clamp(T(v), zero(T), one(T)), g.ρ, g.Ω, g.⚷, g.♯, g.∇, g.d)
 # stop(g::god) = speed(g, zero(T))
 # stoptime(g::god) = god(g.ẑero, g.ône, g.∂t₀, SA[zero(T), g.v[2:end]...], g.ρ, g.Ω, g.⚷, g.♯, g.∇, g.d)
-# δ=T(0.01)
-scale(g::god, δ) = begin
-    ϵ = g.ône - g.ẑero
-    ρ = min.(ϵ.ρ * exp(δ), ○)
+scale(g::god, δ, ω=Ω) = begin
+    ϵ = -(g.ône, g.ẑero, ω)
+    ρ = iszero(ϵ.ρ) ? δ : min.(ϵ.ρ * exp(δ), ○)
     N = length(ϵ.μ)
-    ône = min.(ϵ.μ .+ ρ, ones(T, N))
-    ẑero = max.(zeros(T, N), ϵ.μ .- ρ)
-    move(g, ône) # could be parallel
-    move(g, ẑero) # could be parallel
+    ône = SVector(min.(ϵ.μ .+ ρ, ones(T, N)))
+    ẑero = SVector(max.(zeros(T, N), ϵ.μ .- ρ))
+    move(g, ône) # todo could be parallel
+    move(g, ẑero) # todo could be parallel
 end
-# ẑeroμ=ône
-# ẑeroμ=ẑero
 move(g::god, ẑeroμ) =
     god(
         ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
@@ -218,13 +174,13 @@ focus(g::god, ôneμ) =
         g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇, g.d
     )
 move(g::god, d, δ) = move(g, SVector(ntuple(i -> begin
-        g.ẑero.d[i] == d && return δ(μ[i], T(0.01))
-        μ[i]
-    end, length(μ))))
+        g.ẑero.d[i] == d && return δ(g.ẑero.μ[i], T(0.01))
+        g.ẑero.μ[i]
+    end, length(g.ẑero.μ))))
 focus(g::god, d, δ) = focus(g, SVector(ntuple(i -> begin
-        g.ône.d[i] == d && return δ(μ[i], T(0.01))
-        μ[i]
-    end, length(μ))))
+        g.ône.d[i] == d && return δ(g.ône.μ[i], T(0.01))
+        g.ône.μ[i]
+    end, length(g.ône.μ))))
 focusup(g, d) = focus(g, d, +)
 focusdown(g, d) = focus(g, d, -)
 moveup(g, d) = move(g, d, +)

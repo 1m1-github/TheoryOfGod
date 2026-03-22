@@ -1,3 +1,48 @@
+# z, o=SVector{3}(g.ẑero.μ[end-2:end]), SVector{3}(g.ône.μ[end-2:end])
+function calc_ew(z, o)
+    d = o - z
+    u = SVector(iszero(d[1]) && iszero(d[2]) ? (zero(T), d[3], -d[2]) : (d[2], -d[1], zero(T)))
+    u = u / norm(u)
+    v = cross(d, u)
+    v = v / norm(v)
+    a = abs.(u)
+    b = abs.(v)
+    L = abs.(d)
+    A = []
+    # i = 1
+    for i = 1:3
+        zero(T) < a[i] || continue
+        zero(T) < b[i] || continue
+        wx = L[i] / a[i] / 4
+        wy = L[i] / b[i] / 4
+        a[i] * wx + b[i] * wy ≤ L[i] / 2 || continue
+        j = (i + 1) % 3 + 1
+        a[j] * wx + b[j] * wy ≤ L[j] / 2 || continue
+        j = (j + 1) % 3 + 1
+        a[j] * wx + b[j] * wy ≤ L[j] / 2 || continue
+        push!(A, (wx, wy, wx * wy))
+    end
+    # i = 1
+    # j = 2
+    for i = 1:2, j = i+1:3
+        D = a[i] * b[j] - a[j] * b[i]
+        wx = (L[i] * b[j] - L[j] * b[i]) / D / 2
+        wy = (L[j] * a[i] - L[i] * a[j]) / D / 2
+        zero(T) < wx || continue
+        zero(T) < wy || continue
+        k = 6 - i - j
+        a[k] * wx + b[k] * wy ≤ L[k] / 2 || continue
+        push!(A, (wx, wy, wx * wy))
+    end
+    _, maxi = findmax(a -> a[3], A)
+    wx = A[maxi][1]
+    wy = A[maxi][2]
+    ex = u * wx
+    ey = v * wy
+    @show wx,wy
+    ex, ey, wx, wy
+end
+
 """
 Tighten an interval [lo, hi] given constraint L ≤ s*coeff + s_other*coeff_other ≤ U,
 relaxing over s_other ∈ [-1,1]. Returns (lo, hi, empty).
