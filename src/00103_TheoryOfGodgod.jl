@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 struct god
     ẑero::∃
     ône::∃
@@ -47,23 +45,24 @@ function ∃!(g::god, Φ, ω=Ω)
     ∃!(ϵ, ω)
 end
 
+trivial(ϵ) = ϵ isa 𝕋 || ϵ.Φ === ○̂
 function ∃̇(g::god, ∇̄=1, ω=Ω)
-    ϵ = β(-(g.ône, g.ẑero,ω), ω)
+    ϵ = β(-(g.ône, g.ẑero, ω), ω)
     # todo dim==2
-    ẑeroμ = ϵ isa 𝕋 ? zeros(T, 3) : g.ẑero.μ[end-2:end]
-    ôneμ = ϵ isa 𝕋 ? ones(T, 3) : g.ône.μ[end-2:end]
-    ex, ey, wx, wy = calc_ew(ẑeroμ, ôneμ)
-    i = fill(ϵ isa 𝕋 ? 0 : 1, g.♯..., GL_N)
-    ΦΦ = []
-    !(ϵ isa 𝕋) && push!(ΦΦ, ϵ.Φ)
-    owners!(g, ϵ, i, ΦΦ, 0, ∇̄, ex, ey, wx, wy, ω)
-    project(g, ΦΦ, x, i)
+    ẽx, ẽy, wx, wy = calc_ew(g.ẑero.μ[end-2:end], g.ône.μ[end-2:end])
+    ex = SVector(zeros(T, typeof(ϵ).parameters[1] - 3)..., ẽx...)
+    ey = SVector(zeros(T, typeof(ϵ).parameters[1] - 3)..., ẽy...)
+    c = (g.ẑero.μ .+ g.ône.μ) * ○
+    d = g.ône.μ .- g.ẑero.μ
+    i = fill(trivial(ϵ) ? 0 : 1, g.♯..., GL_N)
+    Φ̃Φ̃ = []
+    !trivial(ϵ) && push!(Φ̃Φ̃, ϵ.Φ)
+    owners!(g, ϵ, i, Φ̃Φ̃, 0, ∇̄, ex, ey, wx, wy, ω)
+    ΦΦ = ΦTuple(ntuple(i -> Φ̃Φ̃[i], length(Φ̃Φ̃)))
+    out = project(g, ΦΦ, i, c, d, ex, ey, wx, wy)
 end
-# function owners!(g, ϵ::𝕋, i, ΦΦ, ∇, ex, ey, wx, wy)
-# end
-# ϵ = Ω.ϵ̃[ϵ][1]
 function owners!(g, ϵ, i, ΦΦ, ∇, ∇̄, ex, ey, wx, wy, ω)
-    if 0 < ∇ && ϵ isa ∃
+    if 0 < ∇ && ϵ isa ∃ && !trivial(ϵ)
         intersects = pyramid_box_intersection(
             i, length(ΦΦ) + 1,
             g.ẑero.μ, g.ône.μ,
@@ -78,7 +77,7 @@ function owners!(g, ϵ, i, ΦΦ, ∇, ∇̄, ex, ey, wx, wy, ω)
         owners!(g, ϵ̃, i, ΦΦ, ∇ + 1, ∇̄, ex, ey, wx, wy, ω)
     end
 end
-# z, o=ẑeroμ, ôneμ
+# z, o=SVector{3}(g.ẑero.μ[end-2:end]), SVector{3}(g.ône.μ[end-2:end])
 function calc_ew(z, o)
     d = o - z
     u = SVector(d[1] == d[2] == 0 ? (0, d[3], -d[2]) : (d[2], -d[1], 0))
@@ -125,16 +124,16 @@ function calc_ew(z, o)
     ex, ey, wx, wy
 end
 
-struct ΦTuple{ΦΦ}
-    ϕ::ΦΦ
+struct ΦTuple{ΦT}
+    ϕ::ΦT
 end
-@generated function Φ(φ::ΦTuple{ΦΦ}, i, x) where {ΦΦ}
-    N = length(ΦΦ.parameters)
+@generated function Φ̇(Φ::ΦTuple{ΦT}, i, x) where ΦT
+    N = length(ΦT.parameters)
     branches = []
-    for ĩ in 1:N
+    for ĩ = 1:N
         push!(branches, quote
             if i == $ĩ
-                return φ.φ[$ĩ](x)
+                return Φ.ϕ[$ĩ](x)
             end
         end)
     end
@@ -143,29 +142,48 @@ end
         return zero(T)
     end
 end
-function project!(out, Φ, i, e1, e2)
-    o = zero(T)
-    for zi = 1:GL_N
-        ĩ = @index(Global, NTuple)
-        ϕi = i[ĩ..., zi]
-        ϕ = Φ[ϕi]
-        x =
-            o += ϕ(x)
-    end
-    out[ĩ] = one(T) - exp(-o)
-end
-function project(g::god, Φ::ΦTuple{ΦΦ}, i) where {ΦΦ}
-    out = KernelAbstractions.zeros(GPU_BACKEND, T, g.♯[2], g.♯[3])
+function project(g, ΦΦ, i, c, d, ex, ey, wx, wy)
+    out = KernelAbstractions.zeros(GPU_BACKEND, T, g.♯...)
     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
     copyto!(i̇, i)
-    project!(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
-        out,
-        Φ, i̇,
-        ndrange=(g.♯[2], g.♯[3])
-    )
+    Base.invokelatest() do
+        project!(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
+            out,
+            ΦΦ, i̇, c, d, ex, ey, wx, wy, g.♯...,
+            ndrange=g.♯
+        )
+    end
     KernelAbstractions.synchronize(GPU_BACKEND)
+    Array(out)
 end
-
+@kernel function project!(out, ΦΦ, i, c, d, ex, ey, wx, wy, nx, ny)
+    o = zero(T)
+    ĩ = @index(Global, NTuple)
+    # zi = 1
+    # ϕi = 1
+    for zi = 1:GL_N
+        ϕi = i[ĩ..., zi]
+        if iszero(ϕi)
+            o += ○
+            continue
+        end
+        t = zi / (GL_N + one(T))
+        omt = one(T) - t
+        wxk, wyk = wx * omt, wy * omt
+        si = (2 * ĩ[1] - one(T) - nx) / (nx - one(T))
+        sj = (2 * ĩ[2] - one(T) - ny) / (ny - one(T))
+        ck = c .+ t * d
+        x = ck .+ si * wxk * ex .+ sj * wyk * ey
+        o += Φ̇(ΦΦ, ϕi, x)
+        # out[1,1] = x[1]
+        # out[1,2] = x[2]
+        # out[1,3] = x[3]
+        # out[1,4] = x[4]
+        #  o=x[1]
+    end
+    out[ĩ...] = one(T) - exp(-o)
+    # out[ĩ...] = o
+end
 # const WHITE = (one(T), one(T), one(T), one(T))
 # const BLACK = (zero(T), zero(T), zero(T), one(T))
 # ∃̇(g::god) = ∃̇(g.ône - g.ẑero, g.♯, g.∇)

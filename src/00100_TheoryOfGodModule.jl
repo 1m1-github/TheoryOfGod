@@ -1,5 +1,5 @@
 import Pkg
-Pkg.activate("tog")
+Pkg.activate(".")
 
 """
 TheoryOfGod
@@ -24,6 +24,11 @@ god observes or creates, God iterates.
 # export ∃, ∃̇, ∃!
 
 # using DataStructures
+using KernelAbstractions, StaticArrays, LinearAlgebra
+using Metal
+const GPU_BACKEND = MetalBackend()
+const GPU_BACKEND_WORKGROUPSIZE = 2^2^3
+
 const T = Float32
 
 include("00101_TheoryOfGod∃.jl")
@@ -35,10 +40,6 @@ include("Octahedron.jl")
 
 # include("00100_TheoryOfGodProjection.jl")
 # include("00100_TheoryOfGodProjection2.jl")
-# using KernelAbstractions
-# using Metal
-# const GPU_BACKEND = MetalBackend()
-# const GPU_BACKEND_WORKGROUPSIZE = 2^2^3
 
 const invϕ = one(T) / MathConstants.golden
 ♯space = 10
@@ -54,15 +55,29 @@ g = god(
 Ω.Ο[ϵ]
 t()
 t(Ω.ϵ̃[Ω][1])
+t(Ω.ϵ̃[Ω.ϵ̃[Ω][1]][1])
 Ω.ϵ̃
 g.ẑero.μ
 g.ône.μ
 g = step(g)
-g = move(g, SA[g.ẑero.μ[1], T(0.75), T(0.75), T(0.75)])
+g = move(g, SA[t(Ω.ϵ̃[Ω][1]), T(0.75), T(0.75), T(0.75)])
 g = move(g, SA[t(Ω.ϵ̃[Ω][1]), T(0.5), T(0.5), T(0.5)])
 
-∃!(g, ○̂)
+∃!(g, (x...)->T(0.1))
+∃!(g, (x...)->T(0.2))
 # g = step(g,0.01)
+
+ΦΦ[1]===○̂
+ΦΦ[2]===○̂
+ΦΦ[1]==○̂
+ΦΦ[2]==○̂
+Ω.ϵ̃[Ω][1].Φ===○̂
+Ω.ϵ̃[Ω.ϵ̃[Ω][1]][1].Φ===○̂
+
+f=Ω.ϵ̃[Ω][1].Φ
+f(T(0.0))
+f2=typeof(ΦΦ).parameters[1].parameters[1]
+f2(T(0.0))
 
 ϵ.μ
 ϵ.ρ

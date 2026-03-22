@@ -1,5 +1,3 @@
-using KernelAbstractions, StaticArrays
-
 const ○ = one(T) / (one(T) + one(T))
 # const ○̂ = _ -> ○
 const ○̂ = (x...) -> ○
