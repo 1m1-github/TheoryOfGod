@@ -1,5 +1,4 @@
 const ○ = one(T) / (one(T) + one(T))
-# const ○̂ = (x...) -> ○
 const ○̂ = x -> ○
 abstract type ∀ end
 struct ∃{N,F,P<:∀} <: ∀
@@ -11,10 +10,8 @@ struct ∃{N,F,P<:∀} <: ∀
     Φ::F
     h::UInt
     function ∃(ϵ̂::∀, d::SVector{N,T}, μ::SVector{N,T}, ρ::SVector{N,T}, ∂::SVector{N,Tuple{Bool,Bool}}, Φ::F) where {N,F}
-        @assert 1 ≤ N
         @assert all(zero(T) .≤ d .≤ one(T))
-        @assert all(zero(T) .≤ μ .≤ one(T))
-        @assert all(zero(T) .≤ ρ .≤ one(T))
+        @assert all(zero(T) .≤ μ .- ρ .≤ μ .+ ρ .≤ one(T))
         # @assert gpu_safe(Φ, N)
         p = sortperm(d)
         d, μ, ρ = map(x -> x[p], (d, μ, ρ))

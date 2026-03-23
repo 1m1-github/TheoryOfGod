@@ -23,7 +23,6 @@ god observes or creates, God iterates.
 
 # export ∃, ∃̇, ∃!
 
-# using DataStructures
 using KernelAbstractions, StaticArrays, LinearAlgebra, MiniFB
 using Metal
 const GPU_BACKEND = MetalBackend()
@@ -39,18 +38,28 @@ include("Octahedron.jl")
 
 const invϕ = one(T) / MathConstants.golden
 ♯space = 10^2
-g = god(
+const G = Ref(god(
     d=sort(SA[zero(T), invϕ, invϕ^2, one(T)]), # t, x, y, z
-    ẑeroμ=SA[t(), ○, ○, ○],
-    f̂ocusμ=SA[one(T), one(T), one(T), one(T)],
-    ρ=(T(0.1),T(0.1)),
-    ♯=(♯space, ♯space))
-g = flatten(g, g.f̂ocus.d[end])
+    # ẑeroμ=SA[t(), ○, ○, zero(T)],
+    # f̂ocusμ=SA[t(), T(0.6), T(0.6), zero(T)],
+    # ρ=(T(0.1),T(0.1)),
+    ẑeroμ=SA[t(), zero(T), zero(T), zero(T)],
+    f̂ocusμ=SA[t(), one(T), one(T), one(T)],
+    ρ=(T(0.5),T(0.5),T(0.0)),
+    ♯=(♯space, ♯space)))
+# const G = Ref(god(
+#     d=sort(SA[zero(T), one(T)]),
+#     ẑeroμ=SA[zero(T), zero(T)],
+#     f̂ocusμ=SA[one(T), one(T)],
+#     ρ=(T(0.5),T(0.5)),
+#     ♯=(♯space, ♯space)))
+g=G[]
+# G[] = flatten(g, g.f̂ocus.d[end])
 
 # include("00102_TheoryOfGodMiniFB.jl")
 
 ∃!(g, x -> prod(x), Ω)
-# g, δ = step(g, zero(T))
+# g[], δ = step(g[], zero(T))
 ∃̇(g, Ω)
 
 ω = Ω

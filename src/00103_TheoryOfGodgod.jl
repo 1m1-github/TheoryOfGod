@@ -4,12 +4,10 @@ struct god
     f̂ocus::∃
     ∂t₀::Bool
     v::T
-    # ρ::NTuple{2,T}
     ρ::NTuple
     Ω::𝕋
     ⚷::UInt
     ♯::NTuple
-    # ♯::NTuple{2,UInt}
     ∇̄::UInt
     norm::Function
 end
@@ -33,24 +31,49 @@ i⚷(i, ⚷, ♯) =
         mod1(i[d] + ♯[d] - î, ♯[d])
     end
 
+# using GLMakie
+# fig = Figure()
+# ax = Axis3(fig[1,1]; perspectiveness=0.5, title="3D Points")
+# for x=0.0:0.1:1.0
+#     for y=0.0:0.1:1.0
+#         scatter!(ax, x*dx[2]+y*dy[2], x*dx[3]+y*dy[3], x*dx[4]+y*dy[4];markersize=6, color=:black)
+#     end
+#     scatter!(ax, x*d[2], x*d[3], x*d[4]; markersize=6, color=:red)
+#     scatter!(ax, x*dx[2], x*dx[3], x*dx[4]; markersize=6, color=:blue)
+#     scatter!(ax, x*dy[2], x*dy[3], x*dy[4]; markersize=6, color=:yellow)
+# end
+# fig
+# dot(dx, dy)
+# dot(dx, d)
+# dot(dy, d)
+# g.norm(dx)
+# g.norm(dy)
 function dxdy(g::god)
     N = length(g.ẑero.μ)
+    
     d = g.f̂ocus.μ .- g.ẑero.μ
-    dnorm = g.norm(d)
+    D = g.norm(d)^2
+
+    ez = SA[zeros(T, N - 1)..., one(T)]
+    dy = ez .- d[end] / D * d
+    dy /= g.norm(dy)
+
+    ey = SA[zeros(T, N - 2)..., one(T), zero(T)]
+    dx = ey .- d[end-1] / D * d
+    dx = dx .- dot(dx, dy) * dy
+    dx /= g.norm(dx)
+
     dx = SA[zeros(T, N - 3)..., one(T), zeros(T, 2)...]
-    dxort = dx .- d[end-2] / dnorm * d
+    dxort = dx .- d[end-2] / D * d
     dxnorm = g.norm(dxort)
     dy = SA[zeros(T, N - 2)..., one(T), zero(T)]
-    dyort = dy .- d[end-1] / dnorm * d
+    dyort = dy .- d[end-1] / D * d
     dynorm = g.norm(dyort)
-    dz = SA[zeros(T, N - 1)..., one(T)]
-    dzort = dz .- d[end] / dnorm * d
-    dznorm = g.norm(dzort)
     dx = dxort
     dy = dyort
-    if dxnorm < dynorm && dxnorm < dznorm
+    if dxnorm ≤ dynorm && dxnorm ≤ dznorm
         dx = dzort
-    elseif dynorm < dxnorm && dynorm < dznorm
+    elseif dynorm ≤ dxnorm && dynorm ≤ dznorm
         dy = dzort
     end
     dx = dx / g.norm(dx)
@@ -62,12 +85,12 @@ function dxdy(g::god)
     dx, dy, μ, d, ρ, N
 end
 function ∃!(g::god, Φ, ω=g.Ω)
-    _, _, μ̃, _, ρ̃, _ = dxdy(g)
+    _, _, μ̇, _, ρ̇, _ = dxdy(g)
     ṫ = t(ω.Ο[ω] + 1)
     ρt = (one(T) - ṫ) * ○ # todo create non-eternally
     μt = ṫ + ρt
-    μ = SA[μt, μ̃[2:end]...]
-    ρ = SA[ρt, ρ̃[2:end]...]
+    μ = SA[μt, μ̇[2:end]...]
+    ρ = SA[ρt, ρ̇[2:end]...]
     ϵ = ∃(ω, g.ẑero.d, μ, ρ, g.ẑero.∂, Φ)
     ∃!(ϵ, ω)
 end
@@ -155,7 +178,7 @@ end
         ĩx = T(ix - 1) / T(nx - 1)
         ĩy = T(iy - 1) / T(ny - 1)
         x = ẑero .+ ĩx * dx .+ ĩy * dy
-        out[ix, iy] = Φ̇(ΦΦ, iϕ, x)
+        out[ix, iy] = Φ̇(ΦΦ, iϕ, x) # todo clamp to [0,1]
     end
 end
 # todo does x actually belong to ϵ
@@ -174,7 +197,7 @@ end
         ĩy = T(iy - 1) / T(ny - 1)
         zt = ẑero .+ t * d
         x = zt .+ ĩx * dx .+ ĩy * dy
-        ϕ += Φ̇(ΦΦ, iϕ, x) * GL_WEIGHTS[iz]
+        ϕ += Φ̇(ΦΦ, iϕ, x) * GL_WEIGHTS[iz] # todo clamp to [0,1]
     end
     out[ix, iy] = one(T) - exp(-ϕ)
 end
@@ -217,15 +240,15 @@ move(g::god, ẑeroμ) = begin
     @show "move2", ẑeroμ
     god(
         ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
-        # ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, SA[ẑeroμ[1], g.f̂ocus.μ[2:end]...], g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
-        g.f̂ocus,
+        ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, SA[ẑeroμ[1], g.f̂ocus.μ[2:end]...], g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
+        # g.f̂ocus,
         g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
     )
 end
 focus(g::god, ôneμ) =
     god(
-        # ∃(g.ẑero.ϵ̂, g.ẑero.d, SA[ôneμ[1], g.ẑero.μ[2:end]...], g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
-        g.ẑero,
+        ∃(g.ẑero.ϵ̂, g.ẑero.d, SA[ôneμ[1], g.ẑero.μ[2:end]...], g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
+        # g.ẑero,
         ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, ôneμ, g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
         g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
     )
