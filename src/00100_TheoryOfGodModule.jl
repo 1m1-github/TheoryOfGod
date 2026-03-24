@@ -31,91 +31,86 @@ const GPU_BACKEND_WORKGROUPSIZE = 2^2^3
 const T = Float32
 
 include("00101_TheoryOfGod∃.jl")
-const Ω = 𝕋()
+const Ω = Ref(𝕋())
 # const name = Dict{∃, String}()
 include("00103_TheoryOfGodgod.jl")
 include("Octahedron.jl")
 
 const invϕ = one(T) / MathConstants.golden
-♯space = 10^1
+♯space = 10^2
+t() = t(Ω[])
 const G = Ref(god(
     d=sort(SA[zero(T), invϕ, invϕ^2, one(T)]), # t, x, y, z
-    # ẑeroμ=SA[t(), zero(T), zero(T), zero(T)],
-    # f̂ocusμ=SA[t(), T(1.0), T(1.0), T(1.0)],
     ẑeroμ=SA[t(), ○, ○, ○],
-    f̂ocusμ=SA[t(), T(0.6), T(0.6), T(0.6)],
-    # ρ=(T(0.5),T(0.5),zero(T)),
-    ρ=(T(0.1),T(0.1),zero(T)),
-    # ρ=(T(0.1),T(0.1),T(1.0)),
+    f̂ocusμ=SA[t(), ○*exp(T(0.1)), ○*exp(T(0.1)), ○*exp(T(0.1))],
+    ρ=(T(0.1), T(0.1), one(T)),
     ♯=(♯space, ♯space)))
-g=G[]
-# G[] = flatten(g, g.f̂ocus.d[end])
 
-# include("00102_TheoryOfGodMiniFB.jl")
+include("00102_TheoryOfGodMiniFB.jl")
 
-∃!(g, x -> prod(x), Ω)
+updatebuffer() = begin
+    try # todo rm
+        Base.invokelatest() do
+            global MINIFB_BUFFER[] = floor.(UInt32, reshape(∃̇(G[], Ω[]), prod(G[].♯)) .* MAX_RGB)
+        end
+    catch e
+        showerror(stderr, e, catch_backtrace())
+    end
+end
+const UPDATE_MINIFB_BUFFER_TASK = @async while true
+    yield()
+    # sleep(1) # todo rm
+    updatebuffer()
+end
+
+const god_TASK = @async while true
+    yield()
+    while isready(PENDING_ACTIONS)
+        Α = take!(PENDING_ACTIONS)
+        global G[] = Α(G[])
+    end
+end
+
+const TIME_TASK = @async begin
+    t = time()
+    while true
+        yield()
+        # sleep(1) # todo rm
+        t̃ = time()
+        dt = t̃ - t
+        t = t̃
+        g, δ = step(G[], dt)
+        δ || continue
+        global G[] = g
+    end
+end
+
+∃!(G[], x -> prod(x), Ω[])
+
 # g[], δ = step(g[], zero(T))
-# ω = Ω
-∃̇(g, Ω)
+# ω = Ω[]
+# g=G[]
+# ∃̇(G[], Ω[])
 
 # const Ω = 𝕋()
-Ω.Ο[Ω]
+# Ω[].Ο[Ω[]]
 # Ω.Ο[Ω.ϵ̃[Ω][1]]
 # Ω.Ο[ϵ]
-t()
+# t()
 # t(Ω.ϵ̃[Ω][1])
 # t(Ω.ϵ̃[Ω.ϵ̃[Ω][1]][1])
 # Ω.ϵ̃
-g.ẑero.μ
-g.ẑero.ρ
-g.f̂ocus.μ
-g.f̂ocus.ρ
-g.ρ
-G[] = step(G[]);
-g=G[]
+# G[].ẑero.μ
+# G[].ẑero.ρ
+# G[].f̂ocus.μ
+# G[].f̂ocus.ρ
+# G[].ρ
+# G[], δ = step(G[])
+# g = G[]
 # ∃!(g, (x...)->T(0.1))
 # g = move(g, SA[t(Ω.ϵ̃[Ω][1]), T(0.75), T(0.75), T(0.75)])
 # ∃!(g, (x...)->T(0.2))
 # g = move(g, SA[t(Ω.ϵ̃[Ω][1]), T(0.5), T(0.5), T(0.5)])
-
-function start()
-    # t = time()
-    while true
-        sleep(1)
-        yield()
-        
-        @show "before pending_actions"
-        while isready(pending_actions)
-            action = take!(pending_actions)
-            global g = action(g)
-        end
-        @show "after pending_actions"
-        
-        # t̂ = time()
-        # dt = t̂ - t
-        # t = t̂
-        # g̃, _ = step(g, dt)
-        # global g = g̃
-        # println("δ=$δ")
-        # δ || continue
-
-        println("start() ẑero.μ=$(g.ẑero.μ)")
-        println("start() f̂ocus.μ=$(g.f̂ocus.μ)")
-
-        # p̂ixel = ∃̇(g)
-        # @show p̂ixel
-        # δ = Δ(pixel, p̂ixel)
-        # @show δ
-        # @show isempty(δ)
-        # isempty(δ) && continue
-        # todo
-        # global buffer = p̂ixel
-        @show "before updatebuffer"
-        global buffer = updatebuffer(g)
-        @show "after updatebuffer"
-    end
-end
-# const godTASK = @async start()
 
 # include("00104_TheoryOfGodTypst.jl")
 # Φ_hi = Φ_typst(typst_to_matrix("hi"))

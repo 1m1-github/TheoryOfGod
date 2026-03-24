@@ -15,10 +15,11 @@ function god(; d, ẑeroμ, f̂ocusμ, ρ, ⚷=zero(UInt), ♯=(2, 2), ∇̄=typ
     N = length(d)
     ∂ = SVector(ntuple(_ -> (true, true), N))
     z = @SVector zeros(T, N)
-    ẑero = ∃(Ω, d, ẑeroμ, z, ∂, ○̂)
-    f̂ocus = ∃(Ω, d, f̂ocusμ, z, ∂, ○̂)
+    ẑero = ∃(Ω[], d, ẑeroμ, z, ∂, ○̂)
+    f̂ocus = ∃(Ω[], d, f̂ocusμ, z, ∂, ○̂)
     god(ẑero, f̂ocus, true, zero(T), ρ, 𝕋(), ⚷, ♯, ∇̄, n̂orm)
 end
+
 dh(⚷, g, n) = powermod(g, ⚷, n)
 ⚷⚷(⚷, dh) = powermod(dh, ⚷, DH_N)
 ⚷i(i, ⚷, ♯) =
@@ -48,39 +49,6 @@ function dxdy(g::god)
     ρ = (abs.(dx) + abs.(dy) + abs.(d)) * ○
     dx, dy, d, μ, ρ, N
 end
-# using GLMakie
-# fig = Figure()
-# ax = Axis3(fig[1, 1])
-# for t = 0.0:0.1:1.0
-#     scatter!(ax, (g.ẑero.μ[2:end] .+ t * d[2:end])...; markersize=6, color=:red)
-#     scatter!(ax, (ẑero[2:end] .+ t * dẑero[2:end])...; markersize=6, color=:red)
-#     scatter!(ax, (ẑero[2:end] .+ t * dx[2:end])...; markersize=6, color=:red)
-#     scatter!(ax, (ẑero[2:end] .+ t * dy[2:end])...; markersize=6, color=:pink)
-# end
-# scatter!(ax, g.ẑero.μ[2:end]..., ; markersize=6, color=:black)
-# scatter!(ax, g.f̂ocus.μ[2:end]..., ; markersize=6, color=:black)
-# scatter!(ax, (g.ẑero.μ[2:end] .+ ○ * d[2:end])...; markersize=6, color=:black)
-# scatter!(ax, f̂ocus[2:end]..., ; markersize=6, color=:blue)
-# scatter!(ax, ẑero[2:end]..., ; markersize=6, color=:blue)
-# for i = 1:size(xout, 1)
-#     for j = 1:size(xout, 2)
-#         for k = 1:size(xout, 3)
-#             scatter!(ax, xout[i, j, k, 2], xout[i, j, k, 3], xout[i, j, k, 4])
-#         end
-#     end
-# end
-# xout[1,1,1,:]
-# xout[1,1,2,:]
-# xout[1,1,3,:]
-# xout[1,1,4,:]
-# xout[1,1,5,:]
-# xout[1,1,6,:]
-# xout[1,1,7,:]
-# dot(dx, dy)
-# dot(dx, d)
-# dot(dy, d)
-# g.norm(dx)
-# g.norm(dy)
 
 function ∃!(g::god, Φ, ω=g.Ω)
     _, _, _, μ̇, ρ̇, _ = dxdy(g)
@@ -160,14 +128,14 @@ function project2d(ΦΦ, Π, i, ẑero, d, dx, dy, nx, ny, f̂ocusϕ)
     out = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny)
     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
     copyto!(i̇, i)
-    Base.invokelatest() do
+    # Base.invokelatest() do
         Π(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
             out,
             ΦΦ, i̇, ẑero, dx, dy,
             nx, ny,
             ndrange=(nx, ny)
         )
-    end
+    # end
     KernelAbstractions.synchronize(GPU_BACKEND)
     Array(out)
 end
@@ -175,14 +143,14 @@ function project3d(ΦΦ, Π, i, ẑero, d, dx, dy, nx, ny, f̂ocusϕ)
     out = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny)
     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
     copyto!(i̇, i)
-    Base.invokelatest() do
+    # Base.invokelatest() do
         Π(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
             out,
             ΦΦ, i̇, ẑero, d, dx, dy, f̂ocusϕ,
             nx, ny, GL_N - 1, GL_NODES, GL_WEIGHTS,
             ndrange=(nx, ny)
         )
-    end
+    # end
     KernelAbstractions.synchronize(GPU_BACKEND)
     Array(out)
 end
@@ -201,8 +169,10 @@ end
 end
 # todo does x actually belong to ϵ
 @kernel function project3d!(out, ΦΦ, i, ẑero, d, dx, dy, f̂ocusϕ, nx, ny, nz, gl_nodes, gl_weights)
-    ϕ = f̂ocusϕ
     (ix, iy) = @index(Global, NTuple)
+    ĩx = T(ix - 1) / T(nx - 1)
+    ĩy = T(iy - 1) / T(ny - 1)
+    ϕ = f̂ocusϕ
     for iz = 1:nz
         iϕ = i[ix, iy, iz]
         if iszero(iϕ)
@@ -211,8 +181,6 @@ end
         end
         t = gl_nodes[iz]
         t̃ = one(T) - t
-        ĩx = T(ix - 1) / T(nx - 1)
-        ĩy = T(iy - 1) / T(ny - 1)
         z = ẑero .+ t * d
         d̃x = t̃ * dx
         d̃y = t̃ * dy
@@ -242,63 +210,42 @@ accelerate(g::god, δ) = speed(g, iszero(g.v) ? δ : g.v * exp(δ))
 speed(g::god, v) = god(g.ẑero, g.f̂ocus, g.∂t₀, clamp(T(v), zero(T), one(T)), g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
 # stop(g::god) = speed(g, zero(T))
 # stoptime(g::god) = god(g.ẑero, g.f̂ocus, g.∂t₀, SA[zero(T), g.v[2:end]...], g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
-scale(g::god, δ) = begin
-    # scale(g::god, δ, ω=Ω) = begin
-    # ϵ = -(g.f̂ocus, g.ẑero, ω)
-    # N = length(ϵ.μ)
-    # ône = SVector(min.(ϵ.μ .+ ρ, ones(T, N)))
-    # ẑero = SVector(max.(zeros(T, N), ϵ.μ .- ρ))
-    # move(g, ône) # todo could be parallel
-    # move(g, ẑero) # todo could be parallel
-    ρ = max.(min.(g.ρ * exp(δ), ○), zero(T))
+scale(g::god, i, δ) = begin
+    ρ = SVector(ntuple(ĩ -> begin
+        ĩ == i && return g.ρ[ĩ] + δ
+        g.ρ[ĩ]
+    end, length(g.ρ)))
     god(g.ẑero, g.f̂ocus, g.∂t₀, g.v, ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
 end
-move(g::god, ẑeroμ) = begin
-    @show "move2", ẑeroμ
+move(g::god, ẑeroμ) =
     god(
         ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
         ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, SA[ẑeroμ[1], g.f̂ocus.μ[2:end]...], g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
-        # g.f̂ocus,
         g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
     )
-end
 focus(g::god, ôneμ) =
     god(
         ∃(g.ẑero.ϵ̂, g.ẑero.d, SA[ôneμ[1], g.ẑero.μ[2:end]...], g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
-        # g.ẑero,
         ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, ôneμ, g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
         g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
     )
-move(g::god, d, δ) = begin
-    @show "move1", d, δ
-    move(g, SVector(ntuple(i -> begin
-            g.ẑero.d[i] == d && return δ(g.ẑero.μ[i], T(0.01))
-            g.ẑero.μ[i]
+move(g::god, i, δ) =
+    move(g, SVector(ntuple(ĩ -> begin
+            ĩ == i && return g.ẑero.μ[ĩ] + δ
+            g.ẑero.μ[ĩ]
         end, length(g.ẑero.μ))))
-end
-focus(g::god, d, δ) = focus(g, SVector(ntuple(i -> begin
-        g.f̂ocus.d[i] == d && return δ(g.f̂ocus.μ[i], T(0.01))
-        g.f̂ocus.μ[i]
+focus(g::god, i, δ) = focus(g, SVector(ntuple(ĩ -> begin
+        ĩ == i && return g.f̂ocus.μ[ĩ] + δ
+        g.f̂ocus.μ[ĩ]
     end, length(g.f̂ocus.μ))))
-focusup(g, d) = focus(g, d, +)
-focusdown(g, d) = focus(g, d, -)
-moveup(g, d) = move(g, d, +)
-movedown(g, d) = move(g, d, -)
-jerkdown(g) = jerk(g, T(-0.01))
+focusup(g, i) = focus(g, i, T(0.01))
+focusdown(g, i) = focus(g, i, -T(0.01))
+moveup(g, i) = move(g, i, T(0.01))
+movedown(g, i) = move(g, i, -T(0.01))
 jerkup(g) = jerk(g, T(0.01))
-scaledown(g) = scale(g, T(-0.01))
-scaleup(g) = scale(g, T(0.01))
-flatten(g, d) = begin
-    ôneμ = SVector(ntuple(i -> begin
-            g.f̂ocus.d[i] == d && return g.ẑero.μ[i]
-            g.f̂ocus.μ[i]
-        end, length(g.f̂ocus.μ)))
-    god(
-        g.ẑero,
-        ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, ôneμ, g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
-        g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
-    )
-end
+jerkdown(g) = jerk(g, T(-0.01))
+scaleup(g, i) = scale(g, i, -T(0.01))
+scaledown(g, i) = scale(g, i, T(0.01))
 
 const GL_N = 8
 const GL_NODES_RAW = SVector{GL_N,T}(
@@ -322,3 +269,38 @@ const GL_WEIGHTS = SVector{GL_N,T}(
     0.2223810344533745,
     0.1012285362903763,
 )
+
+
+# using GLMakie
+# fig = Figure()
+# ax = Axis3(fig[1, 1])
+# for t = 0.0:0.1:1.0
+#     scatter!(ax, (g.ẑero.μ[2:end] .+ t * d[2:end])...; markersize=6, color=:red)
+#     scatter!(ax, (ẑero[2:end] .+ t * dẑero[2:end])...; markersize=6, color=:red)
+#     scatter!(ax, (ẑero[2:end] .+ t * dx[2:end])...; markersize=6, color=:red)
+#     scatter!(ax, (ẑero[2:end] .+ t * dy[2:end])...; markersize=6, color=:pink)
+# end
+# scatter!(ax, g.ẑero.μ[2:end]..., ; markersize=6, color=:black)
+# scatter!(ax, g.f̂ocus.μ[2:end]..., ; markersize=6, color=:black)
+# scatter!(ax, (g.ẑero.μ[2:end] .+ ○ * d[2:end])...; markersize=6, color=:black)
+# scatter!(ax, f̂ocus[2:end]..., ; markersize=6, color=:blue)
+# scatter!(ax, ẑero[2:end]..., ; markersize=6, color=:blue)
+# for i = 1:size(xout, 1)
+#     for j = 1:size(xout, 2)
+#         for k = 1:size(xout, 3)
+#             scatter!(ax, xout[i, j, k, 2], xout[i, j, k, 3], xout[i, j, k, 4])
+#         end
+#     end
+# end
+# xout[1,1,1,:]
+# xout[1,1,2,:]
+# xout[1,1,3,:]
+# xout[1,1,4,:]
+# xout[1,1,5,:]
+# xout[1,1,6,:]
+# xout[1,1,7,:]
+# dot(dx, dy)
+# dot(dx, d)
+# dot(dy, d)
+# g.norm(dx)
+# g.norm(dy)
