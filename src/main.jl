@@ -9,7 +9,6 @@ I = [ZERO < ○ < ONE] denotes a unit 1-dim space of information with origin ○
 We have a Pretopology 𝕋 on Ω such that ϵᵢ ∈ 𝕋:
 * ϵᵢ ⊆ Ω
 * ϵ₂ ∈ ϵ₁.ϵ̃ => ϵ₂|ϵ₁ ⊆ ϵ₁ <=> ϵ₂ ⫉ ϵ₁ ⩓ ϵ₂ ∈ ϵ₃.ϵ̃ => ϵ₁ = ϵ₃
-* ϵ₁ ≠ ϵ₂ => ϵ₁ ∩ ϵ₂ = ∅
 * x ∈ ϵᵢ ⊊ Ω: x.ρ = 0 => ϵᵢ.Φ(x) ∈ I is arbitrary, computable and smooth fuzzy existence potential towards ONE=true xor ZERO=false.
 
 ϵ ⊊ Ω defines its existence inside a subset of Ω using an origin (μ), a radius (ρ) and a closed vs. open in each direction (∂) vector. These vectors are finite and all other dimensional coordinates of ϵ follow from linear interpolation.
@@ -23,69 +22,65 @@ god observes or creates, God iterates.
 
 # export ∃, ∃̇, ∃!
 
-using KernelAbstractions, StaticArrays, LinearAlgebra, MiniFB
+const T = Float32
+
+using KernelAbstractions, StaticArrays, LinearAlgebra
+using HTTP, URIs, Sockets
+using MiniFB
 using Metal
 const GPU_BACKEND = MetalBackend()
 const GPU_BACKEND_WORKGROUPSIZE = 2^2^3
 
-const T = Float32
-
-include("00101_TheoryOfGod∃.jl")
+include("∃.jl")
 const Ω = Ref(𝕋())
-# const name = Dict{∃, String}()
-include("00103_TheoryOfGodgod.jl")
-include("Octahedron.jl")
-
-const invϕ = one(T) / MathConstants.golden
-♯space = 10^2
 t() = t(Ω[])
-const G = Ref(god(
-    d=sort(SA[zero(T), invϕ, invϕ^2, one(T)]), # t, x, y, z
-    ẑeroμ=SA[t(), ○, ○, ○],
-    f̂ocusμ=SA[t(), ○*exp(T(0.1)), ○*exp(T(0.1)), ○*exp(T(0.1))],
-    ρ=(T(0.1), T(0.1), one(T)),
-    ♯=(♯space, ♯space)))
+const invϕ = one(T) / MathConstants.golden
+# const name = Dict{∃, String}()
+include("god.jl")
+include("Octahedron.jl")
+include("MiniFB.jl")
+include("browser.jl")
+include("godBrowser.jl")
+const BROWSER_TASK = Threads.@spawn start(godBrowser1)
+# # g=collect(values(godBROWSER[]))[1].g
+# updatebuffer() = begin
+#     try # todo rm
+#         Base.invokelatest() do
+#             global MINIFB_BUFFER[] = floor.(UInt32, reshape(∃̇(G[], Ω[]), prod(G[].♯)) .* MAX_RGB)
+#         end
+#     catch e
+#         showerror(stderr, e, catch_backtrace())
+#     end
+# end
+# const UPDATE_MINIFB_BUFFER_TASK = Threads.@spawn while true
+#     yield()
+#     # sleep(1) # todo rm
+#     updatebuffer()
+# end
 
-include("00102_TheoryOfGodMiniFB.jl")
+# const CHANGE_TASK = Threads.@spawn while true
+#     yield()
+#     while isready(PENDING_ACTIONS)
+#         Α = take!(PENDING_ACTIONS)
+#         global G[] = Α(G[])
+#     end
+# end
 
-updatebuffer() = begin
-    try # todo rm
-        Base.invokelatest() do
-            global MINIFB_BUFFER[] = floor.(UInt32, reshape(∃̇(G[], Ω[]), prod(G[].♯)) .* MAX_RGB)
-        end
-    catch e
-        showerror(stderr, e, catch_backtrace())
-    end
-end
-const UPDATE_MINIFB_BUFFER_TASK = @async while true
-    yield()
-    # sleep(1) # todo rm
-    updatebuffer()
-end
+# const TIME_TASK = Threads.@spawn begin
+#     t = time()
+#     while true
+#         yield()
+#         # sleep(1) # todo rm
+#         t̃ = time()
+#         dt = t̃ - t
+#         t = t̃
+#         g, δ = step(G[], dt)
+#         δ || continue
+#         global G[] = g
+#     end
+# end
 
-const god_TASK = @async while true
-    yield()
-    while isready(PENDING_ACTIONS)
-        Α = take!(PENDING_ACTIONS)
-        global G[] = Α(G[])
-    end
-end
-
-const TIME_TASK = @async begin
-    t = time()
-    while true
-        yield()
-        # sleep(1) # todo rm
-        t̃ = time()
-        dt = t̃ - t
-        t = t̃
-        g, δ = step(G[], dt)
-        δ || continue
-        global G[] = g
-    end
-end
-
-∃!(G[], x -> prod(x), Ω[])
+# ∃!(G[], x -> prod(x), Ω[])
 
 # g[], δ = step(g[], zero(T))
 # ω = Ω[]
@@ -129,8 +124,3 @@ end
 # # ρ(ϵ::∃) = ϵ.ρ
 
 
-# # include("00090_BroadcastBrowser2Module.jl")
-# # import Main.BroadcastBrowserModule: BroadcastBrowser, start
-# # include("00105_TheoryOfGodgodBrowser.jl")
-# # const BROWSERTASK = Threads.@spawn start(b -> godBrowser(b))
-# # g=collect(values(godBROWSER[]))[1].g
