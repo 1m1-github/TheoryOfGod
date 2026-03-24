@@ -45,8 +45,8 @@ const G = Ref(god(
     ẑeroμ=SA[t(), ○, ○, ○],
     f̂ocusμ=SA[t(), T(0.6), T(0.6), T(0.6)],
     # ρ=(T(0.5),T(0.5),zero(T)),
-    # ρ=(T(0.1),T(0.1),zero(T)),
-    ρ=(T(0.1),T(0.1),T(1.0)),
+    ρ=(T(0.1),T(0.1),zero(T)),
+    # ρ=(T(0.1),T(0.1),T(1.0)),
     ♯=(♯space, ♯space)))
 g=G[]
 # G[] = flatten(g, g.f̂ocus.d[end])
@@ -55,7 +55,7 @@ g=G[]
 
 ∃!(g, x -> prod(x), Ω)
 # g[], δ = step(g[], zero(T))
-ω = Ω
+# ω = Ω
 ∃̇(g, Ω)
 
 # const Ω = 𝕋()

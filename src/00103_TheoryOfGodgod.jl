@@ -48,28 +48,28 @@ function dxdy(g::god)
     ρ = (abs.(dx) + abs.(dy) + abs.(d)) * ○
     dx, dy, d, μ, ρ, N
 end
-using GLMakie
-fig = Figure()
-ax = Axis3(fig[1, 1])
-for t = 0.0:0.1:1.0
-    scatter!(ax, (g.ẑero.μ[2:end] .+ t * d[2:end])...; markersize=6, color=:red)
-    scatter!(ax, (ẑero[2:end] .+ t * dẑero[2:end])...; markersize=6, color=:red)
-    scatter!(ax, (ẑero[2:end] .+ t * dx[2:end])...; markersize=6, color=:red)
-    scatter!(ax, (ẑero[2:end] .+ t * dy[2:end])...; markersize=6, color=:pink)
-end
-scatter!(ax, g.ẑero.μ[2:end]..., ; markersize=6, color=:black)
-scatter!(ax, g.f̂ocus.μ[2:end]..., ; markersize=6, color=:black)
-scatter!(ax, (g.ẑero.μ[2:end] .+ ○ * d[2:end])...; markersize=6, color=:black)
-scatter!(ax, f̂ocus[2:end]..., ; markersize=6, color=:blue)
-scatter!(ax, ẑero[2:end]..., ; markersize=6, color=:blue)
-for i = 1:size(xout, 1)
-    for j = 1:size(xout, 2)
-        for k = 1:size(xout, 3)
-            scatter!(ax, xout[i, j, k, 2], xout[i, j, k, 3], xout[i, j, k, 4])
-        end
-    end
-end
-xout[1,1,1,:]
+# using GLMakie
+# fig = Figure()
+# ax = Axis3(fig[1, 1])
+# for t = 0.0:0.1:1.0
+#     scatter!(ax, (g.ẑero.μ[2:end] .+ t * d[2:end])...; markersize=6, color=:red)
+#     scatter!(ax, (ẑero[2:end] .+ t * dẑero[2:end])...; markersize=6, color=:red)
+#     scatter!(ax, (ẑero[2:end] .+ t * dx[2:end])...; markersize=6, color=:red)
+#     scatter!(ax, (ẑero[2:end] .+ t * dy[2:end])...; markersize=6, color=:pink)
+# end
+# scatter!(ax, g.ẑero.μ[2:end]..., ; markersize=6, color=:black)
+# scatter!(ax, g.f̂ocus.μ[2:end]..., ; markersize=6, color=:black)
+# scatter!(ax, (g.ẑero.μ[2:end] .+ ○ * d[2:end])...; markersize=6, color=:black)
+# scatter!(ax, f̂ocus[2:end]..., ; markersize=6, color=:blue)
+# scatter!(ax, ẑero[2:end]..., ; markersize=6, color=:blue)
+# for i = 1:size(xout, 1)
+#     for j = 1:size(xout, 2)
+#         for k = 1:size(xout, 3)
+#             scatter!(ax, xout[i, j, k, 2], xout[i, j, k, 3], xout[i, j, k, 4])
+#         end
+#     end
+# end
+# xout[1,1,1,:]
 # xout[1,1,2,:]
 # xout[1,1,3,:]
 # xout[1,1,4,:]
@@ -108,18 +108,18 @@ function ∃̇(g::god, ω=g.Ω)
     nz = hasdepth ? GL_N - 1 : 1
     owners!(g, f̂ocus, ϵ, i, Φ̃Φ̃, 0, dx, dy, nz, ω, istrivial)
     ΦΦ = ΦTuple(ntuple(i -> Φ̃Φ̃[i], length(Φ̃Φ̃)))
-    Π, f̂ocusϕ = if hasdepth
+    Π̂, Π, f̂ocusϕ = if hasdepth
         z = @SVector zeros(T, N)
         ϵ = ∃(ω, g.ẑero.d, f̂ocus, z, g.ẑero.∂, ○̂)
         ϵ, found = X(ϵ, g.∇̄, ω)
         ϕ = !found || trivial(ϵ) ? ○ : ϵ.Φ(f̂ocus)
-        project3d!, ϕ
+        project3d, project3d!, ϕ
     else
-        project2d!, zero(T)
+        project2d, project2d!, zero(T)
     end
     ẑero = μ .- (dx .+ dy) * ○
     dẑero = f̂ocus .- ẑero
-    out,xout = project(ΦΦ, Π, i, ẑero, dẑero, dx, dy, g.♯..., f̂ocusϕ)
+    Π̂(ΦΦ, Π, i, ẑero, dẑero, dx, dy, g.♯..., f̂ocusϕ)
 end
 function owners!(g, f̂ocus, ϵ, i, ΦΦ, ∇, dx, dy, nz, ω, istrivial)
     if 0 < ∇ && ϵ isa ∃ && !istrivial
@@ -156,24 +156,38 @@ end
         return zero(T)
     end
 end
-function project(ΦΦ, Π, i, ẑero, d, dx, dy, nx, ny, f̂ocusϕ)
+function project2d(ΦΦ, Π, i, ẑero, d, dx, dy, nx, ny, f̂ocusϕ)
     out = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny)
-    xout = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny, GL_N - 1, 4)
     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
     copyto!(i̇, i)
     Base.invokelatest() do
         Π(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
-            out, xout,
+            out,
+            ΦΦ, i̇, ẑero, dx, dy,
+            nx, ny,
+            ndrange=(nx, ny)
+        )
+    end
+    KernelAbstractions.synchronize(GPU_BACKEND)
+    Array(out)
+end
+function project3d(ΦΦ, Π, i, ẑero, d, dx, dy, nx, ny, f̂ocusϕ)
+    out = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny)
+    i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
+    copyto!(i̇, i)
+    Base.invokelatest() do
+        Π(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
+            out,
             ΦΦ, i̇, ẑero, d, dx, dy, f̂ocusϕ,
             nx, ny, GL_N - 1, GL_NODES, GL_WEIGHTS,
             ndrange=(nx, ny)
         )
     end
     KernelAbstractions.synchronize(GPU_BACKEND)
-    Array(out), Array(xout)
+    Array(out)
 end
 # todo does x actually belong to ϵ
-@kernel function project2d!(out, ΦΦ, i, ẑero, d, dx, dy, f̂ocusϕ, nx, ny)
+@kernel function project2d!(out, ΦΦ, i, ẑero, dx, dy, nx, ny)
     (ix, iy) = @index(Global, NTuple)
     iϕ = i[ix, iy]
     if iszero(iϕ)
@@ -186,7 +200,7 @@ end
     end
 end
 # todo does x actually belong to ϵ
-@kernel function project3d!(out, xout, ΦΦ, i, ẑero, d, dx, dy, f̂ocusϕ, nx, ny, nz, gl_nodes, gl_weights)
+@kernel function project3d!(out, ΦΦ, i, ẑero, d, dx, dy, f̂ocusϕ, nx, ny, nz, gl_nodes, gl_weights)
     ϕ = f̂ocusϕ
     (ix, iy) = @index(Global, NTuple)
     for iz = 1:nz
@@ -203,35 +217,10 @@ end
         d̃x = t̃ * dx
         d̃y = t̃ * dy
         x = z .+ ĩx * d̃x .+ ĩy * d̃y
-        xout[ix, iy, iz, :] .= x
         ϕ += Φ̇(ΦΦ, iϕ, x) * gl_weights[iz] # todo clamp to [0,1]
     end
     out[ix, iy] = one(T) - exp(-ϕ)
 end
-
-# nx,ny=g.♯[1],g.♯[2]
-# # ϕ = f̂ocusϕ
-# (ix, iy) = (1,1)
-# # (ix, iy) = (2,2)
-# iz = collect(1:GL_N-1)[1]
-# # for iz = 1:GL_N-1
-# # iϕ = i[ix, iy, iz]
-# # if iszero(iϕ)
-# #     ϕ += ○ * GL_WEIGHTS[iz]
-# #     continue
-# # end
-# tt = GL_NODES[iz]
-# ĩx = T(ix - 1) / T(nx - 1)
-# ĩy = T(iy - 1) / T(ny - 1)
-# z = ẑero .+ tt * d
-# d̃x = dx * (1 - tt)
-# d̃y = dy * (1 - tt)
-# x = z .+ ĩx * d̃x .+ ĩy * d̃y
-# # ϕ += Φ̇(ΦΦ, iϕ, x) * GL_WEIGHTS[iz] # todo clamp to [0,1]
-# # @show x, ϕ
-# # end
-# # one(T) - exp(-ϕ)
-
 
 function step(g::god, dt̂=one(T))
     if g.∂t₀
