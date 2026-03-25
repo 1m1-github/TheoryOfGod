@@ -1,4 +1,5 @@
-const DPI = 300
+# const DPI = 300
+const DPI = 144
 const TYPST_TEMPLATE(content) = """
 #set page(width: auto, height: auto, margin: (top: 5pt, bottom: 5pt, left: 5pt, right: 5pt))
 #set text(size: 10pt)
@@ -17,13 +18,15 @@ end
 function Φ_typst(mat)
     H, W = size(mat)
     x -> begin
-        px = clamp(unsafe_trunc(UInt32, x[2] * (W - 1)) + 1, 1, W)
-        py = clamp(unsafe_trunc(UInt32, x[3] * (H - 1)) + 1, 1, H)
+        # px = clamp(unsafe_trunc(UInt32, x[2] * (W - 1)) + 1, 1, W)
+        # py = clamp(unsafe_trunc(UInt32, x[3] * (H - 1)) + 1, 1, H)
+        px = unsafe_trunc(UInt32, x[2] * (W - 1)) + 1
+        py = unsafe_trunc(UInt32, x[3] * (H - 1)) + 1
         mat[py, px]
     end
 end
 typst(code) = Φ_typst(typst_to_matrix(code))
-# mat = typst_to_matrix("iii")
+mat = typst_to_matrix("iii")
 # φ_hi = Φ_typst(mat)
 # gpu_safe(φ_hi, 4)
 

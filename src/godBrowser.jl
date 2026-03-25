@@ -45,6 +45,13 @@ function godbrowserstart(browser)
     push!(godBROWSER[], gb)
     gb
 end
+function godbrowserkeypress(key)
+    if key == "ArrowUp"
+    elseif key == "ArrowUp"
+    elseif key == "ArrowUp"
+    elseif key == "ArrowUp"
+    end
+end
 # put!(::godBrowser) = nothing # todo ?
 const godBROWSER = Ref(Set{godBrowser}())
 

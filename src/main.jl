@@ -42,7 +42,7 @@ include("Octahedron.jl")
 include("MiniFB.jl")
 include("browser.jl")
 include("godBrowser.jl")
-const BROWSER_TASK = Threads.@spawn start(godbrowserstart)
+const BROWSER_TASK = Threads.@spawn start(godbrowserstart, godbrowserkeypress)
 
 # dx, dy, d, μ, ρ, N=dxdy(g)
 ∃!(g, x -> T(0.1), Ω[])

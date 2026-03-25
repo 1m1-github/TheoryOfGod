@@ -42,6 +42,12 @@ const HTML = raw"""
 <script>
 const sse = new EventSource(`/events?width=${document.documentElement.clientWidth}&height=${document.documentElement.clientHeight}`)
 sse.onmessage = (e) => eval(e.data)
+document.addEventListener('keydown', (e) => {
+    fetch('/keypress', {
+        method: 'POST',
+        body: e.key
+    })
+})
 </script>
 </body>
 </html>
@@ -77,15 +83,15 @@ function freeport(hint)
     Int(port)
 end
 
-function start(root::Function, port=freeport(8888))
+function start(root::Function, keypress::Function, port=freeport(8888))
     HTTP.serve("0.0.0.0", port; stream=true) do stream
-        target = stream.message.target
-        if target == "/"
+        uri = URI(stream.message.target)
+        if uri.path == "/"
             HTTP.setstatus(stream, 200)
             HTTP.setheader(stream, "Content-Type" => "text/html")
             HTTP.startwrite(stream)
             HTTP.write(stream, HTML)
-        elseif (uri = URI(target); uri.path == "/events")
+        elseif uri.path == "/events"
             params = queryparams(uri)
             width = parse(Int, params["width"])
             height = parse(Int, params["height"])
@@ -95,6 +101,10 @@ function start(root::Function, port=freeport(8888))
             root(bb)
             handle_sse(bb)
             delete!(CLIENTS[], bb)
+        elseif uri.path == "/keypress"
+            keypress(String(read(stream)))
+            HTTP.setstatus(stream, 204)
+            HTTP.startwrite(stream)
         else
             HTTP.setstatus(stream, 404)
             HTTP.startwrite(stream)
