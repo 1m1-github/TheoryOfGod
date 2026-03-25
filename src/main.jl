@@ -44,6 +44,9 @@ include("browser.jl")
 include("godBrowser.jl")
 const BROWSER_TASK = Threads.@spawn start(godbrowserstart)
 
+# dx, dy, d, μ, ρ, N=dxdy(g)
+∃!(g, x -> T(0.1), Ω[])
+
 # @time Base.invokelatest() do
 #                         ∃̇(g, Ω[]);
 #                     end;
@@ -65,7 +68,7 @@ g=gb.g
 # moveup!(g, 1)
 # movedown!(g, 2)
 # movedown!(g, 1)
-# scaleup!(g, 1)
+scaleup!(g, 2)
 # scaledown!(g, 1)
 # scaleup!(g, 2)
 # scaleup!(g, 3)
@@ -84,7 +87,7 @@ g.ρ
 # speed!(g, T(0.001))
 # Ω[].ϵ̃[Ω[]][1].Φ(SA[0.0,0.0,0.0,0.0])
 # Ω[].Ο[Ω[]]
-# t()
+t()
 
 include("Typst.jl")
 # ∃!(g, typst("o"), Ω[])

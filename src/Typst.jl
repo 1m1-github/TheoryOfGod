@@ -1,7 +1,7 @@
 const DPI = 300
 const TYPST_TEMPLATE(content) = """
 #set page(width: auto, height: auto, margin: (top: 5pt, bottom: 5pt, left: 5pt, right: 5pt))
-#set text(size: 20pt)
+#set text(size: 10pt)
 $content
 """
 

@@ -40,7 +40,7 @@ const HTML = raw"""
 <html>
 <body>
 <script>
-const sse = new EventSource(`/events?width=${window.innerWidth}&height=${window.innerHeight}`)
+const sse = new EventSource(`/events?width=${document.documentElement.clientWidth}&height=${document.documentElement.clientHeight}`)
 sse.onmessage = (e) => eval(e.data)
 </script>
 </body>
@@ -89,6 +89,7 @@ function start(root::Function, port=freeport(8888))
             params = queryparams(uri)
             width = parse(Int, params["width"])
             height = parse(Int, params["height"])
+            @show width, height
             bb = BroadcastBrowser(stream, width, height)
             push!(CLIENTS[], bb)
             root(bb)

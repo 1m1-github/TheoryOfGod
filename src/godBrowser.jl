@@ -22,7 +22,7 @@ godbrowser(g, browser) =
                     end
                     δ = Δ!(ϕ, ϕ̇)
                     isempty(δ) && continue
-                    js = "pixel=" * writeδ(δ, g.♯[1]) * "\n" * SET_PIXELS_JS
+                    js = "pixel=" * writeδ(δ, g.♯[2]) * "\n" * SET_PIXELS_JS
                     put!(browser.processor, js)
                 catch e
                     bt = catch_backtrace()
@@ -37,7 +37,7 @@ function godbrowserstart(browser)
     g = god(
         d=sort(SA[zero(T), invϕ, invϕ^2, one(T)]), # t, x, y, z
         ẑeroμ=SA[t(), ○, ○, ○],
-        f̂ocusμ=SA[t(), T(0.6), T(0.6), T(0.6)],
+        f̂ocusμ=SA[t(), ○, ○, ○+T(0.1)],
         ρ=(T(0.1), T(0.1), zero(T)),
         # ♯=(10, 10))
         ♯=(Int(browser.width), Int(browser.height)))
