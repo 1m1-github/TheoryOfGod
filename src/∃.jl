@@ -12,7 +12,7 @@ struct ∃{N,F,P<:∀} <: ∀
     function ∃(ϵ̂::∀, d::SVector{N,T}, μ::SVector{N,T}, ρ::SVector{N,T}, ∂::SVector{N,Tuple{Bool,Bool}}, Φ::F) where {N,F}
         @assert all(zero(T) .≤ d .≤ one(T))
         @assert all(zero(T) .≤ μ .- ρ .≤ μ .+ ρ .≤ one(T))
-        # @assert gpu_safe(Φ, N)
+        @assert gpu_safe(Φ, N)
         p = sortperm(d)
         d, μ, ρ = map(x -> x[p], (d, μ, ρ))
         ∂ = SVector(ntuple(i -> ∂[p[i]], N))
@@ -299,7 +299,9 @@ function gpu_safe(Φ, N)
         x = KernelAbstractions.zeros(GPU_BACKEND, T, N)
         gpu(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(Φ, x, ndrange=1)
         true
-    catch
+    catch e
+        bt = catch_backtrace()
+        showerror(stderr, e, bt)
         false
     end
 end

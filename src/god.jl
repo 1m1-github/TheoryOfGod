@@ -1,5 +1,5 @@
 "Octahedron from ẑero to focus."
-struct god
+mutable struct god
     ẑero::∃
     f̂ocus::∃
     ∂t₀::Bool
@@ -190,62 +190,111 @@ end
     out[ix, iy] = one(T) - exp(-ϕ)
 end
 
-function step(g::god, dt̂=one(T))
+# function step(g::god, dt̂=one(T))
+#     if g.∂t₀
+#         ṫ = t()
+#         g.ẑero.μ[1] == ṫ && return g, false
+#         μ = SVector(ntuple(i -> i == 1 ? ṫ : g.ẑero.μ[i], length(g.ẑero.μ)))
+#     else
+#         δμ = g.f̂ocus.μ .- g.ẑero.μ
+#         all(d -> iszero(d), δμ) && return g, false
+#         α = clamp(g.v * dt̂, zero(T), one(T))
+#         μ = g.ẑero.μ .+ α .* δμ
+#     end
+#     g = move(g, μ)
+#     # g.ẑero.Φ !== ○̂ && ∃!(g.ẑero)
+#     g, true
+# end
+# jerk(g::god, δ) = accelerate(g, g.v * exp(δ))
+# accelerate(g::god, δ) = speed(g, iszero(g.v) ? δ : g.v * exp(δ))
+# speed(g::god, v) = god(g.ẑero, g.f̂ocus, g.∂t₀, clamp(T(v), zero(T), one(T)), g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
+# # stop(g::god) = speed(g, zero(T))
+# # stoptime(g::god) = god(g.ẑero, g.f̂ocus, g.∂t₀, SA[zero(T), g.v[2:end]...], g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
+# scale(g::god, i, δ) = begin
+#     ρ = SVector(ntuple(ĩ -> begin
+#         ĩ == i && return g.ρ[ĩ] + δ
+#         g.ρ[ĩ]
+#     end, length(g.ρ)))
+#     god(g.ẑero, g.f̂ocus, g.∂t₀, g.v, ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
+# end
+# move(g::god, ẑeroμ) =
+#     god(
+#         ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
+#         ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, SA[ẑeroμ[1], g.f̂ocus.μ[2:end]...], g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
+#         g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
+#     )
+# focus(g::god, ôneμ) =
+#     god(
+#         ∃(g.ẑero.ϵ̂, g.ẑero.d, SA[ôneμ[1], g.ẑero.μ[2:end]...], g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
+#         ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, ôneμ, g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
+#         g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
+#     )
+# move(g::god, i, δ) =
+#     move(g, SVector(ntuple(ĩ -> begin
+#             ĩ == i && return g.ẑero.μ[ĩ] + δ
+#             g.ẑero.μ[ĩ]
+#         end, length(g.ẑero.μ))))
+# focus(g::god, i, δ) = focus(g, SVector(ntuple(ĩ -> begin
+#         ĩ == i && return g.f̂ocus.μ[ĩ] + δ
+#         g.f̂ocus.μ[ĩ]
+#     end, length(g.f̂ocus.μ))))
+# focusup(g, i) = focus(g, i, T(0.01))
+# focusdown(g, i) = focus(g, i, -T(0.01))
+# moveup(g, i) = move(g, i, T(0.01))
+# movedown(g, i) = move(g, i, -T(0.01))
+# jerkup(g) = jerk(g, T(0.01))
+# jerkdown(g) = jerk(g, T(-0.01))
+# scaleup(g, i) = scale(g, i, -T(0.01))
+# scaledown(g, i) = scale(g, i, T(0.01))
+
+function step!(g::god, dt̂=one(T))
     if g.∂t₀
         ṫ = t()
-        g.ẑero.μ[1] == ṫ && return g, false
+        g.ẑero.μ[1] == ṫ && return false
         μ = SVector(ntuple(i -> i == 1 ? ṫ : g.ẑero.μ[i], length(g.ẑero.μ)))
     else
         δμ = g.f̂ocus.μ .- g.ẑero.μ
-        all(d -> iszero(d), δμ) && return g, false
-        α = clamp(g.v * dt̂, zero(T), one(T))
+        all(d -> iszero(d), δμ) && return false
+        α = T(clamp(g.v * dt̂, zero(T), one(T)))
         μ = g.ẑero.μ .+ α .* δμ
     end
-    g = move(g, μ)
+    move!(g, μ)
     # g.ẑero.Φ !== ○̂ && ∃!(g.ẑero)
-    g, true
+    true
 end
-jerk(g::god, δ) = accelerate(g, g.v * exp(δ))
-accelerate(g::god, δ) = speed(g, iszero(g.v) ? δ : g.v * exp(δ))
-speed(g::god, v) = god(g.ẑero, g.f̂ocus, g.∂t₀, clamp(T(v), zero(T), one(T)), g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
-# stop(g::god) = speed(g, zero(T))
-# stoptime(g::god) = god(g.ẑero, g.f̂ocus, g.∂t₀, SA[zero(T), g.v[2:end]...], g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
-scale(g::god, i, δ) = begin
-    ρ = SVector(ntuple(ĩ -> begin
+jerk!(g::god, δ) = accelerate!(g, g.v * exp(δ))
+accelerate!(g::god, δ) = speed!(g, iszero(g.v) ? δ : g.v * exp(δ))
+speed!(g::god, v) = g.v =  clamp(T(v), zero(T), one(T))
+scale!(g::god, ρ) = g.ρ = ρ
+scale!(g::god, i, δ) = scale!(g, ntuple(ĩ -> begin
         ĩ == i && return g.ρ[ĩ] + δ
         g.ρ[ĩ]
     end, length(g.ρ)))
-    god(g.ẑero, g.f̂ocus, g.∂t₀, g.v, ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm)
+move!(g::god, ẑeroμ) = begin
+    g.ẑero = ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
+    g.f̂ocus = ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, SA[ẑeroμ[1], g.f̂ocus.μ[2:end]...], g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ)
 end
-move(g::god, ẑeroμ) =
-    god(
-        ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
-        ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, SA[ẑeroμ[1], g.f̂ocus.μ[2:end]...], g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
-        g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
-    )
-focus(g::god, ôneμ) =
-    god(
-        ∃(g.ẑero.ϵ̂, g.ẑero.d, SA[ôneμ[1], g.ẑero.μ[2:end]...], g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ),
-        ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, ôneμ, g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ),
-        g.∂t₀, g.v, g.ρ, g.Ω, g.⚷, g.♯, g.∇̄, g.norm
-    )
-move(g::god, i, δ) =
-    move(g, SVector(ntuple(ĩ -> begin
+focus!(g::god, ôneμ) = begin
+    g.ẑero = ∃(g.ẑero.ϵ̂, g.ẑero.d, SA[ôneμ[1], g.ẑero.μ[2:end]...], g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
+    g.f̂ocus = ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, ôneμ, g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ)
+end
+move!(g::god, i, δ) =
+    move!(g, SVector(ntuple(ĩ -> begin
             ĩ == i && return g.ẑero.μ[ĩ] + δ
             g.ẑero.μ[ĩ]
         end, length(g.ẑero.μ))))
-focus(g::god, i, δ) = focus(g, SVector(ntuple(ĩ -> begin
+focus!(g::god, i, δ) = focus!(g, SVector(ntuple(ĩ -> begin
         ĩ == i && return g.f̂ocus.μ[ĩ] + δ
         g.f̂ocus.μ[ĩ]
     end, length(g.f̂ocus.μ))))
-focusup(g, i) = focus(g, i, T(0.01))
-focusdown(g, i) = focus(g, i, -T(0.01))
-moveup(g, i) = move(g, i, T(0.01))
-movedown(g, i) = move(g, i, -T(0.01))
-jerkup(g) = jerk(g, T(0.01))
-jerkdown(g) = jerk(g, T(-0.01))
-scaleup(g, i) = scale(g, i, -T(0.01))
-scaledown(g, i) = scale(g, i, T(0.01))
+focusup!(g, i) = focus!(g, i, T(0.01))
+focusdown!(g, i) = focus!(g, i, -T(0.01))
+moveup!(g, i) = move!(g, i, T(0.01))
+movedown!(g, i) = move!(g, i, -T(0.01))
+jerkup!(g) = jerk!(g, T(0.01))
+jerkdown!(g) = jerk!(g, T(-0.01))
+scaleup!(g, i) = scale!(g, i, T(0.01))
+scaledown!(g, i) = scale!(g, i, -T(0.01))
 
 const GL_N = 8
 const GL_NODES_RAW = SVector{GL_N,T}(

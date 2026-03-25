@@ -26,6 +26,7 @@ const T = Float32
 
 using KernelAbstractions, StaticArrays, LinearAlgebra
 using HTTP, URIs, Sockets
+using PNGFiles
 using MiniFB
 using Metal
 const GPU_BACKEND = MetalBackend()
@@ -41,46 +42,54 @@ include("Octahedron.jl")
 include("MiniFB.jl")
 include("browser.jl")
 include("godBrowser.jl")
-const BROWSER_TASK = Threads.@spawn start(godBrowser1)
-# # g=collect(values(godBROWSER[]))[1].g
-# updatebuffer() = begin
-#     try # todo rm
-#         Base.invokelatest() do
-#             global MINIFB_BUFFER[] = floor.(UInt32, reshape(∃̇(G[], Ω[]), prod(G[].♯)) .* MAX_RGB)
-#         end
-#     catch e
-#         showerror(stderr, e, catch_backtrace())
-#     end
-# end
-# const UPDATE_MINIFB_BUFFER_TASK = Threads.@spawn while true
-#     yield()
-#     # sleep(1) # todo rm
-#     updatebuffer()
-# end
+const BROWSER_TASK = Threads.@spawn start(godbrowserstart)
 
-# const CHANGE_TASK = Threads.@spawn while true
-#     yield()
-#     while isready(PENDING_ACTIONS)
-#         Α = take!(PENDING_ACTIONS)
-#         global G[] = Α(G[])
-#     end
-# end
+# @time Base.invokelatest() do
+#                         ∃̇(g, Ω[]);
+#                     end;
 
-# const TIME_TASK = Threads.@spawn begin
-#     t = time()
-#     while true
-#         yield()
-#         # sleep(1) # todo rm
-#         t̃ = time()
-#         dt = t̃ - t
-#         t = t̃
-#         g, δ = step(G[], dt)
-#         δ || continue
-#         global G[] = g
-#     end
-# end
+gb=collect(values(godBROWSER[]))[1]
+gb.browser.width, gb.browser.height
+g=gb.g
+# gb.loop
+# # ∃!(g, (x...) -> prod(x), Ω[])
+# ∃!(g, x -> prod(x), Ω[])
+# step!(g)
+# g.∂t₀=false
+# focusup!(g, 2)
+# focus!(g, SA[g.f̂ocus.μ[1],T(0.3),T(0.3),g.f̂ocus.μ[3]])
+# focusup!(g, 3)
+# focusdown!(g, 2)
+# focusdown!(g, 3)
+# moveup!(g, 2)
+# moveup!(g, 1)
+# movedown!(g, 2)
+# movedown!(g, 1)
+# scaleup!(g, 1)
+# scaledown!(g, 1)
+# scaleup!(g, 2)
+# scaleup!(g, 3)
+# g.ρ=(g.ρ[1],g.ρ[2],zero(T))
+# scaledown!(g, 2)
+g.ẑero.μ
+g.ẑero.ρ
+g.f̂ocus.μ
+g.f̂ocus.ρ
+g.ρ
+# norm(g.f̂ocus.μ .- g.ẑero.μ)
+# move!(g, SA[t(), ○, ○, ○])
+# focus!(g, SA[t(), ○*exp(T(0.1)), ○*exp(T(0.1)), ○*exp(T(0.1))])
+# scale!(g, (T(0.1), T(0.1), one(T)))
+# jerkup!(g)
+# speed!(g, T(0.001))
+# Ω[].ϵ̃[Ω[]][1].Φ(SA[0.0,0.0,0.0,0.0])
+# Ω[].Ο[Ω[]]
+# t()
 
-# ∃!(G[], x -> prod(x), Ω[])
+include("Typst.jl")
+# ∃!(g, typst("o"), Ω[])
+∃!(g, typst("i"), Ω[])
+# ∃!(g, typst("ii"), Ω[])
 
 # g[], δ = step(g[], zero(T))
 # ω = Ω[]
@@ -88,13 +97,12 @@ const BROWSER_TASK = Threads.@spawn start(godBrowser1)
 # ∃̇(G[], Ω[])
 
 # const Ω = 𝕋()
-# Ω[].Ο[Ω[]]
+
 # Ω.Ο[Ω.ϵ̃[Ω][1]]
-# Ω.Ο[ϵ]
-# t()
+# Ω[].Ο[Ω[]]
 # t(Ω.ϵ̃[Ω][1])
 # t(Ω.ϵ̃[Ω.ϵ̃[Ω][1]][1])
-# Ω.ϵ̃
+
 # G[].ẑero.μ
 # G[].ẑero.ρ
 # G[].f̂ocus.μ
@@ -106,15 +114,6 @@ const BROWSER_TASK = Threads.@spawn start(godBrowser1)
 # g = move(g, SA[t(Ω.ϵ̃[Ω][1]), T(0.75), T(0.75), T(0.75)])
 # ∃!(g, (x...)->T(0.2))
 # g = move(g, SA[t(Ω.ϵ̃[Ω][1]), T(0.5), T(0.5), T(0.5)])
-
-# include("00104_TheoryOfGodTypst.jl")
-# Φ_hi = Φ_typst(typst_to_matrix("hi"))
-# Φ_hi = Φ_typst("hi")
-# gpu_safe(○̂, 2)
-# gpu_safe((x,y) -> ○, 2)
-# φ_hi, mat_hi = Φ_typst("hi")
-# gpu_safe(φ_hi, 2)
-# ∃!(g, φ_hi)
 
 # println("idx=2 (tex): ", Array(out)[1])
 

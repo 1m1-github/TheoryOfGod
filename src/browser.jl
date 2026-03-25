@@ -49,7 +49,6 @@ sse.onmessage = (e) => eval(e.data)
 
 function safe_write(stream, js)
     try
-        # @show "safe_write", js
         HTTP.write(stream, js)
         flush(stream)
         true
@@ -79,11 +78,9 @@ function freeport(hint)
 end
 
 function start(root::Function, port=freeport(8888))
-    @show port
     HTTP.serve("0.0.0.0", port; stream=true) do stream
         target = stream.message.target
         if target == "/"
-            @show "/"
             HTTP.setstatus(stream, 200)
             HTTP.setheader(stream, "Content-Type" => "text/html")
             HTTP.startwrite(stream)
@@ -93,10 +90,8 @@ function start(root::Function, port=freeport(8888))
             width = parse(Int, params["width"])
             height = parse(Int, params["height"])
             bb = BroadcastBrowser(stream, width, height)
-            @show "/bb", typeof(bb)
             push!(CLIENTS[], bb)
             root(bb)
-            @show "after root"
             handle_sse(bb)
             delete!(CLIENTS[], bb)
         else

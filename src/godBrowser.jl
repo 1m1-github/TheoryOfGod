@@ -3,43 +3,45 @@ struct godBrowser
     loop::Task
     browser::BroadcastBrowser
 end
-godBrowser2(g, browser) =
+godbrowser(g, browser) =
     begin
-        @show "godBrowser2", typeof(browser)
         looptask = Threads.@spawn begin
-            try
-                put!(browser.processor, JS(g.♯[1], g.♯[2]))
-                ϕ = zeros(T, g.♯[1], g.♯[2])
-                while true
+            t = time()
+            put!(browser.processor, JS(g.♯[1], g.♯[2]))
+            ϕ = zeros(T, g.♯[1], g.♯[2])
+            while true
+                try
                     yield()
-                    sleep(1) # todo rm
-                    ϕ̇ = ∃̇(g, Ω[])
-                    # @show p̂ixel
+                    t̃ = time()
+                    dt = t̃ - t
+                    t = t̃
+                    step!(g, dt)
+                    # sleep(1) # todo rm
+                    ϕ̇ = Base.invokelatest() do
+                        ∃̇(g, Ω[])
+                    end
                     δ = Δ!(ϕ, ϕ̇)
-                    # @show δ
-                    # @show isempty(δ)
                     isempty(δ) && continue
                     js = "pixel=" * writeδ(δ, g.♯[1]) * "\n" * SET_PIXELS_JS
                     put!(browser.processor, js)
+                catch e
+                    bt = catch_backtrace()
+                    showerror(stderr, e, bt)
+                    sleep(1)
                 end
-            catch e
-                bt = catch_backtrace()
-                showerror(stderr, e, bt)
             end
         end
         godBrowser(g, looptask, browser)
     end
-function godBrowser1(browser)
-    @show "godBrowser1", typeof(browser)
+function godbrowserstart(browser)
     g = god(
         d=sort(SA[zero(T), invϕ, invϕ^2, one(T)]), # t, x, y, z
         ẑeroμ=SA[t(), ○, ○, ○],
-        f̂ocusμ=SA[t(), ○*exp(T(0.1)), ○*exp(T(0.1)), ○*exp(T(0.1))],
-        ρ=(T(0.1), T(0.1), one(T)),
+        f̂ocusμ=SA[t(), T(0.6), T(0.6), T(0.6)],
+        ρ=(T(0.1), T(0.1), zero(T)),
         # ♯=(10, 10))
         ♯=(Int(browser.width), Int(browser.height)))
-    @show "godBrowser1", typeof(g)
-    gb = godBrowser2(g, browser)
+    gb = godbrowser(g, browser)
     push!(godBROWSER[], gb)
     gb
 end
@@ -98,3 +100,18 @@ const SET_PIXELS_JS = """
 for (let [x,y,r,g,b,a] of pixel) setPixel(x,y,r,g,b,a)
 ctx.putImageData(imageData, 0, 0)
 """
+
+
+# starttime(g) = Threads.@spawn begin
+#     t = time()
+#     while true
+#         yield()
+#         # sleep(1) # todo rm
+#         t̃ = time()
+#         dt = t̃ - t
+#         t = t̃
+#         step!(g, dt) || continue
+#         # global G[] = g
+#     end
+# end
+# const TIME_TASK = starttime(g)

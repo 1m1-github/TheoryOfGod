@@ -10,6 +10,8 @@
 # const CHANGE_DIM_INDEX = Ref(2)
 const MAX_RGB = T(mfb_rgb(255, 255, 255))
 rgb2c(r, g, b) = T(mfb_rgb(r * 255, g * 255, b * 255)) / MAX_RGB
+rgb2c(r, g, b, a) = rgb2c(r, g, b)
+rgb2c(rgba) = rgb2c(rgba.r, rgba.g, rgba.b)
 c2rgb(c) = begin
     c = floor(UInt32, c * MAX_RGB)
     ((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF) ./ 255
@@ -63,3 +65,27 @@ end
 #     MINIFB_WINDOW[], kb_cfunc)
 # schedule(MINIFBTASK, InterruptException(), error=true)
 # mfb_close(MINIFB_WINDOW[])
+
+
+# updatebuffer() = begin
+#     try # todo rm
+#         Base.invokelatest() do
+#             global MINIFB_BUFFER[] = floor.(UInt32, reshape(∃̇(G[], Ω[]), prod(G[].♯)) .* MAX_RGB)
+#         end
+#     catch e
+#         showerror(stderr, e, catch_backtrace())
+#     end
+# end
+# const UPDATE_MINIFB_BUFFER_TASK = Threads.@spawn while true
+#     yield()
+#     # sleep(1) # todo rm
+#     updatebuffer()
+# end
+
+# const CHANGE_TASK = Threads.@spawn while true
+#     yield()
+#     while isready(PENDING_ACTIONS)
+#         Α = take!(PENDING_ACTIONS)
+#         global G[] = Α(G[])
+#     end
+# end
