@@ -40,16 +40,44 @@ const invϕ = one(T) / MathConstants.golden
 include("god.jl")
 include("Octahedron.jl")
 include("MiniFB.jl")
-include("browser.jl")
-include("godBrowser.jl")
-const BROWSER_TASK = Threads.@spawn start(godbrowserstart, godbrowserkeypress)
+# include("browser.jl")
+# include("godBrowser.jl")
+# const BROWSER_TASK = Threads.@spawn start(godbrowserstart, godbrowserkeypress)
 
-g = godBROWSER[].g
+# g = godBROWSER[].g
+g = god(
+        d=sort(SA[zero(T), invϕ, invϕ^2, one(T)]), # t, x, y, z
+        ẑeroμ=SA[t(), ○-T(0.0), ○-T(0.0), ○],
+        # ôneμ=SA[t(Ω[].Ο[Ω[]] + 1), ○+T(0.0), ○+T(0.0), ○+T(0.1)],
+        ôneμ=SA[one(T), ○+T(0.0), ○+T(0.0), ○+T(0.1)],
+        ρ=(T(0.1), T(0.1), zero(T)),
+        ♯=(10, 10))
+ω = Ω[]
+Ω[].Ο[Ω[]]
+t()
+g.ẑero.μ
+g.ône.μ
+g.ρ
+g.θ
+Ω[] === ω
+Ω[].ϵ̃[Ω[]]
+Ω[].ϵ̃[Ω[]][1]
+Ω[].ϵ̃[Ω[]][2]
+Ω[].ϵ̃[Ω[].ϵ̃[Ω[]][1]][1]
 
 # dx, dy, d, μ, ρ, N=dxdy(g)
 ∃!(g, x -> T(0.1), Ω[])
 ∃!(g, x -> T(0.2), Ω[])
 ∃!(g, x -> T(0.3), Ω[])
+ϕ̇ = Base.invokelatest() do
+                        ∃̇(g, Ω[])
+                    end
+unique(ϕ̇)
+
+focus!(g, 2, T(0.2))
+move!(g, 2, T(0.2))
+scale!(g, (T(0.05),T(0.05),zero(T)))
+
 # ∃!(g, x -> begin
 #         abs(x[2] - x[3]) < T(0.01) && return one(T)
 #         # abs([2] - x[3]) < min(g.ρ[1],g.ρ[2])*T(0.01) && return one(T)

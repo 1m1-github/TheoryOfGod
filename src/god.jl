@@ -1,23 +1,27 @@
 "Octahedron from ẑero to focus."
 mutable struct god
     ẑero::∃
-    f̂ocus::∃
+    ône::∃
     ∂t₀::Bool
     v::T
     ρ::NTuple
+    θ::T
     Ω::𝕋
     ⚷::UInt
     ♯::NTuple
     ∇̄::UInt
     norm::Function
 end
-function god(; d, ẑeroμ, f̂ocusμ, ρ, ⚷=zero(UInt), ♯=(2, 2), ∇̄=typemax(UInt), n̂orm=x -> sqrt(sum(x̃ -> x̃^2, x)))
+function god(; d, ẑeroμ, ôneμ, ρ, θ=zero(T), ⚷=zero(UInt), ♯=(2, 2), ∇̄=typemax(UInt), n̂orm=x -> sqrt(sum(x̃ -> x̃^2, x)))
     N = length(d)
-    ∂ = SVector(ntuple(_ -> (true, true), N))
+    ∂ = SVector(ntuple(i -> begin
+        i == 1 && return (false, true)
+        (true, true)
+    end, N))
     z = @SVector zeros(T, N)
     ẑero = ∃(Ω[], d, ẑeroμ, z, ∂, ○̂)
-    f̂ocus = ∃(Ω[], d, f̂ocusμ, z, ∂, ○̂)
-    god(ẑero, f̂ocus, true, zero(T), ρ, 𝕋(), ⚷, ♯, ∇̄, n̂orm)
+    ône = ∃(Ω[], d, ôneμ, z, ∂, ○̂)
+    god(ẑero, ône, true, zero(T), ρ, θ, 𝕋(), ⚷, ♯, ∇̄, n̂orm)
 end
 
 dh(⚷, g, n) = powermod(g, ⚷, n)
@@ -32,34 +36,35 @@ i⚷(i, ⚷, ♯) =
         mod1(i[d] + ♯[d] - î, ♯[d])
     end
 
-function dxdy(g::god)
-    N = length(g.ẑero.μ)
-    d = g.f̂ocus.μ .- g.ẑero.μ
+function octahedron(g::god)
+    N = length(g.ẑero.d)
+    d = g.ône.μ .- g.ẑero.μ
     D = g.norm(d)^2
-    ey = SA[zeros(T, N - 2)..., one(T), zero(T)]
-    dy = ey .- d[end-1] / D * d
-    dy /= g.norm(dy)
-    ex = SA[zeros(T, N - 3)..., one(T), zeros(T, 2)...]
-    dx = ex .- d[end-2] / D * d
-    dx = dx .- dot(dx, dy) * dy
-    dx /= g.norm(dx)
+    perm = sortperm(abs.(d[end-2:end]))
+    i1, i2 = N - 3 + perm[1], N - 3 + perm[2]
+    e1 = zeros(SVector{N,T})
+    e1 = setindex(e1, one(T), i1)
+    d1 = e1 - dot(e1, d) / D * d
+    d1 /= g.norm(d1)
+    e2 = zeros(SVector{N,T})
+    e2 = setindex(e2, one(T), i2)
+    d2 = e2 - dot(e2, d) / D * d
+    d2 = d2 - dot(d2, d1) * d1
+    d2 /= g.norm(d2)
+    dx = cos(g.θ) * d1 + sin(g.θ) * d2
+    dy = -sin(g.θ) * d1 + cos(g.θ) * d2
     dx *= 2 * g.ρ[1]
     dy *= 2 * g.ρ[2]
-    μ = (g.f̂ocus.μ .+ g.ẑero.μ) * ○
+    μ = (g.ône.μ .+ g.ẑero.μ) * ○
     ρ = (abs.(dx) + abs.(dy) + abs.(d)) * ○
     dx, dy, d, μ, ρ, N
 end
 
 function ∃!(g::god, Φ, ω=g.Ω)
-    _, _, _, μ, ρ, _ = dxdy(g)
-    # ṫ = t(ω.Ο[ω] + 1)
-    # t(ω)
-    # ρt = (one(T) - ṫ) * ○ # todo create non-eternally
-    # μt = ṫ + ρt
-    # μ = SA[μt, μ̇[2:end]...]
-    # ρ = SA[ρt, ρ̇[2:end]...]
+    g.ẑero.μ[1] < t(ω) && return
+    _, _, _, μ, ρ, _ = octahedron(g)
     try
-        ∂ = SA[(false, true), g.ẑero.∂[2:end]...]
+        ∂ = SVector(ntuple(i -> (g.ẑero.∂[i][1], g.ône.∂[i][2]), length(μ)))
         ϵ = ∃(ω, g.ẑero.d, μ, ρ, ∂, Φ)
         ∃!(ϵ, ω)
     catch e
@@ -72,47 +77,47 @@ end
 trivial(ϵ) = ϵ isa 𝕋 || ϵ.Φ === ○̂
 function ∃̇(g::god, ω=g.Ω)
     try
-        dx, dy, d, μ, ρ, N = dxdy(g)
+        dx, dy, d, μ, ρ, N = octahedron(g)
         ϵ = ∃(ω, g.ẑero.d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
         ϵ = β(ϵ, ω, ω)
         istrivial = trivial(ϵ)
         ϵϵ = []
         !istrivial && push!(ϵϵ, ϵ)
-        f̂ocusρ = SA[zero(T), fill(g.ρ[end], N - 1)...]
-        f̂ocus = g.ẑero.μ .+ d * ○ .* (one(T) .+ f̂ocusρ)
+        ôneρ = SA[zero(T), fill(g.ρ[end], N - 1)...]
+        ône = g.ẑero.μ .+ d * ○ .* (one(T) .+ ôneρ)
         hasdepth = !iszero(g.ρ[end])
         nz = hasdepth ? GL_N - 1 : 1
         i = fill(istrivial ? 0 : 1, g.♯..., nz)
-        owners!(g, f̂ocus, ϵ, i, ϵϵ, 0, dx, dy, nz, ω, istrivial)
+        owners!(g, ône, ϵ, i, ϵϵ, 0, dx, dy, nz, ω, istrivial)
         ΦΦ = ΦTuple(ntuple(i -> ϵϵ[i].Φ, length(ϵϵ)))
         μρϵϵ = map(ϵ -> μρΩ(ϵ), ϵϵ)
-        ẑeros = ntuple(i ->  μρϵϵ[i][1] .- μρϵϵ[i][2], length(μρϵϵ))
+        ẑeros = ntuple(i -> μρϵϵ[i][1] .- μρϵϵ[i][2], length(μρϵϵ))
         ônes = ntuple(i -> μρϵϵ[i][1] .+ μρϵϵ[i][2], length(μρϵϵ))
         ∂z = ntuple(i -> ntuple(j -> ϵϵ[i].∂[j][1], N), length(ϵϵ))
         ∂o = ntuple(i -> ntuple(j -> ϵϵ[i].∂[j][2], N), length(ϵϵ))
-        Π̂, Π, f̂ocusϕ = if hasdepth
+        Π̂, Π, ôneϕ = if hasdepth
             z = @SVector zeros(T, N)
-            ϵ = ∃(ω, g.ẑero.d, f̂ocus, z, g.ẑero.∂, ○̂)
+            ϵ = ∃(ω, g.ẑero.d, ône, z, g.ẑero.∂, ○̂)
             ϵ, found = X(ϵ, g.∇̄, ω)
-            ϕ = !found || trivial(ϵ) ? ○ : ϵ.Φ(f̂ocus)
+            ϕ = !found || trivial(ϵ) ? ○ : ϵ.Φ(ône)
             project3d, project3d!, ϕ
         else
             project2d, project2d!, zero(T)
         end
         godẑero = μ .- (dx .+ dy) * ○
-        godẑerof̂ocus = f̂ocus .- godẑero
-        Π̂(ΦΦ, Π, i, ẑeros, ônes, ∂z, ∂o, godẑero, godẑerof̂ocus, dx, dy, g.♯..., f̂ocusϕ)
+        godẑeroône = ône .- godẑero
+        Π̂(ΦΦ, Π, i, ẑeros, ônes, ∂z, ∂o, godẑero, godẑeroône, dx, dy, g.♯..., ôneϕ)
     catch e
         bt = catch_backtrace()
         showerror(stderr, e, bt)
         fill(○, g.♯...)
     end
 end
-function owners!(g, f̂ocus, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
+function owners!(g, ône, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
     if 0 < ∇ && ϵ isa ∃ && !istrivial
         intersects = pyramid_box_intersection!(
             i, length(ϵϵ) + 1,
-            g.ẑero.μ, f̂ocus,
+            g.ẑero.μ, ône,
             dx, dy,
             ϵ.μ .- ϵ.ρ, ϵ.μ .+ ϵ.ρ,
             g.♯..., nz)
@@ -121,7 +126,7 @@ function owners!(g, f̂ocus, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
     end
     ∇ == g.∇̄ && return
     for ϵ̃ = ω.ϵ̃[ϵ]
-        owners!(g, f̂ocus, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
+        owners!(g, ône, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
     end
 end
 
@@ -143,9 +148,9 @@ end
         return zero(T)
     end
 end
-# Π̂(ΦΦ, Π, i, godẑero, ẑeros, ônes, godẑerof̂ocus, dx, dy, g.♯..., f̂ocusϕ)
+# Π̂(ΦΦ, Π, i, godẑero, ẑeros, ônes, godẑeroône, dx, dy, g.♯..., ôneϕ)
 # nx, ny = g.♯[1], g.♯[2]
-function project2d(ΦΦ, Π, i, ẑeros, ônes, ∂z, ∂o, godẑero, godẑerof̂ocus, dx, dy, nx, ny, f̂ocusϕ)
+function project2d(ΦΦ, Π, i, ẑeros, ônes, ∂z, ∂o, godẑero, godẑeroône, dx, dy, nx, ny, ôneϕ)
     out = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny)
     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
     copyto!(i̇, i)
@@ -158,13 +163,13 @@ function project2d(ΦΦ, Π, i, ẑeros, ônes, ∂z, ∂o, godẑero, godẑer
     KernelAbstractions.synchronize(GPU_BACKEND)
     Array(out)
 end
-function project3d(ΦΦ, Π, i, godẑero, ẑeros, ônes, godẑerof̂ocus, dx, dy, nx, ny, f̂ocusϕ)
+function project3d(ΦΦ, Π, i, godẑero, ẑeros, ônes, godẑeroône, dx, dy, nx, ny, ôneϕ)
     out = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny)
     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
     copyto!(i̇, i)
     Π(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
         out,
-        ΦΦ, i̇, godẑero, godẑerof̂ocus, dx, dy, f̂ocusϕ,
+        ΦΦ, i̇, godẑero, godẑeroône, dx, dy, ôneϕ,
         nx, ny, GL_N - 1, GL_NODES, GL_WEIGHTS,
         ndrange=(nx, ny)
     )
@@ -185,9 +190,9 @@ end
         olocal = ônes[iϕ]
         ∂zϵ = ∂z[iϕ]
         ∂oϵ = ∂o[iϕ]
-        if any(x .< zlocal .|| (x .== zlocal .&& ∂zϵ) .|| 
-            olocal .< x .|| (x .== olocal .&& ∂oϵ) .|| 
-            olocal .== zlocal)
+        if any(x .< zlocal .|| (x .== zlocal .&& ∂zϵ) .||
+               olocal .< x .|| (x .== olocal .&& ∂oϵ) .||
+               olocal .== zlocal)
             out[ix, iy] = ○
         else
             xlocal = (x .- zlocal) ./ (olocal .- zlocal) # todo case olocal < zlocal
@@ -196,11 +201,11 @@ end
     end
 end
 # todo does x actually belong to ϵ
-@kernel function project3d!(out, ΦΦ, i, godẑero, godẑerof̂ocus, dx, dy, f̂ocusϕ, nx, ny, nz, gl_nodes, gl_weights)
+@kernel function project3d!(out, ΦΦ, i, godẑero, godẑeroône, dx, dy, ôneϕ, nx, ny, nz, gl_nodes, gl_weights)
     (ix, iy) = @index(Global, NTuple)
     ĩx = T(ix - 1) / T(nx - 1)
     ĩy = T(iy - 1) / T(ny - 1)
-    ϕ = f̂ocusϕ
+    ϕ = ôneϕ
     for iz = 1:nz
         iϕ = i[ix, iy, iz]
         if iszero(iϕ)
@@ -209,7 +214,7 @@ end
         end
         t = gl_nodes[iz]
         t̃ = one(T) - t
-        z = godẑero .+ t * godẑerof̂ocus
+        z = godẑero .+ t * godẑeroône
         d̃x = t̃ * dx
         d̃y = t̃ * dy
         x = z .+ ĩx * d̃x .+ ĩy * d̃y
@@ -224,7 +229,7 @@ function step!(g::god, dt̂=one(T))
         g.ẑero.μ[1] == ṫ && return false
         μ = SVector(ntuple(i -> i == 1 ? ṫ : g.ẑero.μ[i], length(g.ẑero.μ)))
     else
-        δμ = g.f̂ocus.μ .- g.ẑero.μ
+        δμ = g.ône.μ .- g.ẑero.μ
         all(d -> iszero(d), δμ) && return false
         α = T(clamp(g.v * dt̂, zero(T), one(T)))
         μ = g.ẑero.μ .+ α .* δμ
@@ -236,22 +241,23 @@ end
 jerk!(g::god, δ) = accelerate!(g, g.v * exp(δ))
 accelerate!(g::god, δ) = speed!(g, iszero(g.v) ? δ : g.v * exp(δ))
 speed!(g::god, v) = g.v = clamp(T(v), zero(T), one(T))
-scale!(g::god, ρ) = g.ρ = ρ
+rotate!(g::god, θ) = g.θ = θ
+scale!(g::god, ρ) = g.ρ = ρ # todo handle too large god
 scale!(g::god, i, δ) = scale!(g, ntuple(ĩ -> begin
         ĩ == i && return g.ρ[ĩ] + δ
         g.ρ[ĩ]
     end, length(g.ρ)))
 move!(g::god, ẑeroμ) = begin
     try
+        any(g.ône.μ .< ẑeroμ) && return # todo handle ône<ẑero
         g.ẑero = ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
-        g.f̂ocus = ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, SA[ẑeroμ[1], g.f̂ocus.μ[2:end]...], g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ)
     catch
     end
 end
 focus!(g::god, ôneμ) = begin
     try
-        g.ẑero = ∃(g.ẑero.ϵ̂, g.ẑero.d, SA[ôneμ[1], g.ẑero.μ[2:end]...], g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
-        g.f̂ocus = ∃(g.f̂ocus.ϵ̂, g.f̂ocus.d, ôneμ, g.f̂ocus.ρ, g.f̂ocus.∂, g.f̂ocus.Φ)
+        any(ôneμ .< g.ẑero.μ) && return # todo handle ône<ẑero
+        g.ône = ∃(g.ône.ϵ̂, g.ône.d, ôneμ, g.ône.ρ, g.ône.∂, g.ône.Φ)
     catch
     end
 end
@@ -261,9 +267,9 @@ move!(g::god, i, δ) =
             g.ẑero.μ[ĩ]
         end, length(g.ẑero.μ))))
 focus!(g::god, i, δ) = focus!(g, SVector(ntuple(ĩ -> begin
-        ĩ == i && return g.f̂ocus.μ[ĩ] + δ
-        g.f̂ocus.μ[ĩ]
-    end, length(g.f̂ocus.μ))))
+        ĩ == i && return g.ône.μ[ĩ] + δ
+        g.ône.μ[ĩ]
+    end, length(g.ône.μ))))
 focusup!(g, i) = focus!(g, i, T(0.01))
 focusdown!(g, i) = focus!(g, i, -T(0.01))
 moveup!(g, i) = move!(g, i, T(0.01))
@@ -343,9 +349,9 @@ const GL_NODES = ○ .+ GL_NODES_RAW ./ (GL_NODES_RAW[end] - GL_NODES_RAW[1]) # 
 #     scatter!(ax, (ẑero[2:end] .+ t * dy[2:end])...; markersize=6, color=:pink)
 # end
 # scatter!(ax, g.ẑero.μ[2:end]..., ; markersize=6, color=:black)
-# scatter!(ax, g.f̂ocus.μ[2:end]..., ; markersize=6, color=:black)
+# scatter!(ax, g.ône.μ[2:end]..., ; markersize=6, color=:black)
 # scatter!(ax, (g.ẑero.μ[2:end] .+ ○ * d[2:end])...; markersize=6, color=:black)
-# scatter!(ax, f̂ocus[2:end]..., ; markersize=6, color=:blue)
+# scatter!(ax, ône[2:end]..., ; markersize=6, color=:blue)
 # scatter!(ax, ẑero[2:end]..., ; markersize=6, color=:blue)
 # for i = 1:size(xout, 1)
 #     for j = 1:size(xout, 2)
