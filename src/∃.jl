@@ -277,39 +277,6 @@ function rm!(ω::𝕋)
     delete!(ω.ϵ̃, ϵ̂̂)
     delete!(ω.Ο, ϵ̂̂)
 end
-# function Base.:(-)(ϵ₁::∃, ϵ₂::∃, ω)
-#     d̂ = sort!(ϵ₂.d ∪ ϵ₁.d)
-#     N = length(d̂)
-#     μ = MVector{N,T}(undef)
-#     ρ = MVector{N,T}(undef)
-#     ∂out = MVector{N,Tuple{Bool,Bool}}(undef)
-#     Threads.@threads for i in eachindex(d̂)
-#         d = d̂[i]
-#         ϵ₂μ, ϵ₂ρ, ϵ₂∂ = μρ(ϵ₂, d)
-#         ϵ₁μ, ϵ₁ρ, ϵ₁∂ = μρ(ϵ₁, d)
-#         żero = ϵ₂μ - ϵ₂ρ
-#         ȯne = ϵ₁μ + ϵ₁ρ
-#         ρ[i] = abs(ȯne - żero) / 2
-#         μ[i] = żero + ρ[i]
-#         ∂out[i] = (ϵ₂∂[1], ϵ₁∂[2])
-#     end
-#     ϵ̂ = α(ϵ₁, ϵ₂, ω)
-#     ∃(ϵ̂, SVector{N}(d̂), SVector{N}(μ), SVector{N}(ρ), SVector{N}(∂out), ϵ₁.Φ)
-# end
-
-function gpu_safe(Φ, N)
-    try
-        @kernel gpu(Φ, x) = Φ(x)
-        x = KernelAbstractions.zeros(GPU_BACKEND, T, N)
-        gpu(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(Φ, x, ndrange=1)
-        true
-    catch e
-        bt = catch_backtrace()
-        showerror(stderr, e, bt)
-        false
-    end
-end
-
 function √(ϵ::∃)
     n = 0
     p = ϵ
@@ -319,7 +286,6 @@ function √(ϵ::∃)
     end
     p, n
 end
-# x=ϵ
 function X(x::∃, ∇, ω)
     ϵ = β(x, ω, ω)
     ϵ === ω && return ω, true
@@ -334,4 +300,16 @@ function X(x::∃, ∇, ω)
         found && return ϵ̂, true
     end
     ω, false
+end
+function gpu_safe(Φ, N)
+    try
+        @kernel gpu(Φ, x) = Φ(x)
+        x = KernelAbstractions.zeros(GPU_BACKEND, T, N)
+        gpu(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(Φ, x, ndrange=1)
+        true
+    catch e
+        bt = catch_backtrace()
+        showerror(stderr, e, bt)
+        false
+    end
 end

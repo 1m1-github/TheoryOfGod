@@ -35,19 +35,6 @@ end
 Per pyramid slice k=1:nz, find (i_min, i_max, j_min, j_max) index ranges of grid
 points inside axis-aligned box [a,b]. Empty slices → (0,0,0,0). Cost: O(nz·n).
 """
-# i=i
-# ĩ=length(ΦΦ)
-# z=g.ẑero.μ
-# o=g.ône.μ
-# ex=
-# ey=
-# rx=
-# ry=
-# a=ϵ.μ .- ϵ.ρ
-# b=ϵ.μ .+ ϵ.ρ
-# nx=g.♯[1]
-# ny=g.♯[2]
-# nz=GL_N
 function pyramid_box_intersection_slice!(i, i̇, dx, dy, a, b, c, d, nx, ny, N, k)
     t = GL_NODES[k]
     si_lo, si_hi = -one(T), one(T)
@@ -81,13 +68,3 @@ function pyramid_box_intersection!(i, i̇, z, o, dx, dy, a, b, nx, ny, nz)
     end
     intersects
 end
-
-# rx = W
-# ry = H
-# nx, ny, nz = 2000, 2000, 8
-# z = SVector(0.0, 0.0, 0.0)
-# o = SVector(1.0, 1.0, 1.0)
-# a = SVector(0.75, 0.75, 0.75)
-# b = SVector(1.0, 1.0, 1.0)
-# @time out = pyramid_box_intersection(z, o, ex, ey, rx, ry, a, b, nx, ny, nz)
-

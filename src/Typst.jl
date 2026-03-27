@@ -1,5 +1,4 @@
 const DPI = 300
-# const DPI = 144
 const TYPST_TEMPLATE(content) = """
 #set page(width: auto, height: auto, margin: (top: 5pt, bottom: 5pt, left: 5pt, right: 5pt))
 #set text(size: 10pt)
@@ -7,7 +6,7 @@ $content
 """
 
 const TYPST_CACHE = Dict{UInt,AbstractMatrix{T}}()
-# collect(values(TYPST_CACHE))[1]
+
 struct ΦTypst{M}
     mat::M
     H::Int32
@@ -37,16 +36,6 @@ function typst_to_matrix(typst_code)
     cmd = `typst compile - --format png --ppi $DPI -`
     rgba = pipeline(IOBuffer(TYPST_TEMPLATE(typst_code)), cmd) |> read |> IOBuffer |> PNGFiles.load
     mat = KernelAbstractions.allocate(GPU_BACKEND, T, size(rgba)...)
-    # copyto!(mat, rgb2c.(rgba))
     copyto!(mat, rgba2scalar.(rgba))
     TYPST_CACHE[h] = mat
 end
-
-typst_code="abcd"
-# mat = typst_to_matrix("A")
-# φ_hi = Φ_typst(mat)
-# gpu_safe(φ_hi, 4)
-# typeof(rgba[1,1])
-Metal.@allowscalar unique(collect(values(TYPST_CACHE))[1])
-unique(rgba)
-unique(rgba2scalar.(rgba))

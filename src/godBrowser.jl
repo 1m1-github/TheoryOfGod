@@ -9,7 +9,7 @@ godbrowser(g, browser) =
             t = time()
             put!(browser.processor, JS(g.♯[1], g.♯[2]))
             ϕ = zeros(T, g.♯[1], g.♯[2])
-            while false # DEBUG
+            while true
                 try
                     yield()
                     t̃ = time()
@@ -43,16 +43,11 @@ function godbrowserstart(browser)
         # ♯=(10, 10))
         ♯=(Int(browser.width), Int(browser.height)))
     global godBROWSER = Ref(godbrowser(g, browser))
+    @show "got godBROWSER"
 end
-const CHANGE_MODE = Ref(0) # 0=zero, 1=focus, 2=ρ
+const CHANGE_MODE = Ref(2) # 0=zero, 1=focus, 2=ρ
 const CHANGE_DIM_INDEX = Ref(2)
 function godbrowserkeypress(key)
-    # println("Key pressed: $key")
-    # println("CHANGE_MODE=$CHANGE_MODE[]")
-    # println("CHANGE_DIM_INDEX=$CHANGE_DIM_INDEX[]")
-    # println("ẑero.μ=$(godBROWSER[].g.ẑero.μ)")
-    # println("ône.μ=$(godBROWSER[].g.ône.μ)")
-    # println("ône.μ=$(godBROWSER[].g.ρ)")
     if key == "ArrowUp"
         if CHANGE_MODE[] == 0
             moveup!(godBROWSER[].g, CHANGE_DIM_INDEX[])
@@ -80,7 +75,6 @@ function godbrowserkeypress(key)
             global CHANGE_DIM_INDEX[] = parse(UInt, key)
         catch end
     end
-    # println("After key pressed: $key")
     println("CHANGE_MODE=$CHANGE_MODE[]")
     println("CHANGE_DIM_INDEX=$CHANGE_DIM_INDEX[]")
     println("ẑero.μ=$(godBROWSER[].g.ẑero.μ)")
@@ -90,29 +84,19 @@ end
 # put!(::godBrowser) = nothing # todo ?
 godBROWSER = nothing
 
-# all(==(ntuple(_->one(T),4)),p̂ixel)
-# g=gb.g
-# gb=only(values(godBROWSER[]))
-# browser=gb.browser
-
 function Δ!(ϕ, ϕ̇)
     δ = Tuple{CartesianIndex{2},Tuple{T,T,T,T}}[]
-    # i = collect(CartesianIndices(ϕ̇))[1]
     for i = CartesianIndices(ϕ̇)
         ϕ[i] == ϕ̇[i] && continue
         ϕ[i] = ϕ̇[i]
-        # push!(δ, (i, (c2rgb(ϕ̇[i])..., one(T))))
         push!(δ, (i, scalar2rgba(ϕ̇[i])))
     end
     δ
 end
-# height=g.♯[2]
-# color=δ[1][2]
-# typemax(UInt8) .* color
+
 function writeδ(δ, height)
     result = []
     for (i, color) = δ
-        # @show i, color
         push!(result, (i[1] - 1, height - 1 - (i[2] - 1), round.(UInt8, typemax(UInt8) .* color)...))
     end
     bracket(x) = "[" * x * "]"
@@ -143,18 +127,3 @@ const SET_PIXELS_JS = """
 for (let [x,y,r,g,b,a] of pixel) setPixel(x,y,r,g,b,a)
 ctx.putImageData(imageData, 0, 0)
 """
-
-
-# starttime(g) = Threads.@spawn begin
-#     t = time()
-#     while true
-#         yield()
-#         # sleep(1) # todo rm
-#         t̃ = time()
-#         dt = t̃ - t
-#         t = t̃
-#         step!(g, dt) || continue
-#         # global G[] = g
-#     end
-# end
-# const TIME_TASK = starttime(g)
