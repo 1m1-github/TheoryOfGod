@@ -294,7 +294,7 @@ function X(x::∃, ∇, ω)
     _, n = √(ϵ)
     ∇ < n && return ω, false
     ϵ̃ = ω.ϵ̃[ϵ]
-    Threads.@threads for ϵ̃ = filter(ϵ̃ -> x ⫉ ϵ̃, ϵ̃)
+    Threads.@threads for ϵ̃ = filter(ϵ̃ -> ⫉(x, ϵ̃, ω), ϵ̃)
         ∩(x, ϵ̃, ω) && return ϵ̃, true
         ϵ̂, found = X(x, ∇)
         found && return ϵ̂, true

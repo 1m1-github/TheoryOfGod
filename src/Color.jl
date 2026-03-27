@@ -1,15 +1,21 @@
 function scalar2rgba(t)
     if t < ○
-        # grayscale: 0 → black, 0.5 → white
-        v = t / ○  # 0→1
+        v = t / ○
         return (v, v, v, one(T))
     elseif t == ○
         return (one(T), one(T), one(T), zero(T))
     else
-        # chromatic: hue from (0.5,1] mapped to [0°,360°)
-        h = (t - ○) / ○  # 0→1
-        alpha = h  # fades in from 0.5, full at 1
-        hue = h * T(360)
+        h = (t - ○) / ○  # ∈ (0, 1]
+        # interleave: odd decimal places → hue, even → alpha
+        # but float precision kills this. pragmatic version:
+        # use upper 8 bits for hue, lower 8 bits for alpha
+        h16 = floor(Int, h * T(65536))
+        hue_i = (h16 >> 8) & 0xFF
+        alp_i = h16 & 0xFF
+
+        hue = T(hue_i) / T(255) * T(360)
+        alpha = T(alp_i) / T(255)
+
         x = one(T) - abs(mod(hue / T(60), T(2)) - one(T))
         r, g, b = if hue < T(60);       (one(T), x, zero(T))
         elseif hue < T(120); (x, one(T), zero(T))
@@ -29,13 +35,10 @@ function rgba2scalar(r, g, b, a)
     delta = cmax - cmin
 
     if iszero(delta)
-        # achromatic → grayscale zone [0, 0.5)
-        # or transparent
         iszero(a) && return ○
-        return r * ○  # r=g=b, scale into [0, 0.5)
+        return r * ○
     end
 
-    # chromatic → hue zone (0.5, 1]
     hue = if cmax == r
         T(60) * mod((g - b) / delta, T(6))
     elseif cmax == g
@@ -43,11 +46,17 @@ function rgba2scalar(r, g, b, a)
     else
         T(60) * ((r - g) / delta + T(4))
     end
-
     if hue < zero(T)
         hue += T(360)
     end
 
-    h = hue / T(360)  # [0,1)
-    return ○ + h * ○   # map back to (0.5, 1]
+    hue_i = unsafe_trunc(Int, hue / T(360) * T(255))
+    alp_i = unsafe_trunc(Int, a * T(255))
+    h16 = (hue_i << 8) | alp_i
+    h = T(h16) / T(65536)
+
+    return ○ + h * ○
 end
+
+# rgba2scalar(1.0,0.0,0.0,0.3)
+# scalar2rgba(rgba2scalar(1.0,0.0,0.0,0.3))

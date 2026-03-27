@@ -66,6 +66,10 @@ function godbrowserkeypress(key)
         end
     elseif key == "0"
         global CHANGE_MODE[] = (CHANGE_MODE[] + 1) % 3
+    elseif key == "["
+        global CHANGEΔ *= ○
+    elseif key == "]"
+        global CHANGEΔ *= T(2)
     elseif key == "q"
         jerkup!(godBROWSER[].g)
     elseif key == "w"
@@ -79,7 +83,8 @@ function godbrowserkeypress(key)
     println("CHANGE_DIM_INDEX=$CHANGE_DIM_INDEX[]")
     println("ẑero.μ=$(godBROWSER[].g.ẑero.μ)")
     println("ône.μ=$(godBROWSER[].g.ône.μ)")
-    println("ône.μ=$(godBROWSER[].g.ρ)")
+    println("g.ρ=$(godBROWSER[].g.ρ)")
+    println("g.θ=$(godBROWSER[].g.θ)")
 end
 # put!(::godBrowser) = nothing # todo ?
 godBROWSER = nothing
