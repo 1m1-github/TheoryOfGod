@@ -60,12 +60,12 @@ function octahedron(ẑeroμ, ôneμ, gρ, θ, n̂orm)
 end
 
 function ∃!(g::god, Φ, ω=g.Ω, t0=t(ω), t1=one(T))
-# function ∃!(g::god, Φ, ω=g.Ω, t0=t(ω), t1=t(ω.Ο[ω]+1))
+    # function ∃!(g::god, Φ, ω=g.Ω, t0=t(ω), t1=t(ω.Ο[ω]+1))
     (t0 < zero(T) || t0 < t(ω) || t1 < t0 || one(T) < t1) && return
     _, _, _, μ̃, ρ̃, _ = octahedron(g)
     try
         ρ̂ = (t1 - t0) * ○
-        μ = SA[t0 + ρ̂, μ̃[2:end]...]
+        μ = SA[t0+ρ̂, μ̃[2:end]...]
         ρ = SA[ρ̂, ρ̃[2:end]...]
         ϵ = ∃(ω, g.ẑero.d, μ, ρ, g.ẑero.∂, Φ)
         ∃!(ϵ, ω)
@@ -92,13 +92,15 @@ function ∃̇(g::god, ω=g.Ω)
         i = fill(istrivial ? 0 : 1, g.♯..., nz)
         owners!(g, ône, ϵ, i, ϵϵ, 0, dx, dy, nz, ω, istrivial)
         # unique(i)
+        # count(x->x==1,i)/prod(size(i))
+        # count(x->x==2,i)/prod(size(i))
         isempty(ϵϵ) && return fill(○, g.♯...)
         ΦΦ = ΦTuple(ntuple(i -> ϵϵ[i].Φ, length(ϵϵ)))
         μρϵϵ = map(ϵ -> μρΩ(ϵ), ϵϵ)
         ẑeros = SVector(ntuple(i -> μρϵϵ[i][1] .- μρϵϵ[i][2], length(μρϵϵ)))
         ônes = SVector(ntuple(i -> μρϵϵ[i][1] .+ μρϵϵ[i][2], length(μρϵϵ)))
-        ∂z = SVector(ntuple(i -> ϵϵ[ceil(Int, i/N)].∂[((i-1)%N)+1][1], N * length(ϵϵ)))
-        ∂o = SVector(ntuple(i -> ϵϵ[ceil(Int, i/N)].∂[((i-1)%N)+1][2], N * length(ϵϵ)))
+        ∂z = SVector(ntuple(i -> ϵϵ[ceil(Int, i / N)].∂[((i-1)%N)+1][1], N * length(ϵϵ)))
+        ∂o = SVector(ntuple(i -> ϵϵ[ceil(Int, i / N)].∂[((i-1)%N)+1][2], N * length(ϵϵ)))
         ôneϕ = if hasdepth
             z = @SVector zeros(T, N)
             ϵ = ∃(ω, g.ẑero.d, ône, z, g.ẑero.∂, ○̂)
@@ -118,16 +120,19 @@ function ∃̇(g::god, ω=g.Ω)
 end
 function owners!(g, ône, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
     if 0 < ∇ && ϵ isa ∃ && !istrivial
+        μ, ρ = μρΩ(ϵ)
         intersects = pyramid_box_intersection!(
             i, length(ϵϵ) + 1,
             g.ẑero.μ, ône,
             dx, dy,
-            ϵ.μ .- ϵ.ρ, ϵ.μ .+ ϵ.ρ,
+            μ .- ρ, μ .+ ρ,
             g.♯..., nz)
         intersects || return
         push!(ϵϵ, ϵ)
     end
     ∇ == g.∇̄ && return
+    # ϵ̃ = ω.ϵ̃[ϵ][1]
+    # ϵ=ϵ̃
     for ϵ̃ = ω.ϵ̃[ϵ]
         owners!(g, ône, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
     end

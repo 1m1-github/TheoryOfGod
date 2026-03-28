@@ -73,6 +73,7 @@ g.θ
 ∃!(g, typst("imi"), Ω[])
 ∃!(g, x -> T(0.1), Ω[])
 ∃!(g, x -> T(0.2), Ω[])
+# Φ=x -> T(0.2)
 ∃!(g, x -> T(0.3), Ω[])
 ϕ̇ = Base.invokelatest() do
         ∃̇(g, Ω[])
@@ -80,8 +81,12 @@ end
 unique(ϕ̇)
 
 focus!(g, 2, T(0.2))
-move!(g, 2, T(0.2))
+moveup!(g, 3)
+movedown!(g, 3)
+scale!(g, (T(0.025), T(0.025), zero(T)))
 scale!(g, (T(0.05), T(0.05), zero(T)))
+scale!(g, (T(0.1), T(0.1), zero(T)))
+scale!(g, (T(0.2), T(0.2), zero(T)))
 scale!(g, 3, one(T))
 g.∂t₀=false
 ∃!(g, x -> begin
