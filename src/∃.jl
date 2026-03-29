@@ -339,7 +339,7 @@ function X(x::∃, ∇, ω)
     ϵ̃ = ω.ϵ̃[ϵ]
     Threads.@threads for ϵ̃ = filter(ϵ̃ -> ⫉(x, ϵ̃, ω), ϵ̃)
         ∩(x, ϵ̃, ω) && return ϵ̃, true
-        ϵ̂, found = X(x, ∇)
+        ϵ̂, found = X(x, ∇, ω)
         found && return ϵ̂, true
     end
     ω, false
