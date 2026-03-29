@@ -118,3 +118,5 @@ g.∂t₀ = false
                 # T(0.01) < (x .- c).^2 < T(0.02) && return rgba2scalar(one(T),zero(T),zero(T),○)
                 return ○
         end, Ω[])
+
+g

@@ -73,7 +73,7 @@ function gpu_safe(Φ, ::Val{N}) where N
         false
     end
 end
-function Base.copy!(ϵ::∃, ϵ̂::∀, dmap=identity, ω::∀)
+function Base.copy!(ϵ::∃, ϵ̂::∀, dmap, ω::∀)
     μΩ, ρΩ = μρΩ(ϵ)
     N = length(ϵ.d)
     d = SVector(ntuple(i -> dmap(ϵ.d[i]), N))

@@ -9,7 +9,7 @@ godbrowser(g, browser) =
             t = time()
             put!(browser.processor, JS(g.♯[1], g.♯[2]))
             ϕ = zeros(T, g.♯[1], g.♯[2])
-            while true
+            while false
                 try
                     yield()
                     t̃ = time()

@@ -209,6 +209,17 @@ function step!(g::god, dt̂=one(T))
     # g.ẑero.Φ !== ○̂ && ∃!(g.ẑero)
     true
 end
+dim!(g::god, dmap) = begin
+    try
+        # ôneμ = SA[ẑeroμ[1], g.ône.μ[2:end]...]
+        # _, _, _, μ, ρ, _ = octahedron(ẑeroμ, ôneμ, g.ρ, g.θ, g.norm)
+        # ∃(g.Ω, g.ẑero.d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
+        ϵ̂ = β()
+        g.ẑero = ∃(ϵ̂, dmap(g.ẑero.d), g.ẑero.μ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
+        g.ône = ∃(g.ône.ϵ̂, g.ône.d, ôneμ, g.ône.ρ, g.ône.∂, g.ône.Φ)
+    catch
+    end
+end
 jerk!(g::god, δ) = accelerate!(g, g.v * exp(δ))
 accelerate!(g::god, δ) = speed!(g, iszero(g.v) ? δ : g.v * exp(δ))
 speed!(g::god, v) = g.v = clamp(T(v), zero(T), one(T))
