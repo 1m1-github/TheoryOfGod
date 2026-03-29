@@ -28,15 +28,12 @@ using KernelAbstractions, StaticArrays, LinearAlgebra, Adapt
 using HTTP, URIs, Sockets
 using PNGFiles
 # using MiniFB
+using Serialization
 using Metal
 const GPU_BACKEND = MetalBackend()
 const GPU_BACKEND_WORKGROUPSIZE = 2^2^3
 
 include("∃.jl")
-const Ω = Ref(𝕋())
-t() = t(Ω[])
-const invϕ = one(T) / MathConstants.golden
-# const name = Dict{∃, String}()
 include("god.jl")
 include("Octahedron.jl")
 # include("MiniFB.jl")
@@ -44,6 +41,12 @@ include("Color.jl")
 include("Typst.jl")
 include("browser.jl")
 include("godBrowser.jl")
+
+const Ω = Ref(𝕋())
+# const Ω = Ref(deserialize("Ω"))
+t() = t(Ω[])
+const invϕ = one(T) / MathConstants.golden
+# const name = Dict{∃, String}()
 const BROWSER_TASK = Threads.@spawn start(godbrowserstart, godbrowserkeypress)
 
 g = godBROWSER[].g
@@ -51,8 +54,8 @@ browser = godBROWSER[].browser
 # g = god(
 #         t=zero(T),
 #         d=sort(SA[invϕ, invϕ^2, one(T)]), # t, x, y, z
-#         ẑeroμ=SA[○-T(0.0), ○-T(0.0), ○],
-#         ôneμ=SA[○+T(0.0), ○+T(0.0), ○+T(0.1)],
+#         ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.4)],
+#         ôneμ=SA[○+T(0.0), ○+T(0.0), ○+T(0.0)],
 #         ρ=(T(0.1), T(0.1), zero(T)),
 #         ♯=(10, 10))
 ω = Ω[]
@@ -64,14 +67,25 @@ g.ρ
 g.θ
 Ω[] === ω
 Ω[].ϵ̃[Ω[]]
-Ω[].ϵ̃[Ω[]][1]
+a = Ω[].ϵ̃[Ω[]][1]
 Ω[].ϵ̃[Ω[]][2]
-Ω[].ϵ̃[Ω[].ϵ̃[Ω[]][1]][1]
+b = Ω[].ϵ̃[Ω[].ϵ̃[Ω[]][1]][1]
+
+# a.Φ(zero(T))
+# b.Φ(zero(T))
+
+# f=typst("imi")
+# serialize("f",f)
+# f=deserialize("f")
+# ∃!(g, f, Ω[])
+serialize("Ω", Ω[])
+
 
 # dx, dy, d, μ, ρ, N=dxdy(g)
 ∃!(g, typst("abcd"), Ω[])
-∃!(g, typst("imi"), Ω[])
+∃!(g, typst("i"), Ω[])
 ∃!(g, x -> T(0.1), Ω[])
+∃!(g, x -> ○, Ω[])
 ∃!(g, x -> T(0.2), Ω[])
 # Φ=x -> T(0.2)
 ∃!(g, x -> T(0.3), Ω[])
@@ -92,10 +106,13 @@ scale!(g, (T(0.2), T(0.2), one(T)))
 scale!(g, 3, one(T))
 scale!(g, 3, T(0.05))
 scale!(g, 3, zero(T))
-g.∂t₀=false
+move!(g, 4, T(0.8))
+step!(g)
+g.∂t₀ = false
 ∃!(g, x -> begin
                 # c = (x[1], T(0.5), T(0.5), T(0.6))
-                T(0.01)^2 < (x[2] .- T(0.5))^2 + (x[3] .- T(0.5))^2 + (x[4] .- T(0.6))^2 < T(0.02)^2 && return rgba2scalar(T(1.0),zero(T),zero(T),T(0.3))
+                # T(0.01)^2 < (x[2] .- T(0.5))^2 + (x[3] .- T(0.5))^2 + (x[4] .- T(0.6))^2 < T(0.02)^2 && return rgba2scalar(T(1.0),zero(T),zero(T),T(0.3))
+                (x[2] .- T(0.5))^2 + (x[3] .- T(0.5))^2 + (x[4] .- T(0.5))^2 < T(0.1)^2 && return rgba2scalar(T(1.0), zero(T), zero(T), T(1.0))
                 # T(0.01) < (x .- c).^2 < T(0.02) && return rgba2scalar(one(T),zero(T),zero(T),○)
                 return ○
         end, Ω[])

@@ -37,9 +37,10 @@ function godbrowserstart(browser)
     g = god(
         t=zero(T),
         d=sort(SA[invϕ, invϕ^2, one(T)]), # t, x, y, z
-        ẑeroμ=SA[○-T(0.0), ○-T(0.0), ○],
-        ôneμ=SA[○+T(0.0), ○+T(0.0), ○+T(0.1)],
-        ρ=(T(0.1), T(0.1), zero(T)),
+        ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.1)],
+        ôneμ=SA[○+T(0.0), ○+T(0.0), ○],
+        # ρ=(T(0.1), T(0.1), zero(T)),
+        ρ=(T(0.1), T(0.1), one(T)),
         # ♯=(10, 10))
         ♯=(Int(browser.width), Int(browser.height)))
     global godBROWSER = Ref(godbrowser(g, browser))
@@ -48,21 +49,22 @@ end
 const CHANGE_MODE = Ref(2) # 0=zero, 1=focus, 2=ρ
 const CHANGE_DIM_INDEX = Ref(2)
 function godbrowserkeypress(key)
+    g = godBROWSER[].g
     if key == "ArrowUp"
         if CHANGE_MODE[] == 0
-            moveup!(godBROWSER[].g, CHANGE_DIM_INDEX[])
+            moveup!(g, CHANGE_DIM_INDEX[])
         elseif CHANGE_MODE[] == 1
-            focusup!(godBROWSER[].g, CHANGE_DIM_INDEX[])
+            focusup!(g, CHANGE_DIM_INDEX[])
         else
-            scaleup!(godBROWSER[].g, CHANGE_DIM_INDEX[])
+            scaleup!(g, CHANGE_DIM_INDEX[])
         end
     elseif key == "ArrowDown"
         if CHANGE_MODE[] == 0
-            movedown!(godBROWSER[].g, CHANGE_DIM_INDEX[])
+            movedown!(g, CHANGE_DIM_INDEX[])
         elseif CHANGE_MODE[] == 1
-            focusdown!(godBROWSER[].g, CHANGE_DIM_INDEX[])
+            focusdown!(g, CHANGE_DIM_INDEX[])
         else
-            scaledown!(godBROWSER[].g, CHANGE_DIM_INDEX[])
+            scaledown!(g, CHANGE_DIM_INDEX[])
         end
     elseif key == "0"
         global CHANGE_MODE[] = (CHANGE_MODE[] + 1) % 3
@@ -71,9 +73,13 @@ function godbrowserkeypress(key)
     elseif key == "]"
         global CHANGEΔ *= T(2)
     elseif key == "q"
-        jerkup!(godBROWSER[].g)
+        jerkup!(g)
     elseif key == "w"
-        jerkdown!(godBROWSER[].g)
+        jerkdown!(g)
+    elseif key == "d"
+        rotateup!(g)
+    elseif key == "f"
+        rotatedown!(g)
     else
         try
             global CHANGE_DIM_INDEX[] = parse(UInt, key)
@@ -81,10 +87,11 @@ function godbrowserkeypress(key)
     end
     println("CHANGE_MODE=$CHANGE_MODE[]")
     println("CHANGE_DIM_INDEX=$CHANGE_DIM_INDEX[]")
-    println("ẑero.μ=$(godBROWSER[].g.ẑero.μ)")
-    println("ône.μ=$(godBROWSER[].g.ône.μ)")
-    println("g.ρ=$(godBROWSER[].g.ρ)")
-    println("g.θ=$(godBROWSER[].g.θ)")
+    println("ẑero.μ=$(g.ẑero.μ)")
+    println("ône.μ=$(g.ône.μ)")
+    println("g.ρ=$(g.ρ)")
+    println("g.θ=$(g.θ)")
+    println("g.norm(g.ône.μ.-g.ẑero.μ)=$(g.norm(g.ône.μ.-g.ẑero.μ))")
 end
 # put!(::godBrowser) = nothing # todo ?
 godBROWSER = nothing

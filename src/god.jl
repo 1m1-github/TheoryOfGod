@@ -170,14 +170,17 @@ function Π(i, ΦΦ, ôneϕ, godẑero, godẑeroône, ẑeros, ônes, ∂z, 
     Array(out)
 end
 # nx, ny=g.♯[1],g.♯[2]
+# gl_nodes, gl_weights=GL_NODES,GL_WEIGHTS
 @kernel function Π!(out, i, ΦΦ, ôneϕ, godẑero, godẑeroône, ẑeros, ônes, ∂z, ∂o, dx, dy, nx, ny, nz, gl_nodes, gl_weights)
     (ix, iy) = @index(Global, NTuple)
+    #ix,iy=2,2
     ĩx = T(ix - 1) / T(nx - 1)
     ĩy = T(iy - 1) / T(ny - 1)
-    ϕ = ôneϕ
+    ϕ = ôneϕ * gl_weights[nz+1]
     hasdepth = 1 < nz
     n = length(godẑero)
     for iz = 1:nz
+        # iz=1
         iϕ = i[ix, iy, iz]
         w = hasdepth ? gl_weights[iz] : one(T)
         if iszero(iϕ)
@@ -210,7 +213,8 @@ end
             ϕ += Φ̇(ΦΦ, iϕ, ẋ) * w # todo clamp to [0,1]
         end
     end
-    out[ix, iy] = hasdepth ? one(T) - exp(-ϕ) : ϕ
+    # out[ix, iy] = hasdepth ? one(T) - exp(-ϕ) : ϕ # Beer-Lambert double integral gives 1-e^-x but makes background non-white, could recalibrate color, not sure whether this is actually needed, also never achieves 1 this way
+    out[ix, iy] = ϕ
 end
 
 CHANGEΔ = T(0.01)
@@ -257,7 +261,6 @@ move!(g::god, ẑeroμ) = begin
         ôneμ = SA[ẑeroμ[1], g.ône.μ[2:end]...]
         _, _, _, μ, ρ, _ = octahedron(ẑeroμ, ôneμ, g.ρ, g.θ, g.norm)
         ∃(g.Ω, g.ẑero.d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
-        # any(g.ône.μ[2:end] .< ẑeroμ[2:end]) && return # todo handle ône<ẑero
         g.ẑero = ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
         g.ône = ∃(g.ône.ϵ̂, g.ône.d, ôneμ, g.ône.ρ, g.ône.∂, g.ône.Φ)
     catch
@@ -268,7 +271,6 @@ focus!(g::god, ôneμ) = begin
         ẑeroμ = SA[ôneμ[1], g.ẑero.μ[2:end]...]
         _, _, _, μ, ρ, _ = octahedron(ẑeroμ, ôneμ, g.ρ, g.θ, g.norm)
         ∃(g.Ω, g.ẑero.d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
-        # any(ôneμ[2:end] .< g.ẑero.μ[2:end]) && return # todo handle ône<ẑero
         g.ẑero = ∃(g.ẑero.ϵ̂, g.ẑero.d, ẑeroμ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
         g.ône = ∃(g.ône.ϵ̂, g.ône.d, ôneμ, g.ône.ρ, g.ône.∂, g.ône.Φ)
     catch
@@ -291,6 +293,8 @@ jerkup!(g) = jerk!(g, CHANGEΔ)
 jerkdown!(g) = jerk!(g, -CHANGEΔ)
 scaleup!(g, i) = scale!(g, i, CHANGEΔ)
 scaledown!(g, i) = scale!(g, i, -CHANGEΔ)
+rotateup!(g) = rotate!(g, g.θ + CHANGEΔ)
+rotatedown!(g) = rotate!(g, g.θ - CHANGEΔ)
 
 const GL_NODES_RAW_8 = SVector{8,T}(
     -0.9602898564975363,
@@ -302,7 +306,7 @@ const GL_NODES_RAW_8 = SVector{8,T}(
     0.7966664774136267,
     0.9602898564975363
 )
-const GL_WEIGHTS_8 = SVector{8,T}(
+const GL_WEIGHTS_RAW_8 = SVector{8,T}(
     0.1012285362903763,
     0.2223810344533745,
     0.3137066458778873,
@@ -330,7 +334,7 @@ const GL_NODES_RAW_16 = SVector{16,T}(
     0.9445750230732326,
     0.9894009349916499
 )
-const GL_WEIGHTS_16 = SVector{16,T}(
+const GL_WEIGHTS_RAW_16 = SVector{16,T}(
     0.0271524594117541,
     0.0622535239386479,
     0.0951585116824928,
@@ -349,9 +353,24 @@ const GL_WEIGHTS_16 = SVector{16,T}(
     0.0271524594117541
 )
 const GL_N = 8
-const GL_WEIGHTS = GL_WEIGHTS_8
 const GL_NODES_RAW = GL_NODES_RAW_8
+const GL_WEIGHTS_RAW = GL_WEIGHTS_RAW_8
 const GL_NODES = ○ .+ GL_NODES_RAW ./ (GL_NODES_RAW[end] - GL_NODES_RAW[1]) # [0,1]
+const GL_WEIGHTS = ○ * GL_WEIGHTS_RAW
+
+# sum(GL_WEIGHTS .* 1/2)
+# 1-exp(-○)
+# using FastGaussQuadrature, LinearAlgebra
+# x, w = gausslegendre(8)
+# f(x)=1/2
+# dot(w,f.(x))
+# 1-exp(-x)==1//2
+# 1//2==exp(-x)
+# log(1//2)==-x
+# x==-log(1//2)
+# x==0.69
+# y=0.62269175
+# x=-log(1-y)
 
 # using GLMakie
 # fig = Figure()
