@@ -18,7 +18,7 @@ function (f::ΦTypst)(x)
     f.mat[py, px]
 end
 function Adapt.adapt_structure(to, f::Φ̂)
-    Φ̂(Adapt.adapt(to, f.Φ), f.zero, f.one, f.∂z, f.∂o)
+    Φ̂(Adapt.adapt(to, f.Φ), f.zero, f.one)
 end
 function Adapt.adapt_structure(to, f::ΦTypst)
     ΦTypst(Adapt.adapt(to, f.mat), f.H, f.W)

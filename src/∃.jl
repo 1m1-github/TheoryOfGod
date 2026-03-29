@@ -14,16 +14,12 @@ struct ∃{N,F,P<:∀} <: ∀
         @assert all(zero(T) .≤ μ .- ρ .≤ μ .+ ρ .≤ one(T))
         p = sortperm(d)
         d, μ, ρ = map(x -> x[p], (d, μ, ρ))
-        ∂ = SVector(ntuple(i -> ∂[p[i]], N))
-        h = hash(d, hash(μ, hash(ρ, hash(∂, hash(ϵ̂)))))
         Φ_inner = raw_Φ(Φ)
         μΩ, ρΩ = μρΩ(ϵ̂, μ, ρ)
-        z = μΩ .- ρΩ
-        o = μΩ .+ ρΩ
-        ∂z = SVector(ntuple(i -> ∂[i][1], N))
-        ∂o = SVector(ntuple(i -> ∂[i][2], N))
-        wrapped = Φ̂(Φ_inner, z, o, ∂z, ∂o)
+        wrapped = Φ̂(Φ_inner, μΩ .- ρΩ, μΩ .+ ρΩ)
         @assert gpu_safe(wrapped, Val(N))
+        ∂ = SVector(ntuple(i -> ∂[p[i]], N))
+        h = hash(d, hash(μ, hash(ρ, hash(∂, hash(ϵ̂)))))
         new{N,typeof(wrapped),typeof(ϵ̂)}(ϵ̂, d, μ, ρ, ∂, wrapped, h)
     end
 end
@@ -45,33 +41,19 @@ end
 Base.hash(::𝕋, h::UInt) = hash(:Ω, h)
 t(Ο::Int) = one(T) - one(T) / (one(T) + T(log(Ο)))
 t(ω::∀) = t(ω.Ο[ω])
-
-function μρΩ(ϵ̂::𝕋, μ, ρ)
-    μ, ρ
-end
-function μρΩ(ϵ̂::∃, μ, ρ)
-    μ̂, ρ̂ = μρΩ(ϵ̂)
-    μ̂ .- ρ̂ .+ T(2) .* ρ̂ .* μ, T(2) .* ρ̂ .* ρ
-end
 struct Φ̂{N,F}
     Φ::F
     zero::SVector{N,T}
     one::SVector{N,T}
-    ∂z::SVector{N,Bool}
-    ∂o::SVector{N,Bool}
 end
 function (f::Φ̂{N})(x) where N
     for k = 1:N
         f.one[k] == f.zero[k] && return ○
         x[k] ≤ f.zero[k] && return ○
         f.one[k] ≤ x[k] && return ○
-        # !f.∂z[k] && x[k] == f.zero[k] && return ○
-        # !f.∂o[k] && x[k] == f.one[k] && return ○
-        # !f.∂z[k] && x[k] == f.zero[k] && return ○
-        # !f.∂o[k] && x[k] == f.one[k] && return ○
     end
-    xlocal = (x .- f.zero) ./ (f.one .- f.zero)
-    f.Φ(xlocal)
+    ẋ = (x .- f.zero) ./ (f.one .- f.zero)
+    f.Φ(ẋ)
 end
 raw_Φ(Φ::Φ̂) = Φ.Φ
 raw_Φ(Φ) = Φ
@@ -126,6 +108,11 @@ end
     μ = μ̂ .- ρ̂ .+ T(2) .* ρ̂ .* ϵ.μ
     ρ = T(2) .* ρ̂ .* ϵ.ρ
     μ, ρ
+end
+μρΩ(::𝕋, μ, ρ) = μ, ρ
+function μρΩ(ϵ̂::∃, μ, ρ)
+    μ̃, ρ̃ = μρΩ(ϵ̂)
+    μ̂(μ, μ̃, ρ̃), ρ̂(ρ, ρ̃)
 end
 function μρ(ϵ::∃, d)
     i = searchsortedfirst(ϵ.d, d)
