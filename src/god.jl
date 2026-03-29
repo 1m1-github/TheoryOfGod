@@ -129,6 +129,7 @@ function owners!(g, ône, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
     # ϵ̃ = ω.ϵ̃[ϵ][1]
     # ϵ=ϵ̃
     for ϵ̃ = ω.ϵ̃[ϵ]
+        ⫉(ϵ, ϵ̃, ω) # todo
         owners!(g, ône, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
     end
 end
@@ -196,7 +197,7 @@ end
 CHANGEΔ = T(0.01)
 function step!(g::god, dt̂=one(T))
     if g.∂t₀
-        ṫ = t()
+        ṫ = ○*(t() + t(Ω[].Ο[Ω[]]+1))
         g.ẑero.μ[1] == ṫ && return false
         μ = SVector(ntuple(i -> i == 1 ? ṫ : g.ẑero.μ[i], length(g.ẑero.μ)))
     else
@@ -211,12 +212,11 @@ function step!(g::god, dt̂=one(T))
 end
 dim!(g::god, dmap) = begin
     try
-        # ôneμ = SA[ẑeroμ[1], g.ône.μ[2:end]...]
-        # _, _, _, μ, ρ, _ = octahedron(ẑeroμ, ôneμ, g.ρ, g.θ, g.norm)
-        # ∃(g.Ω, g.ẑero.d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
-        ϵ̂ = β()
-        g.ẑero = ∃(ϵ̂, dmap(g.ẑero.d), g.ẑero.μ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
-        g.ône = ∃(g.ône.ϵ̂, g.ône.d, ôneμ, g.ône.ρ, g.ône.∂, g.ône.Φ)
+        d = dmap.(g.ẑero.d)
+        _, _, _, μ, ρ, _ = octahedron(g.ẑero.μ, g.ône.μ, g.ρ, g.θ, g.norm)
+        ∃(g.Ω, d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
+        g.ẑero = ∃(g.ẑero.ϵ̂, d, g.ẑero.μ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)
+        g.ône = ∃(g.ône.ϵ̂, d, g.ône.μ, g.ône.ρ, g.ône.∂, g.ône.Φ)
     catch
     end
 end

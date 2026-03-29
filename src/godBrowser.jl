@@ -38,9 +38,9 @@ godbrowser(g, browser) =
     end
 function godbrowserstart(browser)
     g = god(
-        t=zero(T),
+        t=○*t(Ω[].Ο[Ω[]]+1),
         d=sort(SA[invϕ, invϕ^2, one(T)]), # t, x, y, z
-        ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.1)],
+        ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.4)],
         ôneμ=SA[○+T(0.0), ○+T(0.0), ○],
         ρ=(T(0.1), T(0.1), zero(T)),
         # ρ=(T(0.1), T(0.1), one(T)),

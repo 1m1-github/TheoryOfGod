@@ -52,11 +52,11 @@ const BROWSER_TASK = Threads.@spawn start(godbrowserstart, godbrowserkeypress)
 g = godBROWSER[].g
 browser = godBROWSER[].browser
 g = god(
-        t=zero(T),
+        t=○*t(Ω[].Ο[Ω[]]+1),
         d=sort(SA[invϕ, invϕ^2, one(T)]), # t, x, y, z
-        ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.4)],
-        ôneμ=SA[○+T(0.0), ○+T(0.0), ○+T(0.0)],
-        ρ=(T(0.1), T(0.1), one(T)),
+        ẑeroμ=SA[T(0.1), T(0.1), T(0.0)],
+        ôneμ=SA[T(0.1), T(0.1), T(0.1)],
+        ρ=(T(0.01), T(0.01), one(T)),
         ♯=(10, 10))
 ω = Ω[]
 Ω[].Ο[Ω[]]
@@ -71,7 +71,7 @@ a = Ω[].ϵ̃[Ω[]][1]
 Ω[].ϵ̃[Ω[]][2]
 b = Ω[].ϵ̃[Ω[].ϵ̃[Ω[]][1]][1]
 
-# a.Φ(zero(T))
+a.Φ(SA[T(0.2),T(0.45),T(0.45),T(0.45)])
 # b.Φ(zero(T))
 
 # f=typst("imi")
@@ -94,7 +94,7 @@ b = Ω[].ϵ̃[Ω[].ϵ̃[Ω[]][1]][1]
 ϕ̇ = Base.invokelatest() do
         ∃̇(g, Ω[])
 end
-unique(ϕ̇)
+sort(unique(ϕ̇))
 
 focus!(g, 2, T(0.2))
 moveup!(g, 3)
@@ -104,7 +104,9 @@ scale!(g, (T(0.05), T(0.05), zero(T)))
 scale!(g, (T(0.1), T(0.1), zero(T)))
 scale!(g, (T(0.2), T(0.2), zero(T)))
 scale!(g, (T(0.2), T(0.2), T(0.01)))
-scale!(g, (T(0.2), T(0.2), one(T)))
+scale!(g, (T(0.01), T(0.01), one(T)))
+scale!(g, (T(0.001), T(0.001), one(T)))
+scale!(g, (T(0.0005), T(0.0005), one(T)))
 scale!(g, 3, one(T))
 scale!(g, 3, T(0.05))
 scale!(g, 3, zero(T))
@@ -119,4 +121,12 @@ g.∂t₀ = false
                 return ○
         end, Ω[])
 
-g
+dmap = d -> begin
+        d==g.ẑero.d[2] && return T(0.01)
+        d==g.ẑero.d[3] && return T(0.03)
+        d==g.ẑero.d[4] && return T(0.04)
+        d
+end
+dim!(g, dmap)
+g.ẑero.d
+g.ône.d
