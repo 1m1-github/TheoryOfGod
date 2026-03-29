@@ -21,6 +21,9 @@ godbrowser(g, browser) =
                         ∃̇(g, Ω[])
                     end
                     δ = Δ!(ϕ, ϕ̇)
+                    # unique(map(x->x[2],δ))
+                    # count(δ)
+                    # g.♯[1]*g.♯[2]
                     isempty(δ) && continue
                     js = "pixel=" * writeδ(δ, g.♯[2]) * "\n" * SET_PIXELS_JS
                     put!(browser.processor, js)
@@ -39,8 +42,8 @@ function godbrowserstart(browser)
         d=sort(SA[invϕ, invϕ^2, one(T)]), # t, x, y, z
         ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.1)],
         ôneμ=SA[○+T(0.0), ○+T(0.0), ○],
-        # ρ=(T(0.1), T(0.1), zero(T)),
-        ρ=(T(0.1), T(0.1), one(T)),
+        ρ=(T(0.1), T(0.1), zero(T)),
+        # ρ=(T(0.1), T(0.1), one(T)),
         # ♯=(10, 10))
         ♯=(Int(browser.width), Int(browser.height)))
     global godBROWSER = Ref(godbrowser(g, browser))

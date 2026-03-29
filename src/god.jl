@@ -96,11 +96,6 @@ function ∃̇(g::god, ω=g.Ω)
         # count(x->x==2,i)/prod(size(i))
         isempty(ϵϵ) && return fill(○, g.♯...)
         ΦΦ = ΦTuple(ntuple(i -> ϵϵ[i].Φ, length(ϵϵ)))
-        μρϵϵ = map(ϵ -> μρΩ(ϵ), ϵϵ)
-        ẑeros = SVector(ntuple(i -> μρϵϵ[i][1] .- μρϵϵ[i][2], length(μρϵϵ)))
-        ônes = SVector(ntuple(i -> μρϵϵ[i][1] .+ μρϵϵ[i][2], length(μρϵϵ)))
-        ∂z = SVector(ntuple(i -> ϵϵ[ceil(Int, i / N)].∂[((i-1)%N)+1][1], N * length(ϵϵ)))
-        ∂o = SVector(ntuple(i -> ϵϵ[ceil(Int, i / N)].∂[((i-1)%N)+1][2], N * length(ϵϵ)))
         ôneϕ = if hasdepth
             z = @SVector zeros(T, N)
             ϵ = ∃(ω, g.ẑero.d, ône, z, g.ẑero.∂, ○̂)
@@ -111,7 +106,7 @@ function ∃̇(g::god, ω=g.Ω)
         end
         godẑero = μ .- (dx .+ dy) * ○
         godẑeroône = ône .- godẑero
-        Π(i, ΦΦ, ôneϕ, godẑero, godẑeroône, ẑeros, ônes, ∂z, ∂o, dx, dy, g.♯..., nz)
+        Π(i, ΦΦ, ôneϕ, godẑero, godẑeroône, dx, dy, g.♯..., nz)
     catch e
         bt = catch_backtrace()
         showerror(stderr, e, bt)
@@ -156,13 +151,13 @@ end
         return zero(T)
     end
 end
-function Π(i, ΦΦ, ôneϕ, godẑero, godẑeroône, ẑeros, ônes, ∂z, ∂o, dx, dy, nx, ny, nz)
+function Π(i, ΦΦ, ôneϕ, godẑero, godẑeroône, dx, dy, nx, ny, nz)
     out = KernelAbstractions.zeros(GPU_BACKEND, T, nx, ny)
     i̇ = KernelAbstractions.allocate(GPU_BACKEND, UInt16, size(i))
     copyto!(i̇, i)
     Π!(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(
         out, i̇,
-        ΦΦ, ôneϕ, godẑero, godẑeroône, ẑeros, ônes, ∂z, ∂o, dx, dy,
+        ΦΦ, ôneϕ, godẑero, godẑeroône, dx, dy,
         nx, ny, nz, GL_NODES, GL_WEIGHTS,
         ndrange=(nx, ny)
     )
@@ -171,14 +166,13 @@ function Π(i, ΦΦ, ôneϕ, godẑero, godẑeroône, ẑeros, ônes, ∂z, 
 end
 # nx, ny=g.♯[1],g.♯[2]
 # gl_nodes, gl_weights=GL_NODES,GL_WEIGHTS
-@kernel function Π!(out, i, ΦΦ, ôneϕ, godẑero, godẑeroône, ẑeros, ônes, ∂z, ∂o, dx, dy, nx, ny, nz, gl_nodes, gl_weights)
+@kernel function Π!(out, i, ΦΦ, ôneϕ, godẑero, godẑeroône, dx, dy, nx, ny, nz, gl_nodes, gl_weights)
     (ix, iy) = @index(Global, NTuple)
     #ix,iy=2,2
     ĩx = T(ix - 1) / T(nx - 1)
     ĩy = T(iy - 1) / T(ny - 1)
     ϕ = ôneϕ * gl_weights[nz+1]
     hasdepth = 1 < nz
-    n = length(godẑero)
     for iz = 1:nz
         # iz=1
         iϕ = i[ix, iy, iz]
@@ -192,26 +186,8 @@ end
         z = godẑero .+ t * godẑeroône
         d̃x = t̃ * dx
         d̃y = t̃ * dy
-        x = z .+ ĩx * d̃x .+ ĩy * d̃y
-        ẋ = Base.setindex(x, godẑero[1], 1)
-        zlocal = ẑeros[iϕ]
-        olocal = ônes[iϕ]
-        inner = true
-        for k = 2:n
-            ∂i = (iϕ - 1) * n + k
-            if x[k] < zlocal[k] ||
-               olocal[k] < x[k] ||
-               olocal[k] == zlocal[k] ||
-               (∂z[∂i] && x[k] == zlocal[k]) || (∂o[∂i] && x[k] == olocal[k])
-                ϕ += ○ * w
-                inner = false
-                break
-            end
-            ẋ = Base.setindex(ẋ, (x[k] - zlocal[k]) / (olocal[k] - zlocal[k]), k) # todo case olocal < zlocal
-        end
-        if inner
-            ϕ += Φ̇(ΦΦ, iϕ, ẋ) * w # todo clamp to [0,1]
-        end
+        x = z .+ ĩx * d̃x .+ ĩy * d̃y
+        ϕ += Φ̇(ΦΦ, iϕ, x) * w
     end
     # out[ix, iy] = hasdepth ? one(T) - exp(-ϕ) : ϕ # Beer-Lambert double integral gives 1-e^-x but makes background non-white, could recalibrate color, not sure whether this is actually needed, also never achieves 1 this way
     out[ix, iy] = ϕ

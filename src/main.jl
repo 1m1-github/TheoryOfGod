@@ -51,13 +51,13 @@ const BROWSER_TASK = Threads.@spawn start(godbrowserstart, godbrowserkeypress)
 
 g = godBROWSER[].g
 browser = godBROWSER[].browser
-# g = god(
-#         t=zero(T),
-#         d=sort(SA[invϕ, invϕ^2, one(T)]), # t, x, y, z
-#         ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.4)],
-#         ôneμ=SA[○+T(0.0), ○+T(0.0), ○+T(0.0)],
-#         ρ=(T(0.1), T(0.1), zero(T)),
-#         ♯=(10, 10))
+g = god(
+        t=zero(T),
+        d=sort(SA[invϕ, invϕ^2, one(T)]), # t, x, y, z
+        ẑeroμ=SA[○-T(0.0), ○-T(0.0), T(0.4)],
+        ôneμ=SA[○+T(0.0), ○+T(0.0), ○+T(0.0)],
+        ρ=(T(0.1), T(0.1), one(T)),
+        ♯=(10, 10))
 ω = Ω[]
 Ω[].Ο[Ω[]]
 t()
@@ -78,8 +78,10 @@ b = Ω[].ϵ̃[Ω[].ϵ̃[Ω[]][1]][1]
 # serialize("f",f)
 # f=deserialize("f")
 # ∃!(g, f, Ω[])
-serialize("Ω", Ω[])
+# serialize("Ω", Ω[])
 
+# js
+# write("js",js)
 
 # dx, dy, d, μ, ρ, N=dxdy(g)
 ∃!(g, typst("abcd"), Ω[])

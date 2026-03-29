@@ -17,6 +17,9 @@ function (f::ΦTypst)(x)
     py = unsafe_trunc(UInt32, (1 - x[3]) * (f.H - 1)) + 1
     f.mat[py, px]
 end
+function Adapt.adapt_structure(to, f::Φ̂)
+    Φ̂(Adapt.adapt(to, f.Φ), f.zero, f.one, f.∂z, f.∂o)
+end
 function Adapt.adapt_structure(to, f::ΦTypst)
     ΦTypst(Adapt.adapt(to, f.mat), f.H, f.W)
 end

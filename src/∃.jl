@@ -12,18 +12,21 @@ struct ∃{N,F,P<:∀} <: ∀
     function ∃(ϵ̂::∀, d::SVector{N,T}, μ::SVector{N,T}, ρ::SVector{N,T}, ∂::SVector{N,Tuple{Bool,Bool}}, Φ::F) where {N,F}
         @assert all(zero(T) .≤ d .≤ one(T))
         @assert all(zero(T) .≤ μ .- ρ .≤ μ .+ ρ .≤ one(T))
-        @assert gpu_safe(Φ, N)
         p = sortperm(d)
         d, μ, ρ = map(x -> x[p], (d, μ, ρ))
         ∂ = SVector(ntuple(i -> ∂[p[i]], N))
         h = hash(d, hash(μ, hash(ρ, hash(∂, hash(ϵ̂)))))
-        new{N,F,typeof(ϵ̂)}(ϵ̂, d, μ, ρ, ∂, Φ, h) # todo wrap Φ in Φ̂ for global to local map and boundary check
+        Φ_inner = raw_Φ(Φ)
+        μΩ, ρΩ = μρΩ(ϵ̂, μ, ρ)
+        z = μΩ .- ρΩ
+        o = μΩ .+ ρΩ
+        ∂z = SVector(ntuple(i -> ∂[i][1], N))
+        ∂o = SVector(ntuple(i -> ∂[i][2], N))
+        wrapped = Φ̂(Φ_inner, z, o, ∂z, ∂o)
+        @assert gpu_safe(wrapped, Val(N))
+        new{N,typeof(wrapped),typeof(ϵ̂)}(ϵ̂, d, μ, ρ, ∂, wrapped, h)
     end
 end
-# function Φ̂(Φ)
-#     xΩ -> begin
-#     end
-# end
 Base.hash(ϵ::∃, h::UInt) = hash(ϵ.h, h)
 struct 𝕋 <: ∀
     ϵ̃::Dict{∀,Vector{∃}}
@@ -42,6 +45,53 @@ end
 Base.hash(::𝕋, h::UInt) = hash(:Ω, h)
 t(Ο::Int) = one(T) - one(T) / (one(T) + T(log(Ο)))
 t(ω::∀) = t(ω.Ο[ω])
+
+function μρΩ(ϵ̂::𝕋, μ, ρ)
+    μ, ρ
+end
+function μρΩ(ϵ̂::∃, μ, ρ)
+    μ̂, ρ̂ = μρΩ(ϵ̂)
+    μ̂ .- ρ̂ .+ T(2) .* ρ̂ .* μ, T(2) .* ρ̂ .* ρ
+end
+struct Φ̂{N,F}
+    Φ::F
+    zero::SVector{N,T}
+    one::SVector{N,T}
+    ∂z::SVector{N,Bool}
+    ∂o::SVector{N,Bool}
+end
+function (f::Φ̂{N})(x) where N
+    for k = 1:N
+        f.one[k] == f.zero[k] && return ○
+        x[k] ≤ f.zero[k] && return ○
+        f.one[k] ≤ x[k] && return ○
+        # !f.∂z[k] && x[k] == f.zero[k] && return ○
+        # !f.∂o[k] && x[k] == f.one[k] && return ○
+        # !f.∂z[k] && x[k] == f.zero[k] && return ○
+        # !f.∂o[k] && x[k] == f.one[k] && return ○
+    end
+    xlocal = (x .- f.zero) ./ (f.one .- f.zero)
+    f.Φ(xlocal)
+end
+raw_Φ(Φ::Φ̂) = Φ.Φ
+raw_Φ(Φ) = Φ
+function gpu_safe(Φ, ::Val{N}) where N
+    @kernel function gpu_test(Φ, out, ::Val{N}) where N
+        z = ntuple(_ -> zero(T), Val(N))
+        x = SVector{N,T}(z)
+        out[1] = Φ(x)
+    end
+    try
+        out = KernelAbstractions.zeros(GPU_BACKEND, T, 1)
+        gpu_test(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(Φ, out, Val(N), ndrange=1)
+        KernelAbstractions.synchronize(GPU_BACKEND)
+        true
+    catch e
+        showerror(stderr, e, catch_backtrace())
+        false
+    end
+end
+
 # δ(ϵ, ϵ)
 # function δ(ϵ::∃, ϵ̂::∃)
 #     nϵ̂ = length(ϵ.ϵ̂.d)
@@ -306,16 +356,4 @@ function X(x::∃, ∇, ω)
         found && return ϵ̂, true
     end
     ω, false
-end
-function gpu_safe(Φ, N)
-    try
-        @kernel gpu(Φ, x) = Φ(x)
-        x = KernelAbstractions.zeros(GPU_BACKEND, T, N)
-        gpu(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(Φ, x, ndrange=1)
-        true
-    catch e
-        bt = catch_backtrace()
-        showerror(stderr, e, bt)
-        false
-    end
 end
