@@ -81,16 +81,16 @@ function ∃̇(g::god, ω=g.Ω)
     try
         dx, dy, d, μ, ρ, N = octahedron(g)
         ϵ = ∃(ω, g.ẑero.d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
-        ϵ = β(ϵ, ω, ω)
-        istrivial = trivial(ϵ)
+        ϵ̂ = β(ϵ, ω, ω)
+        istrivial = trivial(ϵ̂)
         ϵϵ = []
-        !istrivial && push!(ϵϵ, ϵ)
+        !istrivial && push!(ϵϵ, ϵ̂)
         ôneρ = SA[zero(T), fill(g.ρ[end], N - 1)...]
         ône = g.ẑero.μ .+ d * ○ .* (one(T) .+ ôneρ)
         hasdepth = !iszero(g.ρ[end])
         nz = hasdepth ? GL_N - 1 : 1
         i = fill(istrivial ? 0 : 1, g.♯..., nz)
-        owners!(g, ône, ϵ, i, ϵϵ, 0, dx, dy, nz, ω, istrivial)
+        owners!(g, ône, ϵ̂, ϵ, i, ϵϵ, 0, dx, dy, nz, ω, istrivial)
         # unique(i)
         # count(x->x==1,i)/prod(size(i))
         # count(x->x==2,i)/prod(size(i))
@@ -113,9 +113,9 @@ function ∃̇(g::god, ω=g.Ω)
         fill(○, g.♯...)
     end
 end
-function owners!(g, ône, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
-    if 0 < ∇ && ϵ isa ∃ && !istrivial
-        μ, ρ = μρΩ(ϵ)
+function owners!(g, ône, ϵ̂, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
+    if 0 < ∇ && ϵ̂ isa ∃ && !istrivial
+        μ, ρ = μρΩ(ϵ̂)
         intersects = pyramid_box_intersection!(
             i, length(ϵϵ) + 1,
             g.ẑero.μ, ône,
@@ -123,14 +123,14 @@ function owners!(g, ône, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
             μ .- ρ, μ .+ ρ,
             g.♯..., nz)
         intersects || return
-        push!(ϵϵ, ϵ)
+        push!(ϵϵ, ϵ̂)
     end
     ∇ == g.∇̄ && return
     # ϵ̃ = ω.ϵ̃[ϵ][1]
     # ϵ=ϵ̃
-    for ϵ̃ = ω.ϵ̃[ϵ]
-        ⫉(ϵ, ϵ̃, ω) # todo
-        owners!(g, ône, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
+    for ϵ̃ = ω.ϵ̃[ϵ̂]
+        ∩(ϵ, ϵ̃, ω) || continue
+        owners!(g, ône, ϵ̂, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
     end
 end
 

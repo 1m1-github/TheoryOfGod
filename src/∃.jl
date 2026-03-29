@@ -10,17 +10,18 @@ struct ∃{N,F,P<:∀} <: ∀
     Φ::F
     h::UInt
     function ∃(ϵ̂::∀, d::SVector{N,T}, μ::SVector{N,T}, ρ::SVector{N,T}, ∂::SVector{N,Tuple{Bool,Bool}}, Φ::F) where {N,F}
-        @assert all(zero(T) .≤ d .≤ one(T))
-        @assert all(zero(T) .≤ μ .- ρ .≤ μ .+ ρ .≤ one(T))
         p = sortperm(d)
-        d, μ, ρ = map(x -> x[p], (d, μ, ρ))
-        Φ_inner = raw_Φ(Φ)
-        μΩ, ρΩ = μρΩ(ϵ̂, μ, ρ)
-        wrapped = Φ̂(Φ_inner, μΩ .- ρΩ, μΩ .+ ρΩ)
-        @assert gpu_safe(wrapped, Val(N))
-        ∂ = SVector(ntuple(i -> ∂[p[i]], N))
-        h = hash(d, hash(μ, hash(ρ, hash(∂, hash(ϵ̂)))))
-        new{N,typeof(wrapped),typeof(ϵ̂)}(ϵ̂, d, μ, ρ, ∂, wrapped, h)
+        ḋ, μ̇, ρ̇, ∂̇ = map(x -> x[p], (d, μ, ρ, ∂))
+        for i = 1:N
+            @assert zero(T) ≤ ḋ[i] ≤ one(T)
+            1 < i && @assert ḋ[i-1] ≠ ḋ[i]
+            @assert zero(T) ≤ μ̇[i] - ρ̇[i] ≤ μ̇[i] + ρ̇[i] ≤ one(T)
+        end
+        μΩ, ρΩ = μρΩ(ϵ̂, μ̇, ρ̇)
+        ϕ = Φ̂(Φ̇(Φ), μΩ .- ρΩ, μΩ .+ ρΩ)
+        @assert gpu_safe(ϕ, Val(N))
+        h = hash(ḋ, hash(μ̇, hash(ρ̇, hash(∂̇, hash(ϵ̂)))))
+        new{N,typeof(ϕ),typeof(ϵ̂)}(ϵ̂, ḋ, μ̇, ρ̇, ∂̇, ϕ, h)
     end
 end
 Base.hash(ϵ::∃, h::UInt) = hash(ϵ.h, h)
@@ -43,29 +44,29 @@ t(Ο::Int) = one(T) - one(T) / (one(T) + T(log(Ο)))
 t(ω::∀) = t(ω.Ο[ω])
 struct Φ̂{N,F}
     Φ::F
-    zero::SVector{N,T}
-    one::SVector{N,T}
+    ∂z::SVector{N,T}
+    ∂o::SVector{N,T}
 end
-function (f::Φ̂{N})(x) where N
-    for k = 1:N
-        f.one[k] == f.zero[k] && return ○
-        x[k] ≤ f.zero[k] && return ○
-        f.one[k] ≤ x[k] && return ○
+function (ϕ::Φ̂{N})(x) where N
+    for i = 1:N
+        ϕ.∂o[i] == ϕ.∂z[i] && return ○
+        x[i] ≤ ϕ.∂z[i] && return ○
+        ϕ.∂o[i] ≤ x[i] && return ○
     end
-    ẋ = (x .- f.zero) ./ (f.one .- f.zero)
-    f.Φ(ẋ)
+    ẋ = (x .- ϕ.∂z) ./ (ϕ.∂o .- ϕ.∂z)
+    ϕ.Φ(ẋ)
 end
-raw_Φ(Φ::Φ̂) = Φ.Φ
-raw_Φ(Φ) = Φ
+Φ̇(Φ::Φ̂) = Φ.Φ
+# Φ̇(Φ) = Φ
 function gpu_safe(Φ, ::Val{N}) where N
-    @kernel function gpu_test(Φ, out, ::Val{N}) where N
+    @kernel function gpu_test(Φ, y, ::Val{N}) where N
         z = ntuple(_ -> zero(T), Val(N))
         x = SVector{N,T}(z)
-        out[1] = Φ(x)
+        y[1] = Φ(x)
     end
     try
-        out = KernelAbstractions.zeros(GPU_BACKEND, T, 1)
-        gpu_test(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(Φ, out, Val(N), ndrange=1)
+        y = KernelAbstractions.zeros(GPU_BACKEND, T, 1)
+        gpu_test(GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE)(Φ, y, Val(N), ndrange=1)
         KernelAbstractions.synchronize(GPU_BACKEND)
         true
     catch e
@@ -107,25 +108,23 @@ function Base.copy!(ϵ::∃, ϵ̂::∀, dmap, ω::∀)
     end
     ϵ_new
 end
-ρ̂(ρ, ρ̂) = T(2) .* ρ̂ .* ρ
-ρ̂(ϵ::∃) = ρ̂(ϵ.ρ, ϵ.ϵ̂.ρ)
-μ̂(μ, μ̂, ρ̂) = μ̂ .+ ρ̂ .* (T(2) .* μ .- one(T))
-μ̂(ϵ::∃) = μ̂(ϵ.μ, ϵ.ϵ̂.μ, ϵ.ϵ̂.ρ)
-ρ̃(ϵρ, ρ) = ○ * ρ ./ ϵρ
-ρ̃(ϵ::∃, ρ) = ρ̃(ϵ.ρ, ρ)
-μ̃(ϵμ, ϵρ, μ) = ○ * ((μ .- ϵμ) ./ ϵρ .+ one(T))
-μ̃(ϵ::∃, μ) = μ̃(ϵ.μ, ϵ.ρ, μ)
+ρ̂̂(ρ̂, ρ) = T(2) .* ρ̂ .* ρ
+# ρ̂̂(ϵ::∃) = ρ̂̂(ϵ.ϵ̂.ρ, ϵ.ρ)
+μ̂̂(μ̂, ρ̂, μ) = μ̂ .+ ρ̂ .* (T(2) .* μ .- one(T))
+# μ̂̂(ϵ::∃) = μ̂̂(ϵ.ϵ̂.μ, ϵ.ϵ̂.ρ, ϵ.μ)
+ρ(ρ̂̂, ρ̂) = ○ * ρ̂̂ ./ ρ̂
+# ρ(ϵ::∃, ρ) = ρ̃(ϵ.ρ, ρ)
+μ(μ̂̂, ρ̂̂, μ̂) = ○ * ((μ̂̂ - μ̂) / ρ̂ + one(T))
+# μ̃(ϵ::∃, μ) = μ̃(ϵ.μ, ϵ.ρ, μ)
 μρΩ(ϵ::∃) = begin
     ϵ.ϵ̂ isa 𝕋 && return ϵ.μ, ϵ.ρ
     μ̂, ρ̂ = μρΩ(ϵ.ϵ̂)
-    μ = μ̂ .- ρ̂ .+ T(2) .* ρ̂ .* ϵ.μ
-    ρ = T(2) .* ρ̂ .* ϵ.ρ
-    μ, ρ
+    μ̂̂(μ̂, ρ̂, ϵ.μ), ρ̂̂(ρ̂, ϵ.ρ)
 end
 μρΩ(::𝕋, μ, ρ) = μ, ρ
 function μρΩ(ϵ̂::∃, μ, ρ)
     μ̃, ρ̃ = μρΩ(ϵ̂)
-    μ̂(μ, μ̃, ρ̃), ρ̂(ρ, ρ̃)
+    μ̂(μ̃, ρ̃, μ), ρ̂(ρ̃, ρ)
 end
 function μρ(ϵ::∃, d)
     i = searchsortedfirst(ϵ.d, d)
@@ -170,16 +169,15 @@ function Base.:(⊆)(zero₁, one₁, ∂₁::Tuple{Bool,Bool}, zero₂, one₂,
     ȯne = one₁ < one₂ || (one₁ == one₂ && (!∂₁[2] || ∂₂[2]))
     żero && ȯne
 end
-function ⪽(ϵ₁::∃, ϵ₂::∃)
+function ⪽(ϵ::∃, ϵ̂::∃)
     found = Threads.Atomic{Bool}(false)
     result = Threads.Atomic{Bool}(true)
-    Threads.@threads for i₂ in eachindex(ϵ₂.d)
-        d₂ = ϵ₂.d[i₂]
-        ρ₂ = ϵ₂.ρ[i₂]
-        μ₂ = ϵ₂.μ[i₂]
-        if iszero(ρ₂)
+    Threads.@threads for (î, d̂) in enumerate(ϵ̂.d)
+        ρ̂ = ϵ̂.ρ[î]
+        μ̂ = ϵ̂.μ[î]
+        if iszero(ρ̂)
             Threads.atomic_or!(found, true)
-            μ₁, _, _ = μρ(ϵ₁, d₂)
+            μ, _, _ = μρ(ϵ, d̂)
             if μ₁ != μ₂
                 Threads.atomic_and!(result, false)
             end
@@ -188,9 +186,9 @@ function ⪽(ϵ₁::∃, ϵ₂::∃)
         Threads.atomic_or!(found, true)
         result[] || continue  # skip work if already false
         μ₁, ρ₁, ∂₁ = μρ(ϵ₁, d₂)
-        zero₁, one₁ = μ₁ - ρ₁, μ₁ + ρ₁
-        zero₂, one₂ = μ₂ - ρ₂, μ₂ + ρ₂
-        if !⊆(zero₁, one₁, ∂₁, zero₂, one₂, ϵ₂.∂[i₂])
+        ∂z₁, ∂o₁ = μ₁ - ρ₁, μ₁ + ρ₁
+        ∂z₂, ∂o₂ = μ₂ - ρ₂, μ₂ + ρ₂
+        if !⊆(∂z₁, ∂o₁, ∂₁, ∂z₂, ∂o₂, ϵ₂.∂[i₂])
             Threads.atomic_and!(result, false)
         end
     end
@@ -198,10 +196,10 @@ function ⪽(ϵ₁::∃, ϵ₂::∃)
 end
 function α(ϵ)
     αϵ = Set{∃}([ϵ])
-    p = ϵ.ϵ̂
-    while p isa ∃
-        push!(αϵ, p)
-        p = p.ϵ̂
+    ϵ̂ = ϵ.ϵ̂
+    while ϵ̂ isa ∃
+        push!(αϵ, ϵ̂)
+        ϵ̂ = ϵ̂.ϵ̂
     end
     αϵ
 end
@@ -253,11 +251,11 @@ Base.:(==)(::∃, ::𝕋) = false
 # ϵ₁::∃, ϵ₂::∀, ω = ϵ, ω, ω
 # ϵ = ω.ϵ̃[ϵ₂][1]
 # ⫉(ϵ₁, ϵ, ω)
-function β(ϵ₁::∃, ϵ₂::∀, ω::∀)
-    ϵ̃ = ω.ϵ̃[ϵ₂]
-    ϵ̃₂ = filter(ϵ -> ⫉(ϵ₁, ϵ, ω), ϵ̃)
-    isempty(ϵ̃₂) && return ϵ₂
-    β(ϵ₁, only(ϵ̃₂), ω)
+# ϵ₁::∃, ϵ₂::∀, ω = ϵ₁, only(ϵ̃₂), ω
+function β(ϵ::∃, ϵ̂::∀, ω::∀) # ϵ ⫉ ϵ̂
+    ϵ̃ = filter(ϵ̃ -> ⫉(ϵ, ϵ̃, ω), ω.ϵ̃[ϵ̂])
+    isempty(ϵ̃) && return ϵ̂
+    β(ϵ, only(ϵ̃), ω)
 end
 function Base.:∩(zero₁, one₁, ∂₁::Tuple{Bool,Bool}, zero₂, one₂, ∂₂::Tuple{Bool,Bool})
     żero = max(zero₁, zero₂)
