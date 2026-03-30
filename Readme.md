@@ -12,6 +12,7 @@ If we use a horizontal axis for dimension and a vertical axis for coordinate in 
 Each child ϵ is a subset of its parent in the active dimensions declared by the parent. All siblings are inf-dim disjoint.
 
 god ⊊ God = Ω = I^I = I^(.) = [ZERO < ○ < ONE]^(.)
+
 god observes or creates, God iterates.
 
 Example god: https://github.com/1m1-github/god.jl
