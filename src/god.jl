@@ -61,14 +61,13 @@ end
 
 function ∃!(g::god, Φ, ω=g.Ω, t0=t(ω), t1=one(T))
     # function ∃!(g::god, Φ, ω=g.Ω, t0=t(ω), t1=t(ω.Ο[ω]+1))
-    (t0 < zero(T) || t0 < t(ω) || t1 < t0 || one(T) < t1) && return
+    (t0 < zero(T) || t0 < t(ω, ω) || t1 < t0 || one(T) < t1) && return
     _, _, _, μ̃, ρ̃, _ = octahedron(g)
     try
         ρ̂ = (t1 - t0) * ○
         μ = SA[t0+ρ̂, μ̃[2:end]...]
         ρ = SA[ρ̂, ρ̃[2:end]...]
-        ϵ = ∃(ω, g.ẑero.d, μ, ρ, g.ẑero.∂, Φ)
-        ∃!(ϵ, ω)
+        ∃!(g.ẑero.d, μ, ρ, g.ẑero.∂, Φ, ω)
     catch e
         bt = catch_backtrace()
         showerror(stderr, e, bt)
@@ -79,9 +78,8 @@ end
 trivial(ϵ) = ϵ isa 𝕋 || ϵ.Φ === ○̂
 function ∃̇(g::god, ω=g.Ω)
     try
-        dx, dy, d, μ, ρ, N = octahedron(g)
-        ϵ = ∃(ω, g.ẑero.d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
-        ϵ̂ = β(ϵ, ω, ω)
+        dx, dy, d, ϵμ, ϵρ, N = octahedron(g)
+        ϵ̂ = β(g.ẑero.d, ϵμ, ϵρ, g.ẑero.∂, ω)
         istrivial = trivial(ϵ̂)
         ϵϵ = []
         !istrivial && push!(ϵϵ, ϵ̂)
@@ -90,7 +88,7 @@ function ∃̇(g::god, ω=g.Ω)
         hasdepth = !iszero(g.ρ[end])
         nz = hasdepth ? GL_N - 1 : 1
         i = fill(istrivial ? 0 : 1, g.♯..., nz)
-        owners!(g, ône, ϵ̂, ϵ, i, ϵϵ, 0, dx, dy, nz, ω, istrivial)
+        owners!(g, ône, ϵμ, ϵρ, ϵ̂, i, ϵϵ, 0, dx, dy, nz, ω, istrivial)
         # unique(i)
         # count(x->x==1,i)/prod(size(i))
         # count(x->x==2,i)/prod(size(i))
@@ -98,13 +96,13 @@ function ∃̇(g::god, ω=g.Ω)
         ΦΦ = ΦTuple(ntuple(i -> ϵϵ[i].Φ, length(ϵϵ)))
         ôneϕ = if hasdepth
             z = @SVector zeros(T, N)
-            ϵ = ∃(ω, g.ẑero.d, ône, z, g.ẑero.∂, ○̂)
-            ϵ, found = X(ϵ, g.∇̄, ω)
-            !found || trivial(ϵ) ? ○ : Metal.@allowscalar ϵ.Φ(ône)
+            ôneϵ = β(g.ẑero.d, ône, z, g.ẑero.∂, ω)
+            # trivial(ôneϵ) ? ○ : Metal.@allowscalar ôneϵ.Φ(ône)
+            trivial(ôneϵ) ? ○ : ôneϵ.Φ(ône)
         else
             zero(T)
         end
-        godẑero = μ .- (dx .+ dy) * ○
+        godẑero = ϵμ .- (dx .+ dy) * ○
         godẑeroône = ône .- godẑero
         Π(i, ΦΦ, ôneϕ, godẑero, godẑeroône, dx, dy, g.♯..., nz)
     catch e
@@ -113,14 +111,14 @@ function ∃̇(g::god, ω=g.Ω)
         fill(○, g.♯...)
     end
 end
-function owners!(g, ône, ϵ̂, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
+function owners!(g, ône, ϵμ, ϵρ, ϵ̂, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
     if 0 < ∇ && ϵ̂ isa ∃ && !istrivial
-        μ, ρ = μρΩ(ϵ̂)
+        μ̂, ρ̂ = μρΩ(ϵ̂)
         intersects = pyramid_box_intersection!(
             i, length(ϵϵ) + 1,
             g.ẑero.μ, ône,
             dx, dy,
-            μ .- ρ, μ .+ ρ,
+            μ̂ .- ρ̂, μ̂ .+ ρ̂,
             g.♯..., nz)
         intersects || return
         push!(ϵϵ, ϵ̂)
@@ -129,8 +127,9 @@ function owners!(g, ône, ϵ̂, ϵ, i, ϵϵ, ∇, dx, dy, nz, ω, istrivial)
     # ϵ̃ = ω.ϵ̃[ϵ][1]
     # ϵ=ϵ̃
     for ϵ̃ = ω.ϵ̃[ϵ̂]
-        ∩(ϵ, ϵ̃, ω) || continue
-        owners!(g, ône, ϵ̂, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
+        ϵ̃ϵ̂d = ϵ̂ isa ∃ ? ϵ̂.d : unique(sort(g.ẑero.d ∪ ϵ̃.d))
+        ∩(g.ẑero.d, ϵμ, ϵρ, g.ẑero.∂, ϵ̃.d, ϵ̃.μ, ϵ̃.ρ, ϵ̃.∂, ϵ̃ϵ̂d) || continue
+        owners!(g, ône, ϵμ, ϵρ, ϵ̃, i, ϵϵ, ∇ + 1, dx, dy, nz, ω, trivial(ϵ̃))
     end
 end
 
@@ -210,9 +209,8 @@ function step!(g::god, dt̂=one(T))
     # g.ẑero.Φ !== ○̂ && ∃!(g.ẑero)
     true
 end
-dim!(g::god, dmap) = begin
+dim!(g::god, d) = begin
     try
-        d = dmap.(g.ẑero.d)
         _, _, _, μ, ρ, _ = octahedron(g.ẑero.μ, g.ône.μ, g.ρ, g.θ, g.norm)
         ∃(g.Ω, d, μ, ρ, g.ẑero.∂, g.ẑero.Φ)
         g.ẑero = ∃(g.ẑero.ϵ̂, d, g.ẑero.μ, g.ẑero.ρ, g.ẑero.∂, g.ẑero.Φ)

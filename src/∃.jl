@@ -1,5 +1,3 @@
-const ○ = one(T) / (one(T) + one(T))
-const ○̂ = x -> ○
 abstract type ∀ end
 struct ∃{N,F,P<:∀} <: ∀
     ϵ̂::P
@@ -27,41 +25,43 @@ end
 Base.hash(ϵ::∃, h::UInt) = hash(ϵ.h, h)
 struct 𝕋 <: ∀
     ϵ̃::Dict{∀,Vector{∃}}
-    Ο::Dict{∀,Int}
+    Ο::Dict{∀,UInt}
     L::ReentrantLock
-    s::Ref{Int}
+    s::Ref{UInt}
     function 𝕋()
         ϵ̃ = Dict{∀,Vector{∃}}()
-        Ο = Dict{∀,Int}()
-        Ω = new(ϵ̃, Ο, ReentrantLock(), Ref(1))
+        Ο = Dict{∀,UInt}()
+        Ω = new(ϵ̃, Ο, ReentrantLock(), Ref(UInt(1)))
         Ω.ϵ̃[Ω] = ∃[]
         Ω.Ο[Ω] = Ω.s[]
         Ω
     end
 end
 Base.hash(::𝕋, h::UInt) = hash(:Ω, h)
-t(Ο::Int) = one(T) - one(T) / (one(T) + T(log(Ο)))
-t(ω::∀) = t(ω.Ο[ω])
+t(Ο::UInt) = one(T) - one(T) / (one(T) + T(log(Ο)))
+t(ϵ::∀, ω::𝕋) = t(ω.Ο[ϵ])
+t(ω::𝕋) = t(ω, ω)
+const ○ = one(T) / (one(T) + one(T))
+const ○̂ = x -> ○
 struct Φ̂{N,F}
     Φ::F
-    ∂z::SVector{N,T}
-    ∂o::SVector{N,T}
+    z::SVector{N,T}
+    o::SVector{N,T}
 end
 function (ϕ::Φ̂{N})(x) where N
     for i = 1:N
-        ϕ.∂o[i] == ϕ.∂z[i] && return ○
-        x[i] ≤ ϕ.∂z[i] && return ○
-        ϕ.∂o[i] ≤ x[i] && return ○
+        ϕ.o[i] == ϕ.z[i] && return ○
+        x[i] ≤ ϕ.z[i] && return ○
+        ϕ.o[i] ≤ x[i] && return ○
     end
-    ẋ = (x .- ϕ.∂z) ./ (ϕ.∂o .- ϕ.∂z)
+    ẋ = (x .- ϕ.z) ./ (ϕ.o .- ϕ.z)
     ϕ.Φ(ẋ)
 end
 Φ̇(Φ::Φ̂) = Φ.Φ
-# Φ̇(Φ) = Φ
+Φ̇(Φ) = Φ
 function gpu_safe(Φ, ::Val{N}) where N
     @kernel function gpu_test(Φ, y, ::Val{N}) where N
-        z = ntuple(_ -> zero(T), Val(N))
-        x = SVector{N,T}(z)
+        x = @SVector zeros(T, N)
         y[1] = Φ(x)
     end
     try
@@ -74,248 +74,109 @@ function gpu_safe(Φ, ::Val{N}) where N
         false
     end
 end
-function Base.copy!(ϵ::∃, ϵ̂::∀, dmap, ω::∀)
-    μΩ, ρΩ = μρΩ(ϵ)
-    N = length(ϵ.d)
-    d = SVector(ntuple(i -> dmap(ϵ.d[i]), N))
-    if ϵ̂ isa 𝕋
-        μ_new, ρ_new = μΩ, ρΩ
-    else
-        μ̂Ω, ρ̂Ω = μρΩ(ϵ̂)
-        μ_new = SVector(ntuple(N) do i
-            dᵢ = d[i]
-            j = searchsortedfirst(ϵ̂.d, dᵢ)
-            if j ≤ length(ϵ̂.d) && ϵ̂.d[j] == dᵢ
-                μ̃(μ̂Ω[j], ρ̂Ω[j], μΩ[i])
-            else
-                μΩ[i]
-            end
-        end)
-        ρ_new = SVector(ntuple(N) do i
-            dᵢ = d[i]
-            j = searchsortedfirst(ϵ̂.d, dᵢ)
-            if j ≤ length(ϵ̂.d) && ϵ̂.d[j] == dᵢ
-                ρ̃(ρ̂Ω[j], ρΩ[i])
-            else
-                ρΩ[i]
-            end
-        end)
+function Base.copy!(ϵ::∃, ḋ, μ̇, ρ̇, ω::𝕋)
+    ϵ̇ = ∃!(ḋ, μ̇, ρ̇, ϵ.∂, ϵ.Φ, ω)
+    for ϵ̃ = ω.ϵ̃[ϵ]
+        μ̃ = μ̂̂(μ̇, ρ̇, ϵ̃.μ)
+        ρ̃ = ρ̂̂(ρ̇, ϵ̃.ρ)
+        copy!(ϵ̃, ḋ, μ̃, ρ̃, ω)
     end
-    ϵ_new = ∃(ϵ̂, d, μ_new, ρ_new, ϵ.∂, raw_Φ(ϵ.Φ))
-    ∃!(ϵ_new, ω)
-    for ϵ̃ in ω.ϵ̃[ϵ]
-        copy!(ϵ̃, ϵ_new, dmap, ω)
-    end
-    ϵ_new
+    ϵ̇
 end
 ρ̂̂(ρ̂, ρ) = T(2) .* ρ̂ .* ρ
-# ρ̂̂(ϵ::∃) = ρ̂̂(ϵ.ϵ̂.ρ, ϵ.ρ)
 μ̂̂(μ̂, ρ̂, μ) = μ̂ .+ ρ̂ .* (T(2) .* μ .- one(T))
-# μ̂̂(ϵ::∃) = μ̂̂(ϵ.ϵ̂.μ, ϵ.ϵ̂.ρ, ϵ.μ)
-ρ(ρ̂̂, ρ̂) = ○ * ρ̂̂ ./ ρ̂
-# ρ(ϵ::∃, ρ) = ρ̃(ϵ.ρ, ρ)
-μ(μ̂̂, ρ̂̂, μ̂) = ○ * ((μ̂̂ - μ̂) / ρ̂ + one(T))
-# μ̃(ϵ::∃, μ) = μ̃(ϵ.μ, ϵ.ρ, μ)
-μρΩ(ϵ::∃) = begin
+ρ̃̃(ρ, ρ̃) = ○ * ρ ./ ρ̃
+μ̃̃(μ, ρ, μ̃) = ○ * ((μ .- μ̃) ./ ρ .+ one(T))
+function μρΩ(ϵ::∃)
     ϵ.ϵ̂ isa 𝕋 && return ϵ.μ, ϵ.ρ
     μ̂, ρ̂ = μρΩ(ϵ.ϵ̂)
     μ̂̂(μ̂, ρ̂, ϵ.μ), ρ̂̂(ρ̂, ϵ.ρ)
 end
 μρΩ(::𝕋, μ, ρ) = μ, ρ
-function μρΩ(ϵ̂::∃, μ, ρ)
-    μ̃, ρ̃ = μρΩ(ϵ̂)
-    μ̂(μ̃, ρ̃, μ), ρ̂(ρ̃, ρ)
+function μρΩ(ϵ::∃, μ, ρ)
+    μ̇, ρ̇ = μρΩ(ϵ)
+    μ̂̂(μ̇, ρ̇, μ), ρ̂̂(ρ̇, ρ)
 end
-function μρ(ϵ::∃, d)
-    i = searchsortedfirst(ϵ.d, d)
-    N = length(ϵ.d)
-    if i ≤ N && ϵ.d[i] == d
-        return ϵ.μ[i], ϵ.ρ[i], ϵ.∂[i]
-    end
-    d₀ = d₁ = ϵ.d[1]
-    dₙ = ϵ.d[N]
+function μρ(ϵd, ϵμ, ϵρ, ϵ∂, d)
+    i = searchsortedfirst(ϵd, d)
+    N = length(ϵd)
+    i ≤ N && ϵd[i] == d && return ϵμ[i], ϵρ[i], ϵ∂[i]
+    d₀ = d₁ = ϵd[1]
+    dₙ = ϵd[N]
     μ₀ = μ₁ = ○
     if d < d₀
         d₀ = zero(T)
-        μ₁ = ϵ.μ[1]
+        μ₁ = ϵμ[1]
     elseif dₙ < d
         d₀, d₁ = dₙ, one(T)
-        μ₀ = ϵ.μ[N]
+        μ₀ = ϵμ[N]
     else
-        d₀, d₁ = ϵ.d[i-1], ϵ.d[i]
-        μ₀, μ₁ = ϵ.μ[i-1], ϵ.μ[i]
+        d₀, d₁ = ϵd[i-1], ϵd[i]
+        μ₀, μ₁ = ϵμ[i-1], ϵμ[i]
     end
     d = (d - d₀) / (d₁ - d₀)
     μ₀ + (μ₁ - μ₀) * d, zero(T), (true, true)
 end
-function ∂(x::∃, ::𝕋)
-    zeroₓ = x.μ .- x.ρ
-    any(==(zero(T)), zeroₓ) && return true
-    oneₓ = x.μ .+ x.ρ
-    any(==(one(T)), oneₓ)
+function ⊂(z, o, ∂, ẑ, ô, ∂̂)
+    # ż = ẑ < z || (ẑ == z && (!∂[1] && ∂̂[1]))
+    # ȯ = o < ô || (o == ô && (!∂[1] && ∂̂[1]))
+    ż = ẑ < z || (ẑ == z && (!∂[1] || ∂̂[1]))
+    ȯ = o < ô || (o == ô && (!∂[1] || ∂̂[1]))
+    ż && ȯ
 end
-function ∂(x::∃, ϵ::∃)
-    zeroμ, oneμ = ϵ.μ .- ϵ.ρ, ϵ.μ .+ ϵ.ρ
-    Threads.@threads for i = eachindex(ϵ.d)
-        d = ϵ.d[i]
-        iszero(ϵ.ρ[i]) && continue
-        μₓ, _ = μρ(x, d)
-        (μₓ == zeroμ[i] || μₓ == oneμ[i]) && return true
+function ⫉(ϵd, ϵμ, ϵρ, ϵ∂, ϵ̂d, ϵ̂μ, ϵ̂ρ, ϵ̂∂)
+    for (î, d̂) in enumerate(ϵ̂d)
+        ρ̂ = ϵ̂ρ[î]
+        μ̂ = ϵ̂μ[î]
+        μ, ρ, ∂ = μρ(ϵd, ϵμ, ϵρ, ϵ∂, d̂)
+        z, o = μ - ρ, μ + ρ
+        ẑ, ô = μ̂ - ρ̂, μ̂ + ρ̂
+        !⊂(z, o, ∂, ẑ, ô, ϵ̂∂[î]) && return false
     end
-    false
+    true
 end
-function Base.:(⊆)(zero₁, one₁, ∂₁::Tuple{Bool,Bool}, zero₂, one₂, ∂₂::Tuple{Bool,Bool})
-    żero = zero₂ < zero₁ || (zero₂ == zero₁ && (!∂₁[1] || ∂₂[1]))
-    ȯne = one₁ < one₂ || (one₁ == one₂ && (!∂₁[2] || ∂₂[2]))
-    żero && ȯne
-end
-function ⪽(ϵ::∃, ϵ̂::∃)
-    found = Threads.Atomic{Bool}(false)
-    result = Threads.Atomic{Bool}(true)
-    Threads.@threads for (î, d̂) in enumerate(ϵ̂.d)
-        ρ̂ = ϵ̂.ρ[î]
-        μ̂ = ϵ̂.μ[î]
-        if iszero(ρ̂)
-            Threads.atomic_or!(found, true)
-            μ, _, _ = μρ(ϵ, d̂)
-            if μ₁ != μ₂
-                Threads.atomic_and!(result, false)
-            end
-            continue
-        end
-        Threads.atomic_or!(found, true)
-        result[] || continue  # skip work if already false
-        μ₁, ρ₁, ∂₁ = μρ(ϵ₁, d₂)
-        ∂z₁, ∂o₁ = μ₁ - ρ₁, μ₁ + ρ₁
-        ∂z₂, ∂o₂ = μ₂ - ρ₂, μ₂ + ρ₂
-        if !⊆(∂z₁, ∂o₁, ∂₁, ∂z₂, ∂o₂, ϵ₂.∂[i₂])
-            Threads.atomic_and!(result, false)
-        end
-    end
-    found[] && result[]
-end
-function α(ϵ)
-    αϵ = Set{∃}([ϵ])
-    ϵ̂ = ϵ.ϵ̂
-    while ϵ̂ isa ∃
-        push!(αϵ, ϵ̂)
-        ϵ̂ = ϵ̂.ϵ̂
-    end
-    αϵ
-end
-function α(ϵ₁::∃, ϵ₂::∃, ω::∀)
-    αϵ₁ = α(ϵ₁)
-    for ϵ = αϵ₁
-        ϵ == ϵ₂ && return ϵ₂
-    end
-    # ϵ₂ ∈ αϵ₁ && return ϵ₂
-    ϵ̂ = ϵ₂.ϵ̂
-    while ϵ̂ isa ∃
-        for ϵ = αϵ₁
-            ϵ == ϵ̂ && return ϵ̂
-        end
-        # ϵ̂ ∈ αϵ₁ && return ϵ̂
-        ϵ̂ = ϵ̂.ϵ̂
-    end
-    ω
-end
-function ℼ(ϵ::∃)
-    ϵ̂ = ϵ.ϵ̂
-    ϵ̂ isa 𝕋 && return ϵ
-    ϵ̂̂ = ∃(ϵ̂.ϵ̂, ϵ.d, μ̂(ϵ), ρ̂(ϵ), ϵ.∂, ϵ.Φ)
-    ℼ(ϵ̂̂)
-end
-ℼ(ω::𝕋, ::Any) = ω
-ℼ(ϵ, ::𝕋) = ℼ(ϵ)
-function ℼ(ϵ₁::∃, ϵ₂::∃)
-    ○̂̂ = SVector(ntuple(○̂, length(ϵ₁.d)))
-    ϵ₁ == ϵ₂ && return ∃(ϵ₂, ϵ₁.d, ○̂̂, ○̂̂, ϵ₁.∂, ϵ₁.Φ)
-    ϵ₁.ϵ̂ == ϵ₂ && return ϵ₁
-    if ϵ₂ ∈ α(ϵ₁)
-        return ℼ(∃(ϵ₁.ϵ̂.ϵ̂, ϵ₁.d, μ̂(ϵ₁), ρ̂(ϵ₁), ϵ₁.∂, ϵ₁.Φ), ϵ₂)
-    end
-    ϵ₁Ω = ℼ(ϵ₁)
-    ϵ₂Ω = ℼ(ϵ₂)
-    μ = μ̃(ϵ₂Ω, ϵ₁Ω.μ)
-    ρ = ρ̃(ϵ₂Ω, ϵ₁Ω.ρ)
-    ∃(ϵ₂, ϵ₁.d, μ, ρ, ϵ₁.∂, ϵ₁.Φ)
-end
-⫉(ϵ, ::𝕋) = true
-function ⫉(ϵ₁::∃, ϵ₂::∃, ω::∀)
-    ϵ₁.ϵ̂ == ϵ₂.ϵ̂ && return ϵ₁ ⪽ ϵ₂
-    ϵ̂ = α(ϵ₁, ϵ₂, ω)
-    ℼ(ϵ₁, ϵ̂) ⪽ ℼ(ϵ₂, ϵ̂)
-end
-Base.:(==)(ϵ₁::∃, ϵ₂::∃) = ϵ₁.d == ϵ₂.d && ϵ₁.μ == ϵ₂.μ && ϵ₁.ρ == ϵ₂.ρ && ϵ₁.∂ == ϵ₂.∂
-Base.:(==)(::∃, ::𝕋) = false
-# ϵ₁::∃, ϵ₂::∀, ω = ϵ, ω, ω
-# ϵ = ω.ϵ̃[ϵ₂][1]
-# ⫉(ϵ₁, ϵ, ω)
-# ϵ₁::∃, ϵ₂::∀, ω = ϵ₁, only(ϵ̃₂), ω
-function β(ϵ::∃, ϵ̂::∀, ω::∀) # ϵ ⫉ ϵ̂
-    ϵ̃ = filter(ϵ̃ -> ⫉(ϵ, ϵ̃, ω), ω.ϵ̃[ϵ̂])
+β(d, μ, ρ, ∂, ω::𝕋) = β(d, μ, ρ, ∂, ω, ω)
+function β(d, μ, ρ, ∂, ϵ̂::∀, ω::𝕋)
+    ϵ̃ = filter(ϵ -> begin
+        ϵμ, ϵρ = μρΩ(ϵ)
+        ⫉(d, μ, ρ, ∂, ϵ.d, ϵμ, ϵρ, ϵ.∂)
+    end, ω.ϵ̃[ϵ̂])
     isempty(ϵ̃) && return ϵ̂
-    β(ϵ, only(ϵ̃), ω)
+    β(d, μ, ρ, ∂, only(ϵ̃), ω)
 end
-function Base.:∩(zero₁, one₁, ∂₁::Tuple{Bool,Bool}, zero₂, one₂, ∂₂::Tuple{Bool,Bool})
-    żero = max(zero₁, zero₂)
-    ȯne = min(one₁, one₂)
-    żero < ȯne && return true
-    żero ≠ ȯne && return false
-    ∂₀₀ = zero₂ < zero₁ ? ∂₁[1] : (zero₁ < zero₂ ? ∂₂[1] : ∂₁[1] && ∂₂[1])
-    ∂₀₁ = one₁ < one₂ ? ∂₁[2] : (one₂ < one₁ ? ∂₂[2] : ∂₁[2] && ∂₂[2])
+function Base.:∩(z₁, o₁, ∂₁, z₂, o₂, ∂₂)
+    ż = max(z₁, z₂)
+    ȯ = min(o₁, o₂)
+    ż < ȯ && return true
+    ż ≠ ȯ && return false
+    ∂₀₀ = z₂ < z₁ ? ∂₁[1] : (z₁ < z₂ ? ∂₂[1] : ∂₁[1] && ∂₂[1])
+    ∂₀₁ = o₁ < o₂ ? ∂₁[2] : (o₂ < o₁ ? ∂₂[2] : ∂₁[2] && ∂₂[2])
     ∂₀₀ && ∂₀₁
 end
-Base.:∩(ϵ₁::∃, ::𝕋) = true
-function Base.:∩(ϵ₁::∃, ϵ₂::∃, ω::∀)
-    ϵ₁ == ϵ₂ && return true
-    if ϵ₁.ϵ̂ !== ϵ₂.ϵ̂
-        ϵ̂ = α(ϵ₁, ϵ₂, ω)
-        return ∩(ℼ(ϵ₁, ϵ̂), ℼ(ϵ₂, ϵ̂), ω)
+function Base.:∩(ϵ₁d, ϵ₁μ, ϵ₁ρ, ϵ₁∂, ϵ₂d, ϵ₂μ, ϵ₂ρ, ϵ₂∂, ϵ₂ϵ̂d)
+    for d = ϵ₂ϵ̂d
+        μ₁, ρ₁, ∂₁ = μρ(ϵ₁d, ϵ₁μ, ϵ₁ρ, ϵ₁∂, d)
+        μ₂, ρ₂, ∂₂ = μρ(ϵ₂d, ϵ₂μ, ϵ₂ρ, ϵ₂∂, d)
+        z₁, o₁ = μ₁ - ρ₁, μ₁ + ρ₁
+        z₂, o₂ = μ₂ - ρ₂, μ₂ + ρ₂
+        !∩(z₁, o₁, ∂₁, z₂, o₂, ∂₂) && return false
     end
-    d̂ = sort(ϵ₁.d ∪ ϵ₂.d)
-    if !iszero(d̂[1])
-        if !isone(d̂[end])
-            d̂ = [zero(T), d̂..., one(T)]
-        else
-            d̂ = [zero(T), d̂...]
-        end
-    elseif !isone(d̂[end])
-        d̂ = [d̂..., one(T)]
-    end
-    μ₁, ρ₁, ∂₁ = μρ(ϵ₁, zero(T))
-    μ₂, ρ₂, ∂₂ = μρ(ϵ₂, zero(T))
-    μ₁prev, μ₂prev = μ₁, μ₂
-    for (i, d) = enumerate(d̂)
-        if 1 < i
-            μ₁, ρ₁, ∂₁ = μρ(ϵ₁, d)
-            μ₂, ρ₂, ∂₂ = μρ(ϵ₂, d)
-        end
-        zero₁, one₁ = μ₁ - ρ₁, μ₁ + ρ₁
-        zero₂, one₂ = μ₂ - ρ₂, μ₂ + ρ₂
-        !∩(zero₁, one₁, ∂₁, zero₂, one₂, ∂₂) && return false
-        i == 1 && continue
-        μ₁prev < μ₂prev && μ₂ < μ₁ && return true
-        μ₂prev < μ₁prev && μ₁ < μ₂ && return true
-        μ₁prev, μ₂prev = μ₁, μ₂
-    end
-    ϵ̃ = get(ω.ϵ̃, ϵ₂, ∃[])
-    isempty(ϵ̃) && return true
-    ϵ̂ = ℼ(ϵ₁, ϵ₂)
-    all(ϵ̃ -> ∩(ϵ̂, ϵ̃, ω), ϵ̃)
+    true
 end
-function ∃!(ϵ::∃, ω::∀)
+function ∃!(d, μ, ρ, ∂, ϕ, ω::𝕋)
     lock(ω.L)
-    ϵ̂ = β(ϵ, ω, ω)
-    ϵ̃ = ω.ϵ̃[ϵ̂]
-    any(ϵ̃ -> ∩(ϵ, ϵ̃, ω), ϵ̃) && (unlock(ω.L); return nothing)
-    if ϵ̂ !== ϵ.ϵ̂
-        μΩ, ρΩ = μρΩ(ϵ)
-        μ̂Ω, ρ̂Ω = μρΩ(ϵ̂)
-        ρ = ρ̃(ρ̂Ω, ρΩ)
-        μ = μ̃(μ̂Ω, ρ̂Ω, μΩ)
-        ϵ = ∃(ϵ̂, ϵ.d, μ, ρ, ϵ.∂, ϵ.Φ)
+    ϵ̂ = β(d, μ, ρ, ∂, ω)
+    any(ϵ̃ -> begin
+        ϵ̃ϵ̂d = ϵ̂ isa ∃ ? ϵ̂.d : unique(sort(d ∪ ϵ̃.d))
+        ∩(d, μ, ρ, ∂, ϵ̃.d, ϵ̃.μ, ϵ̃.ρ, ϵ̃.∂, ϵ̃ϵ̂d)
+    end, ω.ϵ̃[ϵ̂]) && (unlock(ω.L); return nothing)
+    μ̃, ρ̃ = if ϵ̂ === ω
+        μ, ρ
+    else
+        ϵ̂μ, ϵ̂ρ = μρΩ(ϵ̂)
+        μ̃̃(ϵ̂μ, ϵ̂ρ, μ), ρ̃̃(ρ, ϵ̂ρ)
     end
+    ϵ = ∃(ϵ̂, d, μ̃, ρ̃, ∂, ϕ)
     while Sys.free_memory() < ω.s[] + sizeof(ϵ)
         rm!(ω)
     end
@@ -328,33 +189,5 @@ function ∃!(ϵ::∃, ω::∀)
     ϵ
 end
 function rm!(ω::𝕋)
-    ϵ̂̂ = argmin(ϵ -> ω.Ο[ϵ], filter(k -> k isa ∃, keys(ω.Ο)))
-    ω.s[] -= sizeof(ϵ̂̂)
-    filter!(ϵ -> ϵ !== ϵ̂̂, ω.ϵ̃[ϵ̂̂.ϵ̂])
-    delete!(ω.ϵ̃, ϵ̂̂)
-    delete!(ω.Ο, ϵ̂̂)
-end
-function √(ϵ::∃)
-    n = 0
-    p = ϵ
-    while !(p.ϵ̂ isa 𝕋)
-        p = p.ϵ̂
-        n += 1
-    end
-    p, n
-end
-function X(x::∃, ∇, ω::∀)
-    ϵ = β(x, ω, ω)
-    ϵ === ω && return ω, true
-    ∂(x, ϵ) && return ω, true
-    ∩(x, ϵ, ω) && return ϵ, true # ?
-    _, n = √(ϵ)
-    ∇ < n && return ω, false
-    ϵ̃ = ω.ϵ̃[ϵ]
-    Threads.@threads for ϵ̃ = filter(ϵ̃ -> ⫉(x, ϵ̃, ω), ϵ̃)
-        ∩(x, ϵ̃, ω) && return ϵ̃, true
-        ϵ̂, found = X(x, ∇, ω)
-        found && return ϵ̂, true
-    end
-    ω, false
+    # todo
 end
