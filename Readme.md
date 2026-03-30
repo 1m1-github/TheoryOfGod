@@ -14,4 +14,4 @@ Each child ϵ is a subset of its parent in the active dimensions declared by the
 god ⊊ God = Ω = I^I = I^(.) = [ZERO < ○ < ONE]^(.)
 god observes or creates, God iterates.
 
-Example god: 
+Example god: https://github.com/1m1-github/god.jl
