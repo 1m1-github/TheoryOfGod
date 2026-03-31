@@ -1,7 +1,8 @@
-module tog
+# module TheoryOfGod
 
 using StaticArrays # rm if ∃ removes SVector
 using KernelAbstractions # rather not have dependency but makes Φ deterministic and gpu safe
+# const T = Float32
 
 """
 TheoryOfGod
@@ -21,7 +22,7 @@ god ⊊ God = Ω = I^I = I^(.) = [ZERO < ○ < ONE]^(.)
 god observes or creates, God iterates.
 """
 
-export ∃!
+export ∃!, ∃
 
 abstract type ∀ end
 struct ∃{N,F,P<:∀} <: ∀
@@ -215,4 +216,4 @@ function rm!(ω::𝕋)
     # todo
 end
 
-end
+# end
