@@ -2,7 +2,7 @@
 
 ## Install Julia
 
-![julia](https://julialang.org/downloads)
+[https://julialang.org/downloads](https://julialang.org/downloads)
 
 Usually
 
