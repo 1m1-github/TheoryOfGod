@@ -2,9 +2,7 @@
 
 ## Install Julia
 
-```markdown
 ![julia](https://julialang.org/downloads)
-```
 
 Usually
 
