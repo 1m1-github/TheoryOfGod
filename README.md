@@ -1,22 +1,48 @@
 # Theory Of God
 
-## Install Julia
+## Install julia
 
-[https://julialang.org/downloads](https://julialang.org/downloads)
+```
+curl -fsSL https://install.julialang.org | sh -s -- --yes
+```
 
-## Install git
+## Create directory
 
-[https://git-scm.com/install](https://git-scm.com/install)
+```
+mkdir TheoryOfGod && cd TheoryOfGod
+```
 
 ## Install TheoryOfGod
 
-```sh
-julia -e 'using Pkg;Pkg.add(url="https://github.com/1m1-github/TOGInstall.git");using TOGInstall;TOGInstall.install();Pkg.rm("TOGInstall")'
+```
+julia --optimize=3 --threads=auto --quiet --load tog.jl --eval 'tog.awaken()'
 ```
 
-## Awaken TheoryOfGod
+## Awaken Ω
 
-tog
+```
+cd Ω
+```
+
+```
+julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using TOGΩ;TOGΩ.awaken()'
+```
+
+## Awaken Dona
+
+```
+cd Dona
+```
+
+```
+env JULIA_PKG_DEVDIR=$HOME/.julia/dev JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Dona;Dona.awaken(universe="../Ω")'
+```
+
+### Update
+
+```
+julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
+```
 
 ## LoopOS
 

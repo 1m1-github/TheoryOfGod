@@ -1,0 +1,236 @@
+"""
+Learning is creating a Pkg once the code is good.
+The Pkg is added to a local registry
+"""
+module TOGLearning
+
+# todo handle fails
+
+export newpkg, updatepkg, cppkg
+
+using Pkg, TOML, LocalRegistry, Git
+using Pkg.Types: PackageSpec, Context
+
+const REGISTRYNAME = "TOGRegistry"
+const JULIACODEPATH = joinpath(DEPOT_PATH[1], "dev")
+
+const LICENSEFILE = "LICENSE"
+const LICENSE = """
+Study it, use it, enjoy it.
+Any one deriving value from this should share a fair value >= 0.
+"""
+const READMEFILE = "README.md"
+const README(name) = "# $name"
+const GITIGNOREFILE = ".gitignore"
+const GITIGNORE = """
+.*
+**/.*
+!**/.gitignore
+Manifest.toml
+tmp*
+"""
+
+pkgdir(; name) = joinpath(JULIACODEPATH, name)
+projecttoml(; name) = joinpath(pkgdir(name=name), "Project.toml")
+
+"""
+pkgs: Pkgs to be added (via name, url, path).
+files: Files to be copied over.
+"""
+function newpkg(; name::String, files=String[], pkgs=String[], mvfiles=false)
+    path = pkgdir(name=name)
+    Pkg.generate(path)
+    try
+        changefiles(name=name, files=files, rmfiles=String[], cpmv=mvfiles ? mv : cp, init=true)
+        changepkgs(name=name, pkgs=pkgs, rmpkgs=String[])
+        version = initversion(name=name)
+        addcommit(path=path, commitmessage=version)
+        # newremoterepo(path=path)
+        registerpkg(name=name)
+    catch e
+        rm(path, force=true, recursive=true)
+        rethrow(e)
+    end
+end
+
+"""
+pkgs: new Pkgs to be added
+rmpkgs: Pkgs to be removed
+files: Files to be copied over
+rmfiles: Files to be removed
+"""
+function updatepkg(; name::String, files=String[], pkgs=String[], rmfiles=String[], rmpkgs=String[], mvfiles=false)
+    changefiles(name=name, files=files, rmfiles=rmfiles, cpmv=mvfiles ? mv : cp)
+    changepkgs(name=name, pkgs=pkgs, rmpkgs=rmpkgs)
+    path = pkgdir(name=name)
+    isdirty(path=path) || return
+    version = updateversion(name=name)
+    addcommit(path=path, commitmessage=version)
+    # if hasremote(path=path)
+    #     pushremote(path=path)
+    # else
+    #     newremoterepo(path=path)
+    # end
+    registerpkg(name=name)
+end
+# function rmpkg(; name::String, pushregistry=false, githubuser=get(ENV, "GITHUB_USER", ""), githubauth=get(ENV, "GITHUB_AUTH", ""))
+# rmdir(joinpath(JULIACODEPATH, name))
+# path = registrytoml()
+# registry = TOML.parsefile(path)
+# pkgkeys = filter(k -> registry["packages"][k]["name"] == name, keys(registry["packages"]))
+# if !isempty(pkgkeys)
+# pkgkey = only(pkgkeys)
+# rmdir(joinpath(LOOPOSREGISTRYPATH, registry["packages"][pkgkey]["path"]))
+# delete!(registry["packages"], pkgkey)
+# open(path, "w") do io
+# TOML.print(io, registry)
+# end
+# addcommitpush(LOOPOSREGISTRYPATH, push=pushregistry)
+# end
+# rmrepo(name, githubuser, githubauth)
+# end
+function cppkg(; name::String, newname::String)
+    files = readdir(joinpath(pkgdir(name=name), "src"), join=true)
+    project = TOML.parsefile(projecttoml(name=name))
+    pkgs = haskey(project, "deps") ? collect(keys(project["deps"])) : String[]
+    newpkg(name=newname, files=files, pkgs=pkgs)
+end
+# function mvpkg(; name::String, newname::String, pushregistry=false, githubuser=get(ENV, "GITHUB_USER", ""), githubauth=get(ENV, "GITHUB_AUTH", ""))
+#     cppkg(name=name, newname=newname, pushregistry=pushregistry, githubuser=githubuser, githubauth=githubauth)
+#     rmpkg(name=name)
+# end
+# function checkpkg(;name)
+#     # cd(pkgdir(name=name)) do
+#         oldenv = Base.active_project()
+#         # Pkg.activate(".")
+#         Pkg.activate(pkgdir(name=name))
+#         Pkg.precompile()
+#         @show "reactivate", oldenv
+#         Pkg.activate(oldenv)
+#         @show "reactivated oldenv"
+#     # end
+# end
+
+# rmdir(path) = isdir(path) && rm(path, recursive=true)
+function addfile(; name, file, content)
+    file = joinpath(pkgdir(name=name), file)
+    !isfile(file) && write(file, content)
+end
+srcfile(; name, file) = joinpath(pkgdir(name=name), "src", basename(file))
+function changefiles(; name, files=String[], rmfiles=String[], cpmv=cp, init=false)
+    if init
+        addfile(name=name, file=LICENSEFILE, content=LICENSE)
+        addfile(name=name, file=GITIGNOREFILE, content=GITIGNORE)
+        addfile(name=name, file=READMEFILE, content=README(name))
+    end
+    for file = files
+        cpmv(file, srcfile(name=name, file=file), force=true)
+    end
+    for file = rmfiles
+        rm(srcfile(name=name, file=file))
+    end
+end
+
+function changepkg(pkg, f)
+    if startswith(pkg, "http")
+        f(url=pkg)
+    elseif ispath(pkg)
+        f(path=pkg)
+    else
+        f(pkg)
+    end
+end
+function changepkgs(; name, pkgs=String[], rmpkgs=String[])
+    # cd(pkgdir(name=name)) do
+    oldenv = Base.active_project()
+    # Pkg.activate(".")
+    Pkg.activate(pkgdir(name=name))
+    # Pkg.Registry.add("General")
+    # Pkg.Registry.add(path="/Users/1m1/.julia/registries/TOGRegistry")
+    # Pkg.update(update_registry=false)
+    isempty(rmpkgs) || Pkg.rm(rmpkgs)
+    isempty(pkgs) || Pkg.add(pkgs)
+    # isempty(pkgs) || Pkg.develop(pkgs)
+    Pkg.precompile()
+    Pkg.activate(oldenv)
+    # end
+end
+
+function registerpkg(; name)
+    register(
+        pkgdir(name=name),
+        registry=REGISTRYNAME,
+        repo=remoteurllocal(name=name),
+        push=false
+    )
+end
+
+function resolve(; name)
+    cd(pkgdir(name=name)) do
+        oldenv = Base.active_project()
+        Pkg.activate(".")
+        Pkg.resolve()
+        Pkg.activate(oldenv)
+    end
+end
+function changeversion(; name, newversion)
+    path = projecttoml(name=name)
+    project = TOML.parsefile(path)
+    version = VersionNumber(project["version"])
+    project["version"] = string(newversion(version))
+    delete!(project, "compat")
+    open(path, "w") do file
+        TOML.print(file, project)
+    end
+    resolve(name=name)
+    project["version"]
+end
+initversion(; name) = changeversion(name=name, newversion=_ -> v"1")
+updateversion(; name) = changeversion(name=name, newversion=v -> VersionNumber(v.major + 1))
+
+function git1m1()
+    g = Sys.which("git")
+    g === nothing && return nothing
+    chomp(read(`$g config user.name`, String)) == "1m1" ? g : nothing
+end
+function gitcmd()
+    g = git1m1()
+    isnothing(g) && return git()
+    g
+end
+
+isdirty(; path=".") =
+    cd(path) do
+        !isempty(read(`$(gitcmd()) status --porcelain`))
+    end
+remoteurllocal(; name) = joinpath(JULIACODEPATH, name)
+hasremote(; path=".") =
+    cd(path) do
+        !isempty(readlines(`$(gitcmd()) remote`))
+    end
+getremoteurl(; path=".") =
+    cd(path) do
+        readlines(`$(gitcmd()) remote get-url origin`) |> only
+    end
+addsetremote(; path, addset) =
+    cd(path) do
+        run(`$(gitcmd()) remote $addset origin $(remoteurllocal(name=basename(path)))`)
+    end
+addremote(; path) = addsetremote(path=path, addset="add")
+setremote(; path) = addsetremote(path=path, addset="set-url")
+pushremote(; path=".") =
+    cd(path) do
+        g = git1m1()
+        !isnothing(g) && run(`$g push -f -u origin main`)
+    end
+function addcommit(; path, commitmessage=".")
+    cd(path) do
+        isnew = !isdir(".git")
+        isnew && run(`$(gitcmd()) init`)
+        run(`$(gitcmd()) add .`)
+        !isnew && !isdirty(path=".") && return
+        run(`$(gitcmd()) commit -m $commitmessage`)
+    end
+end
+
+end
