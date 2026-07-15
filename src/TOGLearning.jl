@@ -39,6 +39,7 @@ files: Files to be copied over.
 """
 function newpkg(; name::String, files=String[], pkgs=String[], mvfiles=false)
     path = pkgdir(name=name)
+    isdir(path) && return
     Pkg.generate(path)
     try
         changefiles(name=name, files=files, rmfiles=String[], cpmv=mvfiles ? mv : cp, init=true)

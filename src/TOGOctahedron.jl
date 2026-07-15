@@ -5,7 +5,7 @@ export Octahedron
 # using StaticArrays
 using KernelAbstractions, LinearAlgebra
 using TOGGPU: GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE
-using TOG: ○, 𝕋, Ο, ∃, ○̂
+using TOG∃: ○, 𝕋, Ο, ∃, ○̂
 using TOGRay: GL_NODES, GL_N
 import TOGRay.∃̇
 using TOGPrivacy

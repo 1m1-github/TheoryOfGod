@@ -5,7 +5,7 @@ export learn, LoopOS
 using Pkg, Serialization
 using LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort
 using TOGOctahedron: Octahedron
-using TOG: ○
+using TOG∃: ○
 
 const T = Ref{DataType}()
 const OCTAHEDRON = Ref{Octahedron}()

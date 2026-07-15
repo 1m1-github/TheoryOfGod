@@ -6,7 +6,7 @@ export TOG
 using ZMQ
 using TOGZMQAPIServer
 using TOGOctahedron: Octahedron, pyramid, box_aabb, ∃̇
-using TOG: ∃
+using TOG∃: ∃
 import TOG∃.∃!
 
 const SOCKET = Ref{Socket}()

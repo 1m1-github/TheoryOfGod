@@ -2,7 +2,7 @@ module TOGRay
 
 using FastGaussQuadrature, KernelAbstractions
 using TOGGPU: GPU_BACKEND, GPU_BACKEND_WORKGROUPSIZE
-using TOG: ○
+using TOG∃: ○
 const GL_N = 8
 const GL_NODES_RAW, GL_WEIGHTS_RAW = gausslegendre(GL_N)
 const GL_NODES(T) = ○(T) .+ GL_NODES_RAW ./ (GL_NODES_RAW[end] - GL_NODES_RAW[1]) # [0,1]

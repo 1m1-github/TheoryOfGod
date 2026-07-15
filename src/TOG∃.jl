@@ -9,7 +9,7 @@ We have an ontology 𝕋 on Ω such that ϵ ∈ 𝕋:
 god ⊊ GOD = Ω = I^I = I^(.) = [ZERO < ○ < ONE]^(.)
 god observes or creates, GOD iterates.
 """
-module TOG
+module TOG∃
 using KernelAbstractions, IntervalTrees, TOGGPU
 import Base.:∩
 abstract type ∀ end

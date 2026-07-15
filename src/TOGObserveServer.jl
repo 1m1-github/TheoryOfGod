@@ -2,7 +2,7 @@ module TOGObserveServer
 
 using ZMQ
 using TOGZMQAPIServer
-using TOG: t, 𝕋, ∩
+using TOG∃: t, 𝕋, ∩
 
 const SOCKET = Ref{Socket}()
 const TASK = Ref{Task}()

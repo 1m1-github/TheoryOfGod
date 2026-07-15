@@ -5,7 +5,7 @@ module TOGΩ
 const T = Float64
 
 using Serialization
-using TOG: 𝕋
+using TOG∃: 𝕋
 using TOGCommunicationServer, TOGAwaken, TOGLogging, TOGObserveServer, TOGCreateServer
 # using TOGREPL
 using TOGMatrix, TOGOctahedron, TOGColor, Colors # DEBUG?
