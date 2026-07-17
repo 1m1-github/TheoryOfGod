@@ -84,18 +84,14 @@ struct TrackedSymbol
     value::Any
     timestamp::Float64
 end
-long = readdir # Explore long memory.
+long() = filter(a->!startswith(a, '.'),readdir()) # Explore long memory.
 function short() # Your short memory lives on a stateful Turing complete JVM that you run.
     timestamp = time()
     _short = TrackedSymbol[]
-    # @info filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
-    godpkg = only(filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies()))[2]
-    # @info godpkg.name
-    # @info godpkg.dependencies
-    for pkg = keys(godpkg.dependencies)
-        # @info pkg
+    for pkg = filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
+        @info pkg
         sym = Symbol(pkg)
-        # @info sym, isdefined(Main, sym)
+        @info sym, isdefined(Main, sym)
         isdefined(Main, sym) && push!(_short, TrackedSymbol(Main, sym, getfield(Main, sym), timestamp))
     end
     for sym = sort(names(Main, all=true))
@@ -185,6 +181,6 @@ function awaken(intelligence)
     LOOP.duration = 0.0
     INTELLIGENCE[] = intelligence
     errormonitor(Threads.@spawn start!(next, PROCESSOR))
-    listen(LOOP)
+    # listen(LOOP) # DEBUG
 end
 end

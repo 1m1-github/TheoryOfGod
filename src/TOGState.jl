@@ -24,7 +24,7 @@ function state(
     cached, volatile = cache!(short_memory)
     cached = filter(c -> !(c.m === Main && c.sym == :Main && c.value === Main), cached)
     for (i, action) = enumerate(history)
-        length(action.input) == 1 && only(action.input) == Input && continue
+        length(action.input) == 1 && only(action.input).source isa Loop && continue
         push!(volatile, TrackedSymbol(LoopOS, Symbol("history[][$i].input"), action.input, action.timestamp))
         if istaskfailed(action.task)
             push!(volatile, TrackedSymbol(LoopOS, Symbol("history[][$i].task"), action.task, action.timestamp))

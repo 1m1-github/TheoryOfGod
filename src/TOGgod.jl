@@ -26,6 +26,7 @@ function sleep()
 end
 
 function awaken(; args...)
+    TOGLogging.awaken()
     # write(string(time()),"god"*string(args))
     @info "TOGgod.awaken", args
     ARGS[] = merge(ARGS[], args)
@@ -36,7 +37,6 @@ function awaken(; args...)
     universe = args[:universe]
     name = args[:name]
     intelligence = args[:intelligence]
-    TOGLogging.awaken()
     TOGAwaken.awaken()
     TOGZMQ.awaken(name=name)
     TOGObserveClient.awaken(TOGAwaken.togobserve(path=universe))
@@ -51,7 +51,7 @@ function awaken(; args...)
         ôneμ=[zero(T[]), ○(T[]), ○(T[]), ○(T[])+T[](0.1)],
         ρ=[T[](0.0), T[](0.1), T[](0.1), T[](0.0)],
         ♯=(1, 1))
-    TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport,functions=Dict(
+    TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
         "/keypress"=>TOGOctahedronBrowser.keypress,
         "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
         "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
@@ -76,10 +76,13 @@ function browserconnect(port, browser)
 end
 
 function learn(; pkgs=String[], rmpkgs=String[])
+    @info "learn"
     isempty(pkgs) || Pkg.add(pkgs)
     isempty(rmpkgs) || Pkg.rm(rmpkgs)
     sleep()
-    TOGAwaken.awakengod(ARGS[]...)
+    @info "learn, after sleep"
+    TOGAwaken.awakengod(; ARGS[]...)
+    @info "learn, after awakengod"
     exit(0)
 end
 
