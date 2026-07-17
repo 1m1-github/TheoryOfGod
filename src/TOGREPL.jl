@@ -40,20 +40,20 @@ using TOGAwaken, TOGPort
 const REMOTE_REPL_TASK = Ref{Task}()
 const NAME = Ref{String}()
 # function awaken(GOD)
-function connect(; start_key, port, host=Sockets.localhost)
-    @show "connect", start_key, port, host
-    connection = RemoteREPL.connect_remote(host, port)
-    @show "connect", connection
-    name = @remote(connection, TOGΩ.TOGREPL.NAME[])
-    @show "connect", name
-    initrepl(
-        s -> RemoteREPL.remotecmd(connection, stdout, s),
-        # start_key=(start_key),
-        mode_name=Symbol(name),
-        prompt_text="$name> ",
-        # startup_text=false,
-    )
-end
+# function connect(; start_key, port, host=Sockets.localhost)
+#     @show "connect", start_key, port, host
+#     connection = RemoteREPL.connect_remote(host, port)
+#     @show "connect", connection
+#     name = @remote(connection, TOGΩ.TOGREPL.NAME[])
+#     @show "connect", name
+#     initrepl(
+#         s -> RemoteREPL.remotecmd(connection, stdout, s),
+#         # start_key=(start_key),
+#         mode_name=Symbol(name),
+#         prompt_text="$name> ",
+#         # startup_text=false,
+#     )
+# end
 function awaken(; name, remotereplport=TOGPort.openport(), path=".")
     NAME[] = name
     # atreplinit(r -> begin

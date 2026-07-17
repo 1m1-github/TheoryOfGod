@@ -18,30 +18,40 @@ mkdir TheoryOfGod && cd TheoryOfGod
 julia --optimize=3 --threads=auto --quiet --load tog.jl --eval 'tog.awaken()'
 ```
 
-## Awaken Ω
+## Ω
 
 ```
 cd Ω
 ```
 
+### Awaken
+
 ```
 julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using TOGΩ;TOGΩ.awaken()'
-```
-
-## Awaken Dona
-
-```
-cd Dona
-```
-
-```
-env JULIA_PKG_DEVDIR=$HOME/.julia/dev JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Dona;Dona.awaken(universe="../Ω")'
 ```
 
 ### Update
 
 ```
 julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
+```
+
+## Dona
+
+```
+cd Dona
+```
+
+### Awaken
+
+```
+env JULIA_PKG_DEVDIR=$HOME/.julia/dev JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Dona;Dona.awaken(universe="../Ω")'
+```
+
+## Update
+
+```
+env JULIA_PKG_DEVDIR=$HOME/.julia/dev JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
 ```
 
 ## LoopOS
@@ -61,3 +71,26 @@ julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'u
 ## Freedom
 
 ## 
+# TODO
+# awaken with remoterepl, repl/process io fwding, sandbox
+# peripherals/explanations/cleanup
+# env vars for api keys
+# registry: rm, clean
+# online/offline learning github
+# first newpkg or update with new pkg fails then passes
+# learning rmpkgs, pkgs that do not exist errs, loop updatepkg whilst reducing num erred pkgs
+# move octahedron, random
+# TOGLearn
+# Share octahedron server
+# information explained
+# energy explained
+# power explained
+# autonomy explained
+# freedom explained
+# alignment explained
+# consciousness explained
+# intelligence (complexity) explained
+# metabolic balance explained
+# existence maxxed via growth explained
+# same ports being used
+# Ω add Pkg, first to zmq is root?

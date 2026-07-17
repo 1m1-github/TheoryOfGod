@@ -6,8 +6,7 @@ export TOG
 using ZMQ
 using TOGZMQAPIServer
 using TOGOctahedron: Octahedron, pyramid, box_aabb, ∃̇
-using TOG∃: ∃
-import TOG∃.∃!
+using TOG∃: ∃, ∃!
 
 const SOCKET = Ref{Socket}()
 const TASK = Ref{Task}()
@@ -17,11 +16,7 @@ const TASK = Ref{Task}()
 #     schedule(TASK[], InterruptException(), error=true)
 #     TOGZMQAPIServer.sleep(SOCKET[])
 # end
-function awaken(;socketlocation, ω)
-    SOCKET[], TASK[] = TOGZMQAPIServer.awaken(socketlocation=socketlocation, functions=Dict(
-        :create => create(ω),
-    ))
-end
+awaken(;socketlocation, ω) = SOCKET[], TASK[] = TOGZMQAPIServer.awaken(socketlocation=socketlocation, functions=Dict(:create => create(ω)))
 
 create(ω) = (x...) -> create(x..., ω)
 function create(o::Octahedron, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
@@ -29,13 +24,14 @@ function create(o::Octahedron, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
     length(μ) == 2 && return ∃!2d(o, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
     length(μ) == 3 && return ∃!3d(o, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
     length(μ) == 4 && return ∃!4d(o, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
-    ∃!(o, ϕ, ∂₀, ∂₁, n, ω)
+    ∃!Nd(o, ϕ, ∂₀, ∂₁, n, ω)
 end
 
-function ∃!(o::Octahedron, ϕ, ∂₀, ∂₁, n, ω=o.Ω)
+function ∃!Nd(o::Octahedron, ϕ, ∂₀, ∂₁, n, ω=o.Ω)
     _, _, _, _, _, _, _, _, _, μ̃, ρ̃ = pyramid(o)
     # N, z, dx, dy, c, a, za, ca, zo, μ, ρ
-    ∃!(∃(o.d, μ̃, ρ̃, ∂₀, ∂₁, ϕ), n, ω)
+    ϵ = ∃(o.d, μ̃, ρ̃, ∂₀, ∂₁, ϕ)
+    ∃!(ϵ, n, ω)
 end
 function ∃!2d(o::Octahedron, μ, ρ, ϕ, ∂₀, ∂₁, n, ω=o.Ω)
     _, z, dx, dy, _, _, _, _, zo, _, _ = pyramid(o)
@@ -69,12 +65,14 @@ function ∃!3d(o::Octahedron, μ, ρ, ϕ, ∂₀, ∂₁, n, ω=o.Ω)
     ρ̃[2] = 2 * o.norm(dx) * ρ[1] * t̃ * min(μ[1], one(eltype(μ)) - μ[1])
     ρ̃[3] = 2 * o.norm(dy) * ρ[2] * t̃ * min(μ[2], one(eltype(μ)) - μ[2])
     ρ̃[4] = o.norm(za) * ρ[3] * min(μ[3], (one(eltype(μ)) - max(μ[1], μ[2])) * t̃)
-    ∃!(∃(o.d, μ̃, ρ̃, [true, ∂₀...], [true, ∂₁...], ϕ), n, ω)
+    ϵ = ∃(o.d, μ̃, ρ̃, [true, ∂₀...], [true, ∂₁...], ϕ)
+    ∃!(ϵ, n, ω)
 end
 function ∃!4d(o::Octahedron, μ, ρ, ϕ, ∂₀, ∂₁, n, ω=o.Ω)
     _, _, _, _, _, _, _, _, _, μ̃, ρ̃ = pyramid(o)
     # N, z, dx, dy, c, a, za, ca, zo, μ, ρ
-    ∃!(∃(o.d, μ̃, ρ̃, ∂₀, ∂₁, ϕ), n, ω)
+    ϵ = ∃(o.d, μ̃, ρ̃, ∂₀, ∂₁, ϕ)
+    ∃!(ϵ, n, ω)
 end
 
 # """

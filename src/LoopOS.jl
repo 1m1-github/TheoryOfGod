@@ -88,10 +88,13 @@ long = readdir # Explore long memory.
 function short() # Your short memory lives on a stateful Turing complete JVM that you run.
     timestamp = time()
     _short = TrackedSymbol[]
-    # @info Pkg.dependencies()
-    for pkg = filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
+    # @info filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
+    godpkg = only(filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies()))[2]
+    # @info godpkg.name
+    # @info godpkg.dependencies
+    for pkg = keys(godpkg.dependencies)
         # @info pkg
-        sym = Symbol(pkg[2].name)
+        sym = Symbol(pkg)
         # @info sym, isdefined(Main, sym)
         isdefined(Main, sym) && push!(_short, TrackedSymbol(Main, sym, getfield(Main, sym), timestamp))
     end

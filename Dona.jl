@@ -1,10 +1,11 @@
-module Janet
+module Dona
 
 export LoopOS
 import TOGgod: LoopOS
 
 export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools
 using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools
+# export TOGCommunicationClient: Messages
 
 using TOGIntelligence, TOGXAI, TOGgod
 
@@ -26,10 +27,11 @@ intelligence(;
     model=TOGXAI.intelligence)
 
 function awaken(; args...)
+    @info "awaken Dona"
     # write(string(time()),"Dona1")
     _args = merge(NamedTuple(;), args)
     _args = merge(_args, [
-        :name => "Janet",
+        :name => "Dona",
         :intelligence => intelligence,
         # :pkg => string(@__MODULE__),
     ])

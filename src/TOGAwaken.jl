@@ -31,11 +31,11 @@ function isawake(; path=".")
     success(`kill -0 $pid`)
 end
 function awaken(; path=".")
-    isawake(path=path) && error("TOGgod at $path is already awake.")
+    isawake(path=path) && error("god at $path is already awake.")
     writepid(path=path)
 end
 
-function julia(; path=".", project=joinpath(path, TOGDIR), depot=joinpath(project, "julia"),args=JULIA_ARGS, wait=true, code)
+function julia(; code, path=".", project=joinpath(path, TOGDIR), depot=joinpath(project, "julia"),args=JULIA_ARGS, wait=true, sandbox=false)
     cd(path) do
         dev = joinpath(ENV["HOME"], ".julia", "dev")
         depot *= ":" * join(DEPOT_PATH, ":")
@@ -45,7 +45,7 @@ function julia(; path=".", project=joinpath(path, TOGDIR), depot=joinpath(projec
                 "JULIA_PROJECT" => project,
                 "JULIA_DEPOT_PATH" => depot,
             )
-        # run(sandbox(cmd), wait=wait)
+        sandbox && ( cmd = sandboxcmd(cmd) )
         run(cmd, wait=wait)
     end
 end
@@ -59,18 +59,14 @@ function installΩ()
     path=dir,
     project=project,
     depot=DEPOT_PATH[1],
-    code="""
-    using Pkg
-    Pkg.add("TOGΩ")
-    """)
+    code="""using Pkg;Pkg.add("TOGΩ")""")
 end
 function updateΩ()
     TOGAwaken.julia(
     path="Ω",
     project=TOGAwaken.TOGDIR,
     depot=DEPOT_PATH[1],
-    args=TOGAwaken.JULIA_ARGS_INTERACTIVE,
-    code="""using Pkg;Pkg.update()""", wait=false)
+    code="""using Pkg;Pkg.update()""")
 end
 function awakenΩ()
     installΩ()
@@ -79,42 +75,45 @@ function awakenΩ()
     path="Ω",
     project=TOGAwaken.TOGDIR,
     depot=DEPOT_PATH[1],
-    args=TOGAwaken.JULIA_ARGS_INTERACTIVE,
+    # args=TOGAwaken.JULIA_ARGS_INTERACTIVE,
     code="""using TOGΩ;TOGΩ.awaken()""", wait=false)
 end
 
-function installgod(;name)
-    dir = name
+function installgod(;name, pkgs)
     project=TOGAwaken.TOGDIR
-    isdir(joinpath(dir, project)) && return
-    isdir(dir) || mkdir(dir)
+    isdir(joinpath(name, project)) && return
+    isdir(name) || mkdir(name)
+    pkgsstr = join(map(pkg->""""$pkg\"""", pkgs), ',')
+    awakencode = read("$name.jl", String)
     TOGAwaken.julia(
-    path=dir,
+    path=name,
     project=project,
     code="""
     using Pkg
     Pkg.Registry.add()
     Pkg.Registry.add(path="$REGISTRYPATH")
-    Pkg.add("$name")
+    Pkg.add([$pkgsstr])
+    write($name.jl, $awakencode)
     """)
 end
 function updategod(;name)
     TOGAwaken.julia(
     path=name,
     project=TOGAwaken.TOGDIR,
-    code="""using Pkg;Pkg.update()""", wait=false)
+    code="""using Pkg;Pkg.update()""")
 end
-function awakengod(;name)
-    installgod(name=name)
+function awakengod(;name, universe, pkgs)
+    installgod(name=name, pkgs=pkgs)
     updategod(name=name)
     TOGAwaken.julia(
     path=name,
     project=TOGAwaken.TOGDIR,
-    args=TOGAwaken.JULIA_ARGS_INTERACTIVE,
-    code="""using $name;$name.awaken(universe="../Ω")""", wait=false)
+    # args=TOGAwaken.JULIA_ARGS_INTERACTIVE,
+    code="""include(".tog/$name.jl");using .$name;$name.awaken(universe="$universe")""", wait=false)
+    # code="""using $name;$name.awaken(universe="$universe")""") # DEBUG
 end
 
-function sandbox(;path, cmd)
+function sandboxcmd(;path, cmd)
     args = if Sys.isapple()
         profile = joinpath(path, ".sb")
         write(

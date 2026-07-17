@@ -23,11 +23,6 @@ end
 
 time(ω::𝕋) = (x...) -> t(ω)
 type(ω::𝕋) = (x...) -> first(typeof(ω).parameters)
-Base.:∩(ω::𝕋) = (x...) -> 
-begin
-    # @info typeof(x)
-    # ∩(x[1][1], ω, x[1][2]) # put!
-    ∩(x[1], ω, x[2]) # take!(octahedron)
-end
+Base.:∩(ω::𝕋) = (x...) -> ∩(x[1], ω, x[2])
 
 end

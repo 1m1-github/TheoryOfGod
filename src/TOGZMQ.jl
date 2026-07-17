@@ -1,16 +1,25 @@
 module TOGZMQ
 
+export TOGMessage
+
 using ZMQ, Serialization
 using LoopOS: Peripheral
+import TOGState: state
 
 import Base: take!, put!
-# struct Message <: Peripheral end
-struct ReceiveChannel <: Peripheral
-    channel::Channel
+
+const ID = Ref{String}("")
+
+struct TOGMessage
+    from::String
+    to::String
+    togroup::Bool
+    description::String
+    information::Any
 end
-take!(a::ReceiveChannel) = take!(a.channel)
-put!(a::ReceiveChannel, information) = put!(a.channel, information)
-const RECEIVECHANNEL = ReceiveChannel(Channel{Any}(Inf))
+state(message::TOGMessage) = """$(message.from)->$(message.to): $(typeof(message.information)) [$(message.description)]"""
+
+awaken(;name) = ID[] = name
 
 # __init__() = atexit(sleep)
 # sleep() = nothing
@@ -18,47 +27,45 @@ const RECEIVECHANNEL = ReceiveChannel(Channel{Any}(Inf))
 #     # rm(replace(socket.last_endpoint[1:end-1], r"^ipc://" => "")) # todo needed?
 #     close(socket)
 # end
-send(socket::Socket, information) = send(socket, "", false, "", Symbol(""), "", information)
-function send(socket::Socket, to::String, togroup::Bool, from::String, symbol::Symbol, description::String, information)
-    # @info "TOGZMQ.send", socket, to, togroup, from, symbol, description, typeof(information)
+function send(socket::Socket, message::TOGMessage)
+    # isempty(ID[]) && error("Run TOGZMQ.awaken() first.")
+    @info "TOGZMQ.send", socket, message
     buffer = IOBuffer()
     # @info "TOGZMQ.send", sizeof(buffer)
-    serialize(buffer, information)
-    # @info "TOGZMQ.send, serialized"
-    _information = Message(take!(buffer))
-    # @info "TOGZMQ.send, got _information"
-    ZMQ.send_multipart(socket, [to, togroup, from, string(symbol), description, _information])
+    serialize(buffer, message.information)
+    # @info "TOGZMQ.send, serialized", typeof(message.information), message.information
+    information = Message(take!(buffer))
+    # @info "TOGZMQ.send, buffer", typeof(information), information
+    data = [message.to, message.togroup, message.from, message.description]
+    # @info "TOGZMQ.send data1", data
+    # @info "TOGZMQ.send socket.type", socket.type, socket.type == ROUTER
+    socket.type == ROUTER && ( data = [message.to; data...] )
+    # @info "TOGZMQ.send data2", data
+    push!(data, information)
+    # @info "TOGZMQ.send data3", data
+    ZMQ.send_multipart(socket, data)
 end
-# TOGgod.TOGCommunicationClient.send("∀", true, "i", :q, "qw", 12)
-# send(to::String, togroup::Bool, from::String, symbol::Symbol, description::String, information)
-# "i","∀",true,"i","q","qw",12
 function receive(socket::Socket)
     # @info "TOGZMQ.receive", socket
     frames = ZMQ.recv_multipart(socket)
     # @info "TOGZMQ.receive", socket, length(frames)
-    # n = socket.type == ROUTER ? 
-    # frames1 = String(frames[1])
-    # @info "TOGZMQ.receive", frames1
-    to = length(frames) < 6 ? "" : String(frames[end-5])
+    to = String(frames[end-4])
     # @info "TOGZMQ.receive, to", to
-    togroup = Bool(only(frames[end-4]))
+    togroup = Bool(only(frames[end-3]))
     # @info "TOGZMQ.receive, togroup", togroup
-    from = String(frames[end-3])
+    from = String(frames[end-2])
     # @info "TOGZMQ.receive, from", from
-    symbol = Symbol(String(frames[end-2]))
-    # @info "TOGZMQ.receive, symbol", symbol
     description = String(frames[end-1])
-    # @info "TOGZMQ.receive, description", description
+    # @info "TOGZMQ.receive, from", from
     buffer = IOBuffer(frames[end])
     # @info "TOGZMQ.receive, buffer", sizeof(buffer)
     information = try 
         deserialize(buffer) 
-    catch e 
-        @info e
-        buffer
+    catch e
+        e
     end
-    # @info "TOGZMQ.receive", typeof(information)
-    to, togroup, from, symbol, description, information
+    @info "TOGZMQ.receive", socket, information
+    TOGMessage(from, to, togroup, description, information)
 end
 
 end

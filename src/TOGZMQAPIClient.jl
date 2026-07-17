@@ -2,6 +2,7 @@ module TOGZMQAPIClient
 
 using ZMQ
 using TOGZMQAPIServer, TOGZMQ
+using TOGZMQ: TOGMessage
 
 # __init__() = atexit(sleep)
 # sleep() = nothing
@@ -14,11 +15,11 @@ function awaken(socketlocation)
 end
 function call(socket::Socket, f::Symbol, x...)
     # @info "TOGZMQAPIClient.call", socket, f, typeof(x), length(x)
-    TOGZMQ.send(socket, TOGZMQAPIServer.APIData(f, x))
+    TOGZMQ.send(socket, TOGMessage(TOGZMQ.ID[], "Ω", false, string(f), TOGZMQAPIServer.APIData(f, x)))
     # @info "TOGZMQAPIClient.call, sent"
-    _, _, _, _, _, information = TOGZMQ.receive(socket)
+    message = TOGZMQ.receive(socket)
     # @info "TOGZMQAPIClient.call", typeof(information)
-    information
+    message.information
 end
 call(socket::Socket, f::Symbol) = call(socket, f, nothing)
 

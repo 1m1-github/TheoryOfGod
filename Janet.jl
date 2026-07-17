@@ -1,4 +1,4 @@
-module Dona
+module Janet
 
 export LoopOS
 import TOGgod: LoopOS
@@ -6,7 +6,7 @@ import TOGgod: LoopOS
 export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools
 using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools
 
-using TOGIntelligence, TOGXAI, TOGgod
+using TOGIntelligenceJanet, TOGXAI, TOGgod
 
 intelligence(;
     self,
@@ -15,21 +15,22 @@ intelligence(;
     shortmemory,
     newinput,
     complexity,
-) = TOGIntelligence.intelligence(
+) = TOGIntelligenceJanet.intelligence(
     self=self,
     history=history,
     longmemory=longmemory,
     shortmemory=shortmemory,
     newinput=newinput,
     complexity=complexity,
-    state_post="",
+    state_post="X",
     model=TOGXAI.intelligence)
 
 function awaken(; args...)
+    @info "awaken Janet"
     # write(string(time()),"Dona1")
     _args = merge(NamedTuple(;), args)
     _args = merge(_args, [
-        :name => "Dona",
+        :name => "Janet",
         :intelligence => intelligence,
         # :pkg => string(@__MODULE__),
     ])

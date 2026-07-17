@@ -1,4 +1,4 @@
-module TOGIntelligence
+module TOGIntelligenceJanet
 
 using LoopOS: Action, Input, TrackedSymbol
 using TOGState: state
@@ -24,6 +24,7 @@ function intelligence(;
     state_post="",
     model,
 )
+    @info "TOGIntelligenceJanet.intelligence"
     input_system, input_user = state(
         self,
         history,
@@ -51,10 +52,7 @@ function intelligence(;
     # DEBUG
 
     # t1 = time() #DEBUG
-    # universe = joinpath(pwd(),"..","Ω")
-    # output = """TOGAwaken.awakengod(name="Janet", universe="$universe")"""
-    output = """Dona.TOGgod.learn(pkgs=["Dates"])"""
-    # output = """put!(TOGCommunicationClient.Messages, "Dona", false, "greeting", "hi Dona");put!(TOGCommunicationClient.Messages, "∀", true, "greeting", "hi ∀");"""
+    output = """put!(TOGCommunicationClient.Messages, "Dona", false, "greeting", "hi")"""
     ΔE = 0.0
     # output, ΔE = model(complexity)(
     #     input_system,
@@ -99,7 +97,7 @@ end
 const JULIA_PREPEND = "```julia\n"
 const JULIA_POSTPEND = "\n```"
 function extract_julia_blocks(text::String)
-    @info "extract_julia_blocks", text
+    @show "extract_julia_blocks", text
     text = strip(text)
     blocks = split(text, JULIA_PREPEND)
     length(blocks) == 1 && return text # no JULIA_PREPEND, all Julia
