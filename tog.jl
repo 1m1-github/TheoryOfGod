@@ -28,7 +28,8 @@ function awakenDona()
         "TOGCreateClient", 
         "TOGBroadcastBrowser", 
         "TOGColor", 
-        "TOGBasicTools"
+        "TOGBasicTools",
+        "TOGTextToAudioBrowser",
     ])
 end
 
@@ -96,9 +97,6 @@ function awakenregistry()
     TOGLearning.newpkg(name="TOGPowerOfAttorney", files=$(files("TOGPowerOfAttorney")))
     TOGLearning.newpkg(name="TOGBasicTools", pkgs=["HTTP", "JSON3", "Base64", "Dates", "SMTPClient", "Serialization", "Gumbo", "Cascadia"], files=$(files("TOGBasicTools")))
     """)
-    # TOGLearning.newpkg(name="TOGIntelligenceJanet", pkgs=["LoopOS", "TOGState", "TOGLogging"], files=$(files("TOGIntelligenceJanet")))
-    # TOGLearning.newpkg(name="Janet", pkgs=["TOGgod", "TOGXAI", "TOGAdvice", "TOGPowerOfAttorney", "TOGIntelligenceJanet", "TOGAwaken", "TOGOctahedron", "TOGCommunicationClient", "TOGLearning", "TOGCreateClient", "TOGBroadcastBrowser", "TOGColor", "TOGBasicTools"], files=$(files("Janet")))
-    # TOGLearning.newpkg(name="Dona", pkgs=["TOGgod", "TOGXAI", "TOGAdvice", "TOGPowerOfAttorney", "TOGIntelligence", "TOGAwaken", "TOGOctahedron", "TOGCommunicationClient", "TOGLearning", "TOGCreateClient", "TOGBroadcastBrowser", "TOGColor", "TOGBasicTools"], files=$(files("Dona")))
 end
 
 end

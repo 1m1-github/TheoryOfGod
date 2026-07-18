@@ -55,6 +55,7 @@ const NAME = Ref{String}()
 #     )
 # end
 function awaken(; name, remotereplport=TOGPort.openport(), path=".")
+    @info "TOGREPL.jl, awaken"
     NAME[] = name
     # atreplinit(r -> begin
     #     ReplMaker.initrepl(

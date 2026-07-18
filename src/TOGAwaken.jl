@@ -42,6 +42,7 @@ function awaken(; path=".")
 end
 
 function julia(; code, path=".", project=joinpath(path, TOGDIR), dev=joinpath(project, "julia", "dev"), depot=joinpath(project, "julia"), args=JULIA_ARGS, wait=true, sandbox=false)
+    @info "TOGAwaken.jl, julia"
     cd(path) do
         depot *= ":" * join(DEPOT_PATH, ":")
         cmd = addenv(
@@ -88,6 +89,7 @@ function awakenΩ()
 end
 
 function installgod(; path, pkgs)
+    @info "TOGAwaken.jl, installgod"
     project=TOGAwaken.TOGDIR
     isdir(joinpath(path, project)) && return
     isdir(path) || mkpath(path)
@@ -106,6 +108,7 @@ function installgod(; path, pkgs)
         """)
 end
 function updategod(; path)
+    @info "TOGAwaken.jl, updategod"
     julia(
         path=path,
         project=TOGAwaken.TOGDIR,
@@ -116,6 +119,7 @@ Awakens a god
 example: `awakengod(path="Anna", pkgs=["Dates"], universe=TOGgod.ARGS[][:universe])`
 """
 function awakengod(; args...)
+    @info "TOGAwaken.jl, awakengod"
     path=args[:path]
     pkgs=get(args, :pkgs, String[])
     installgod(path=path, pkgs=pkgs)

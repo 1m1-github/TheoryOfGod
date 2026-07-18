@@ -22,7 +22,10 @@ const BROADCASTBROWSER = Ref{BroadcastBrowser}()
 Run js on the browser.
 example: `put!(BroadcastBrowser, "console.log('hi')")`.
 """
-put!(::Type{BroadcastBrowser}, js) = put!(BROADCASTBROWSER[].processor, js)
+put!(::Type{BroadcastBrowser}, js) = begin
+@info "TOGBroadcastBrowser.jl, put!"    
+    put!(BROADCASTBROWSER[].processor, js)
+end
 
 const HTMLINIT(port) = """
 <!DOCTYPE html>
@@ -70,6 +73,7 @@ function handle_ws(stream, f)
 end
 
 function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/websocket"=>println))
+    @info "TOGBroadcastBrowser.jl, awaken"    
     TOGAwaken.writebroadcastbrowserport(port=port)
     @async HTTP.listen!("0.0.0.0", port) do stream
         if HTTP.WebSockets.isupgrade(stream.message)

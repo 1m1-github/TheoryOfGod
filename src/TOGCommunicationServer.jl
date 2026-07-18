@@ -15,7 +15,7 @@ const PUBSOCKET = Ref{Socket}()
 # end
 
 function awaken(; router, pub)
-    # @info "TOGCommunicationServer.awaken", router, pub
+    @info "TOGCommunicationServer.jl, .awaken", router, pub
     ROUTERSOCKET[] = Socket(ROUTER)
     PUBSOCKET[] = Socket(PUB)
     bind(ROUTERSOCKET[], router)
@@ -23,7 +23,7 @@ function awaken(; router, pub)
     errormonitor(@async @whiletrue begin
         # @info "TOGCommunicationServer, waiting"
         message = TOGZMQ.receive(ROUTERSOCKET[])
-        @info "TOGCommunicationServer, received",  message.from, message.to, message.togroup, message.description, typeof(message.information)
+        @info "TOGCommunicationServer.jl, received",  message.from, message.to, message.togroup, message.description, typeof(message.information)
         socket =  message.togroup ? PUBSOCKET[] : ROUTERSOCKET[]
         TOGZMQ.send(socket, message)
     end)

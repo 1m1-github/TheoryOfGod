@@ -200,6 +200,7 @@ function ∩(ϵ::∃, β, Ο, ω::𝕋)
 end
 ∩(ϵ::∃, ω::𝕋, Ο) = ∩(∩(ϵ, ∩ᵢ(ϵ, ω), Ο, ω))
 function ∃!(ϵ::∃, n, ω::𝕋)
+    @info "TOG∃.jl, ∃!"
     lock(ω.L)
     β = ∩ᵢ(ϵ, ω)
     # @info typeof(ϵ), typeof(β)

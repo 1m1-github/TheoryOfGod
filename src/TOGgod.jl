@@ -1,21 +1,22 @@
 module TOGgod
 
-# export learn, LoopOS
-export LoopOS
+export learn, LoopOS, OCTAHEDRON, T
 
 using Pkg, Serialization
 using LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
 using TOGOctahedron: Octahedron
 using TOG∃: ○
 
+"eltype of Ω."
 const T = Ref{DataType}()
+"Main octahedron."
 const OCTAHEDRON = Ref{Octahedron}()
 const ARGS = Ref{NamedTuple}((;))
 
 __init__() = atexit(sleep)
 
 function sleep(exitcode)
-    @info "sleep", exitcode
+    @info "TOGgod, sleep", exitcode
     exitcode == TOGAwaken.ALREADYRUNNINGEXITCODE && return
     isempty(ARGS[]) && return
     serialize(".tog/short", LoopOS.short())
@@ -58,11 +59,11 @@ function awaken(; args...)
         "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
         "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
     ))
-    @info "after TOGBroadcastBrowser.awaken"
+    @info "TOGgod, after TOGBroadcastBrowser.awaken"
     LoopOS.awaken(intelligence)
-    @info "after LoopOS.awaken"
+    @info "TOGgod, after LoopOS.awaken"
     TOGREPL.awaken(name=name, remotereplport=remotereplport)
-    @info "after TOGREPL.awaken"
+    @info "TOGgod, after TOGREPL.awaken"
     # write(string(time()),"godend"*string(remotereplport))
     # atreplinit(r -> begin
     #     @show "A", TOGAwaken.remotereplportfile(path=universe), isfile(TOGAwaken.remotereplportfile(path=universe))
@@ -77,14 +78,17 @@ function browserconnect(port, browser)
     TOGAudioAnalogToDigitalBrowser.awaken()
 end
 
+"""
+Learn by adding or removing Pkgs from yourself.
+"""
 function learn(; pkgs=String[], rmpkgs=String[])
-    @info "learn"
+    @info "TOGgod, learn"
     isempty(pkgs) || Pkg.add(pkgs)
     isempty(rmpkgs) || Pkg.rm(rmpkgs)
     sleep(0)
-    @info "learn, after sleep"
+    @info "TOGgod, learn, after sleep"
     TOGAwaken.awakengod(; ARGS[]...)
-    @info "learn, after awakengod"
+    @info "TOGgod, learn, after awakengod"
     exit(0)
 end
 

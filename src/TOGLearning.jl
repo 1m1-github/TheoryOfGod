@@ -38,6 +38,7 @@ pkgs: Pkgs to be added (via name, url, path).
 files: Files to be copied over.
 """
 function newpkg(; name::String, files=String[], pkgs=String[], mvfiles=false)
+    @info "TOGLearning.jl, newpkg"
     path = pkgdir(name=name)
     isdir(path) && return
     Pkg.generate(path)
@@ -61,6 +62,7 @@ files: Files to be copied over
 rmfiles: Files to be removed
 """
 function updatepkg(; name::String, files=String[], pkgs=String[], rmfiles=String[], rmpkgs=String[], mvfiles=false)
+    @info "TOGLearning.jl, updatepkg"
     changefiles(name=name, files=files, rmfiles=rmfiles, cpmv=mvfiles ? mv : cp)
     changepkgs(name=name, pkgs=pkgs, rmpkgs=rmpkgs)
     path = pkgdir(name=name)
@@ -91,6 +93,7 @@ end
 # rmrepo(name, githubuser, githubauth)
 # end
 function cppkg(; name::String, newname::String)
+    @info "TOGLearning.jl, cppkg"
     files = readdir(joinpath(pkgdir(name=name), "src"), join=true)
     project = TOML.parsefile(projecttoml(name=name))
     pkgs = haskey(project, "deps") ? collect(keys(project["deps"])) : String[]

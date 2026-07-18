@@ -25,6 +25,7 @@ function sleep(exitcode)
     TOGREPL.sleep()
 end
 function awaken(; path=".", router=TOGAwaken.router(path=path), pub=TOGAwaken.pub(path=path), togobserve=TOGAwaken.togobserve(path=path), togcreate=TOGAwaken.togcreate(path=path))
+    @info "TOGΩ, awaken"
     TOGLogging.awaken()
     TOGAwaken.awaken()
     TOGZMQ.awaken(name="Ω")

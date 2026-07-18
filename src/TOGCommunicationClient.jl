@@ -29,6 +29,7 @@ Retrieve received message using its index in CACHE.
 example: `take!(Messages, 1)`
 """
 function take!(::Type{Messages}, i)
+    @info "TOGCommunicationClient.jl, take!"
     # take!(MESSAGES.channel)
     message = CACHE[i]
     deleteat!(CACHE, i)
@@ -42,6 +43,7 @@ take!(::Messages, i) = take!(Messages, i)
 #     close(SUBSOCKET[])
 # end
 function awaken(;dealer, sub)
+    @info "TOGCommunicationClient.jl, awaken"
     DEALERSOCKET[] = Socket(DEALER)
     DEALERSOCKET[].routing_id = TOGZMQ.ID[]
     # @info "TOGCommunicationClient.awaken", DEALERSOCKET[].routing_id
@@ -68,9 +70,9 @@ example: `ignoregroup("interestinggroup")`
 ignoregroup(group) = unsubscribe(SUBSOCKET[], group)
 
 function receive(socket)
-    @info "TOGCommunicationClient.receive", socket
+    @info "TOGCommunicationClient.jl, receive", socket
     message = TOGZMQ.receive(socket)
-    @info "TOGCommunicationClient, received",  message.from, message.to, message.togroup, message.description, typeof(message.information)
+    @info "TOGCommunicationClient.jl, received",  message.from, message.to, message.togroup, message.description, typeof(message.information)
     push!(CACHE, message)
     # put!(Messages, message)
 end

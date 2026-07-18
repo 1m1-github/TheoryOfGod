@@ -30,7 +30,7 @@ function intelligence(;
         newinput,
         STATE_POST * state_post,
     )
-
+    @info "TOGIntelligence, intelligence"
     # DEBUG
     ts = time()
     # LOGS = Main.LOGS
@@ -92,7 +92,7 @@ end
 const JULIA_PREPEND = "```julia\n"
 const JULIA_POSTPEND = "\n```"
 function extract_julia_blocks(text::String)
-    @info "extract_julia_blocks", text
+    @info "TOGIntelligence, extract_julia_blocks", text
     text = strip(text)
     blocks = split(text, JULIA_PREPEND)
     length(blocks) == 1 && return text # no JULIA_PREPEND, all Julia

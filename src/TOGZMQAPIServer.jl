@@ -15,7 +15,7 @@ const FUNCTIONS = Dict{Symbol,Function}()
 # sleep() = nothing
 # sleep(socket) = TOGZMQ.sleep(socket)
 function awaken(;socketlocation, functions)
-    # @info "TOGZMQAPIServer.awaken", socketlocation
+    @info "TOGZMQAPIServer.awaken", socketlocation
     socket = Socket(REP)
     bind(socket, socketlocation)
     socket, errormonitor(@async @whiletrue receive(socket, functions))
@@ -23,7 +23,7 @@ end
 function receive(socket, functions)
     # @info "TOGZMQAPIServer.receive", socket, functions
     message = TOGZMQ.receive(socket)
-    # @info "TOGZMQAPIServer.receive", message.information.f
+    @info "TOGZMQAPIServer.receive", message
     output = try
         f = functions[message.information.f]
         # @info typeof(message.information.args), typeof(f)
@@ -35,7 +35,7 @@ function receive(socket, functions)
         showerror(stdout, e, bt)
         string(e)
     end
-    # @info "TOGZMQAPIServer.receive", typeof(output)
+    @info "TOGZMQAPIServer.receive", typeof(output)
     TOGZMQ.send(socket, TOGMessage(TOGZMQ.ID[], message.from, message.togroup, message.description, output))
 end
 

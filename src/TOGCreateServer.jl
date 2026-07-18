@@ -18,7 +18,7 @@ awaken(;socketlocation, ω) = SOCKET[], TASK[] = TOGZMQAPIServer.awaken(socketlo
 
 create(ω) = (x...) -> create(x..., ω)
 function create(o::Octahedron, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
-    # @info "create", length(μ)
+    @info "TOGCreateServer, create", length(μ)
     length(μ) == 2 && return ∃!2d(o, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
     length(μ) == 3 && return ∃!3d(o, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)
     length(μ) == 4 && return ∃!4d(o, μ, ρ, ϕ, ∂₀, ∂₁, n, ω)

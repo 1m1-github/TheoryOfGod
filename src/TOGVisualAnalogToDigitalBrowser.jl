@@ -9,13 +9,18 @@ struct VisualAnalogToDigitalBrowser <: Peripheral
     channel::Channel{Matrix{ColorTypes.RGBA{FixedPointNumbers.N0f8}}}
 end
 const VISUALANALOGTODIGITALBROWSER = VisualAnalogToDigitalBrowser(Channel{Matrix{ColorTypes.RGBA{FixedPointNumbers.N0f8}}}())
-put!(::VisualAnalogToDigitalBrowser, img) = put!(VISUALANALOGTODIGITALBROWSER.channel, img)
+put!(::VisualAnalogToDigitalBrowser, img) = begin
+  @info "TOGVisualAnalogToDigitalBrowser.jl, put!"
+  put!(VISUALANALOGTODIGITALBROWSER.channel, img)
+end
 take!(::VisualAnalogToDigitalBrowser) = take!(VISUALANALOGTODIGITALBROWSER.channel)
 function take!(::Type{VisualAnalogToDigitalBrowser})
+@info "TOGVisualAnalogToDigitalBrowser.jl, take!"
     put!(BroadcastBrowser, JSLOOK)
     take!(VISUALANALOGTODIGITALBROWSER)
 end
 function webcam(bytes)
+  @info "TOGVisualAnalogToDigitalBrowser.jl, webcam"
     json = JSON3.read(String(bytes))
     b64 = split(json.image, "base64,")[2]
     img = PNGFiles.load(IOBuffer(base64decode(b64)))

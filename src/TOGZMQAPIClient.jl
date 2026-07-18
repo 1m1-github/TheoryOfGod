@@ -8,13 +8,13 @@ using TOGZMQ: TOGMessage
 # sleep() = nothing
 # sleep(socket::Socket) = TOGZMQAPIServer.sleep(socket)
 function awaken(socketlocation)
-    # @show "TOGZMQAPIClient.awaken", socketlocation
+    @show "TOGZMQAPIClient.awaken", socketlocation
     socket = Socket(REQ)
     connect(socket, socketlocation)
     socket
 end
 function call(socket::Socket, f::Symbol, x...)
-    # @info "TOGZMQAPIClient.call", socket, f, typeof(x), length(x)
+    @info "TOGZMQAPIClient.call", socket, f, typeof(x), length(x)
     TOGZMQ.send(socket, TOGMessage(TOGZMQ.ID[], "Ω", false, string(f), TOGZMQAPIServer.APIData(f, x)))
     # @info "TOGZMQAPIClient.call, sent"
     message = TOGZMQ.receive(socket)

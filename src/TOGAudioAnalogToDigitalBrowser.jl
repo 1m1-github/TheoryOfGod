@@ -21,12 +21,14 @@ const WSTASK = Ref{Task}()
 const WS = Ref{HTTP.WebSockets.WebSocket}()
 
 function awaken()
+  @info "TOGAudioAnalogToDigitalBrowser.jl, awaken"
   WSTASK[], WS[] = sttws(output=output)
   put!(BroadcastBrowser, JSLISTEN)
   listen(AUDIOANALOGTODIGITALBROWSER)
 end
 
 function output(data)
+  @info "TOGAudioAnalogToDigitalBrowser.jl, output"
   msg = string(Dict(
     :type => data["type"],
     :text => data["text"],
@@ -37,7 +39,10 @@ function output(data)
   put!(AUDIOANALOGTODIGITALBROWSER, msg)
 end
 
-ws(msg) = HTTP.WebSockets.send(WS[], msg)
+ws(msg) = begin
+  @info "TOGAudioAnalogToDigitalBrowser.jl, ws"
+  HTTP.WebSockets.send(WS[], msg)
+end
 
 const JSLISTEN = """
 (async()=>{

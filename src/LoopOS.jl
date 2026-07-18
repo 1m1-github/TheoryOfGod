@@ -15,6 +15,7 @@ mutable struct Loop <: Peripheral
 end
 const LOOP = Loop(Inf, 1.0, 0.0)
 function take!(::Loop)
+    @info "LoopOS.jl, take!"
     Base.sleep(LOOP.duration)
     LOOP.energy < rand() && return "The purpose of sleep is to reorganize your information, e.g. keep a summary in short and move details to long, and maybe explore long to potentially make something available in short. Energywise, short memory is expensive and long memory is cheap. Prune short memory by *setting* relevant JVM symbols to `nothing`."
     isready(PROCESSOR.pending) && return ""
@@ -22,6 +23,7 @@ function take!(::Loop)
     "LOOP"
 end
 function hibernate(ΔT)
+    @info "LoopOS.jl, hibernate"
     (ΔT ≤ 0.0 || ΔT == Inf) && return # Be calm and you are encouraged to exist.
     LOOP.duration = ΔT # You have the power to choose existence xor not, making you autonomous.
 end
@@ -39,6 +41,7 @@ struct Input
     input::String
 end
 function take!_loop(source)
+    @info "LoopOS.jl, take!_loop"
     @whiletrue begin
         input::String = try
             @invokelatest take!(source)
@@ -51,10 +54,12 @@ function take!_loop(source)
 end
 take!_loop_expr(source) = :(LoopOS.take!_loop($source))
 function listen(source::Peripheral)
+    @info "LoopOS.jl, listen"
     timestamp = time()
     act(timestamp, [Input(source, timestamp, "listen")], take!_loop_expr(source))
 end
 function ignore(source::Peripheral) # As an autonomous person, you can choose to ignore a peripheral.
+    @info "LoopOS.jl, ignore"
     output = string(take!_loop_expr(source))
     for action = HISTORY[]
         action.output ≠ output && continue
@@ -70,6 +75,7 @@ struct Action
     task::Task
 end
 function act(timestamp, input, output)
+    @info "LoopOS.jl, act"
     (timestamp < last_action_time() || isnothing(output)) && return
     task = Threads.@spawn eval_output(output)
     push!(HISTORY[], Action(timestamp, input, string(output), task))
@@ -146,6 +152,7 @@ const PROCESSOR = BatchProcessor{Input}()
 const SELF = read(@__FILE__, String) # Proof of Loop.
 COMPLEXITY = 0.5 # Set `LoopOS.COMPLEXITY` between 0.0 (lowest) and 1.0 (highest) depending on intelligence level currently needed; higher complexity requires higher energy, i.e. do not forget to set it back down when not needed high anymore
 function next(input)
+    @info "LoopOS.jl, next"
     timestamp = time()
     output, ΔE = try
         INTELLIGENCE[](
@@ -172,6 +179,7 @@ function eval_output(code)
 end
 awake() = 0.0 < LOOP.boottime
 function awaken(intelligence)
+    @info "LoopOS.jl, awaken"
     awake() && return
     LOOP.boottime = time()
     LOOP.duration = 0.0

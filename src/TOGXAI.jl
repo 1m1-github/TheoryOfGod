@@ -21,6 +21,7 @@ function intelligence(
     temperature,
     model,
 )
+@info "TOGXAI.jl, intelligence"
     headers = [
         "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",
         "Content-Type" => "application/json",
@@ -33,7 +34,7 @@ function intelligence(
     body = Dict(
         "model" => model,
         "input" => input,
-        "reasoning" => Dict("effort" => "high"),
+        # "reasoning" => Dict("effort" => "high"),
         "max_output_tokens" => max_output_tokens,
     )
     # "temperature" => temperature,
@@ -86,6 +87,7 @@ function sttws(;
     smart_turn_timeout=3000,
     language="en"
 )
+@info "TOGXAI.jl, sttws"
     url = "wss://" * URL * "/stt?interim_results=$(interim_results)&diarize=$(diarize)&filler_words=$(filler_words)&smart_turn=$(smart_turn)&smart_turn_timeout=$(smart_turn_timeout)&language=$(language)"
     headers = HTTP.Headers()
     push!(headers, "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""")
@@ -101,6 +103,7 @@ wrapping tags: <soft>, <whisper>, <loud>, <build-intensity>, <decrease-intensity
 https://docs.x.ai/developers/model-capabilities/audio/text-to-speech#speech-tags
 """ # todo maybe add all?
 function tts(text)
+    @info "TOGXAI.jl, tts"
     headers = [
         "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",
         "Content-Type" => "application/json",
@@ -121,6 +124,7 @@ function tts(text)
 end
 
 function generateimage(;prompt, aspect_ratio="auto", resolution="1k")
+    @info "TOGXAI.jl, generateimage"
     headers = [
         "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",
         "Content-Type" => "application/json",

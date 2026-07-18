@@ -10,6 +10,7 @@ using LoopOS: @whiletrue
 const JSKEYPRESS = """document.addEventListener('keydown', (e) => {fetch('/keypress', {method: 'POST',body: e.key})})"""
 
 function awaken(; octahedron, browser)
+    @info "TOGOctahedronBrowser, awaken"
     octahedron.♯ = (Int(browser.width), Int(browser.height))
     BROWSER[] =
         Browser(
@@ -25,6 +26,7 @@ end
 const BROWSER = Ref{Browser}()
 const OBSERVE = Ref(true)
 browserlooptask(octahedron) = errormonitor(Threads.@spawn begin
+    @info "TOGOctahedronBrowser, browserlooptask"
     # t = time()
     put!(BroadcastBrowser, JS(octahedron.♯[1], octahedron.♯[2]))
     put!(BroadcastBrowser, JSKEYPRESS)
