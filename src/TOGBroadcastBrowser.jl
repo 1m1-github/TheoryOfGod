@@ -1,5 +1,7 @@
 module TOGBroadcastBrowser
 
+export put!
+
 using HTTP, URIs, Sockets
 using LoopOS: BatchProcessor, start!, Peripheral
 using TOGAwaken, TOGPort
@@ -15,8 +17,11 @@ struct BroadcastBrowser <: Peripheral
 end
 const BROADCASTBROWSER = Ref{BroadcastBrowser}()
 # const CLIENTS = Ref(Set{BroadcastBrowser}())
-"`put!(BroadcastBrowser, js)` runs the js on all connected browsers"
 # put!(::Type{BroadcastBrowser}, js) = [put!(client.processor, js) for client = CLIENTS[]]
+"""
+Run js on the browser.
+example: `put!(BroadcastBrowser, "console.log('hi')")`.
+"""
 put!(::Type{BroadcastBrowser}, js) = put!(BROADCASTBROWSER[].processor, js)
 
 const HTMLINIT(port) = """

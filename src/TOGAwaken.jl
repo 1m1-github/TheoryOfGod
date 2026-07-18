@@ -1,9 +1,12 @@
 module TOGAwaken
 
+export awakengod
+
 const TOGDIR = ".tog"
 const REGISTRYPATH = joinpath(DEPOT_PATH[1], "registries", "TOGRegistry")
 const JULIA_ARGS = ["--optimize=3", "--threads=auto", "--quiet"]
 const JULIA_ARGS_INTERACTIVE = [JULIA_ARGS..., "--interactive"]
+const ALREADYRUNNINGEXITCODE = 8888
 
 globalpath(; path=".") = joinpath(pwd(), path)
 router(; path=".") = "ipc://$(globalpath(path=path))/$TOGDIR/router.ipc" # change to tcp if on separate machines
@@ -26,14 +29,14 @@ end
 sleep = rmpid
 function isawake(; path=".")
     file = pidfile(path=path)
-    isfile(file) && return true
+    isfile(file) || return false
     pid = readpid(file=file)
     success(`kill -0 $pid`)
 end
 function awaken(; path=".")
     if isawake(path=path)
         @error "god at $path is already awake."
-        exit(0)
+        exit(ALREADYRUNNINGEXITCODE)
     end
     writepid(path=path)
 end
@@ -53,12 +56,12 @@ function julia(; code, path=".", project=joinpath(path, TOGDIR), dev=joinpath(pr
 end
 
 function installΩ()
-    name = "Ω"
+    path = "Ω"
     project=TOGAwaken.TOGDIR
-    isdir(joinpath(name, project)) && return
-    isdir(name) || mkdir(name)
+    isdir(joinpath(path, project)) && return
+    isdir(path) || mkpath(path)
     julia(
-        path=name,
+        path=path,
         project=project,
         dev=joinpath(ENV["HOME"], ".julia", "dev"),
         depot=DEPOT_PATH[1],
@@ -84,14 +87,15 @@ function awakenΩ()
         code="""using TOGΩ;TOGΩ.awaken()""", wait=false)
 end
 
-function installgod(; name, pkgs)
+function installgod(; path, pkgs)
     project=TOGAwaken.TOGDIR
-    isdir(joinpath(name, project)) && return
-    isdir(name) || mkdir(name)
+    isdir(joinpath(path, project)) && return
+    isdir(path) || mkpath(path)
     pkgadd = isempty(pkgs) ? "" : "Pkg.add([" * join(map(pkg->""""$pkg\"""", pkgs), ',') * "])"
     currentdir = pwd()
+    name = basename(path)
     julia(
-        path=name,
+        path=path,
         project=project,
         code="""
         using Pkg
@@ -101,25 +105,31 @@ function installgod(; name, pkgs)
         $pkgadd
         """)
 end
-function updategod(; name)
+function updategod(; path)
     julia(
-        path=name,
+        path=path,
         project=TOGAwaken.TOGDIR,
         code="""using Pkg;Pkg.update()""")
 end
+"""
+Awakens a god 
+example: `awakengod(path="Anna", pkgs=["Dates"], universe=TOGgod.ARGS[][:universe])`
+"""
 function awakengod(; args...)
-    name=args[:name]
+    path=args[:path]
     pkgs=get(args, :pkgs, String[])
-    installgod(name=name, pkgs=pkgs)
-    updategod(name=name)
-    parts = ["$k = $(repr(v))" for (k, v) in pairs(args)]
-    argsstring = join(parts, ",")
+    installgod(path=path, pkgs=pkgs)
+    updategod(path=path)
+    argsparts = ["$k = $(repr(v))" for (k, v) in pairs(args)]
+    argsstring = join(argsparts, ",")
+    name = basename(path)
+    godfile = joinpath(path, TOGDIR, "$name.jl")
     @info "TOGAwaken.awakengod", argsstring
     julia(
-        path=name,
+        path=path,
         project=TOGAwaken.TOGDIR,
         # args=TOGAwaken.JULIA_ARGS_INTERACTIVE,
-        code="""include(".tog/$name.jl");using .$name;$name.awaken($argsstring)""", wait=false)
+        code="""include("$godfile");using .$name;$name.awaken($argsstring)""", wait=false)
     # code="""using $name;$name.awaken(universe="$universe")""") # DEBUG
 end
 

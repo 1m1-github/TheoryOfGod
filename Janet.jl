@@ -6,7 +6,7 @@ import TOGgod: LoopOS
 export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools
 using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools
 
-using TOGIntelligenceJanet, TOGXAI, TOGgod
+using TOGIntelligence, TOGXAI, TOGgod
 
 intelligence(;
     self,
@@ -15,7 +15,7 @@ intelligence(;
     shortmemory,
     newinput,
     complexity,
-) = TOGIntelligenceJanet.intelligence(
+) = TOGIntelligence.intelligence(
     self=self,
     history=history,
     longmemory=longmemory,
@@ -30,7 +30,7 @@ function awaken(; args...)
     # write(string(time()),"Dona1")
     _args = merge(NamedTuple(;), args)
     _args = merge(_args, [
-        :name => "Janet",
+        # :path => joinpath(pwd(), "Janet"),
         :intelligence => intelligence,
         # :pkg => string(@__MODULE__),
     ])

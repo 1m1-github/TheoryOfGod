@@ -5,7 +5,7 @@ export web_search, browse_page, download_file, run_shell, send_http_request, par
 using HTTP, JSON3, Base64, Dates, SMTPClient, Serialization, Gumbo, Cascadia
 
 "Uses DuckDuckGo API for searching returning a Dict with :title, :snippet and :url keys"
-function web_search(query; num_results=10)
+function web_search(query::String; num_results=10)
     encoded_query = HTTP.URIs.escapeuri(query)
     url = "https://html.duckduckgo.com/html/?q=$(encoded_query)"
     response = HTTP.get(url)
@@ -25,7 +25,7 @@ function web_search(query; num_results=10)
 end
 
 "Removes HTML tags to extract plain text"
-function browse_page(url)
+function browse_page(url::String)
     resp = HTTP.get(url)
     html = String(resp.body)
 
@@ -61,7 +61,7 @@ function browse_page(url)
 end
 
 "Handles binary download safely"
-download_file(url, local_path) = HTTP.download(url, local_path)
+download_file(url::String, local_path::String) = HTTP.download(url, local_path)
 
 "run_shell(`echo 1`), throws on error"
 function run_shell(cmd::Cmd)::String
@@ -76,17 +76,17 @@ end
 run_shell(command::String) = run_shell(Cmd(split(command)))
 
 "Supports common HTTP methods like GET POST"
-function send_http_request(method, url, headers=Dict(), body="")
+function send_http_request(method::String, url::String, headers=Dict(), body="")
     hpairs = Pair.(keys(headers), values(headers))
     resp = HTTP.request(method, url, hpairs, body)
     String(resp.body)
 end
 
 "Handles malformed JSON gracefully"
-parse_json(json_str) = JSON3.read(json_str)
+parse_json(json_str::String) = JSON3.read(json_str)
 
 """`send_email(["<to@email.org>"], "body", "message")`"""
-function send_email(to::Vector{String}, subject, message)
+function send_email(to::Vector{String}, subject::String, message::String)
     from = "<email@1m1.io>"
     body = get_body(to, from, subject, message)
     # body = get_body(to, from, subject, message; cc, replyto)

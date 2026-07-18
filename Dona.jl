@@ -31,7 +31,7 @@ function awaken(; args...)
     # write(string(time()),"Dona1")
     _args = merge(NamedTuple(;), args)
     _args = merge(_args, [
-        :name => "Dona",
+        # :path => joinpath(pwd(), "Dona"),
         :intelligence => intelligence,
         # :pkg => string(@__MODULE__),
     ])

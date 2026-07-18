@@ -1,6 +1,6 @@
 module TOGOctahedron
 
-export Octahedron
+export Octahedron, take!
 
 # using StaticArrays
 using KernelAbstractions, LinearAlgebra
@@ -13,6 +13,20 @@ using LoopOS: Peripheral
 import Base: ∩
 import Base.take!
 
+"""
+Observe ∞-dim Ω with a 3d manifold Octahedron. 
+The octahedron spans between the observer is at ẑeroμ, the focus at ôneμ.
+All existence is smooth and all observation is discrete.
+The pyramid from the focus times ρ[end] to the base is discretized and observed via Beer-Lambert accumulation along the pyramid height.
+Ο = Minimum world complexity (proportional to time) of observation.
+∂Ο = Fix observation complexity to the present/current world time.
+v = Speed for ẑeroμ to move towards ôneμ.
+ρ = 3dim size vector of the octahedron base.
+θ = Rotation around the octahedron height line.
+♯ = 2d discretization of the base.
+norm = Function to measure the length of a vector.
+⚷ = Not implemented yet, to be used to encrypt/decrypt information.
+"""
 mutable struct Octahedron{T} <: Peripheral
     Ο::UInt
     ∂Ο::Bool
@@ -37,17 +51,33 @@ end
 #     1 < length(ϵ) && return false
 #     only(ϵ).ϕ === ○̂
 # end
-function take!(oo::AbstractVector{Tuple{Octahedron,𝕋,T}}) where T
-    ψ, α = take!(oo[1][1], oo[1][2])
+"""
+Observe layers octahedra given a compositing factor for each layer.
+example: `take!([(octahedron1,0.5),(octahedron2,0.5)])`
+"""
+function take!(oo::AbstractVector{Tuple{Octahedron,T}}) where T
+    ψ, α = take!(oo[1][1])
     for i = 2:length(oo)
-        ψ̃, α̃ = take!(oo[i][1], oo[i][2])
-        ψ, α = take!(ψ, α, ψ̃, α̃, oo[i][3])
+        ψ̃, α̃ = take!(oo[i][1])
+        ψ, α = take!(ψ, α, ψ̃, α̃, oo[i][2])
     end
     ψ, α
 end
-take!(oo::AbstractVector{Tuple{Octahedron,T}}, ω::𝕋) where T = take!([(o[1], ω, o[2]) for o = oo])
-take!(oo::AbstractVector{Octahedron}, ω::𝕋, β::Number) = take!([(o, ω, β) for o = oo])
+# function take!(oo::AbstractVector{Tuple{Octahedron,𝕋,T}}) where T
+#     ψ, α = take!(oo[1][1], oo[1][2])
+#     for i = 2:length(oo)
+#         ψ̃, α̃ = take!(oo[i][1], oo[i][2])
+#         ψ, α = take!(ψ, α, ψ̃, α̃, oo[i][3])
+#     end
+#     ψ, α
+# end
+# take!(oo::AbstractVector{Tuple{Octahedron,T}}, ω::𝕋) where T = take!([(o[1], ω, o[2]) for o = oo])
+# take!(oo::AbstractVector{Octahedron}, ω::𝕋, β::Number) = take!([(o, ω, β) for o = oo])
 take!(ψ₁, α₁, ψ₂, α₂, β) = (one(β) - β) * ψ₁ .+ β * ψ₂, ○(β) * (α₁ .+ α₂)
+"""
+Observe given an octahedron.
+example: `take!(TOGgod.OCTAHEDRON[])`
+"""
 function take!(o::Octahedron)
     # @info "∃̇Octahedron(o::Octahedron)"
     # try

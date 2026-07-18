@@ -1,7 +1,5 @@
 module TOGTypst
 
-export typst
-
 using PNGFiles, Typst_jll
 using TOGMatrix: MATRIX_CACHE, rgbamatrix
 
@@ -24,6 +22,6 @@ function typst_to_matrix(; typst_code, dpi)
     end
 end
 
-typst(; typst_code, dpi) = rgbamatrix(typst_to_matrix(typst_code=typst_code, dpi=dpi))
+typst(; typst_code::String, dpi::Int) = rgbamatrix(typst_to_matrix(typst_code=typst_code, dpi=dpi))
 
 end

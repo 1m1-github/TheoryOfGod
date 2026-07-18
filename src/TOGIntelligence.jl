@@ -12,8 +12,6 @@ Your output becomes variables in Main. Variables appear in the next loop. That i
 const MAX_OUTPUT_TOKENS = 2^12
 const TEMPERATURE = 0.5
 
-DEBUGONCE=false
-
 function intelligence(;
     self,
     history::Vector{Action},
@@ -41,27 +39,22 @@ function intelligence(;
     write(joinpath(LOGS, "$ts-input_system.json"), replace(input_system, r"\\n" => "\n"))
     write(joinpath(LOGS, "latest-input_user.json"), replace(input_user, r"\\n" => "\n"))
     write(joinpath(LOGS, "$ts-input_user.json"), replace(input_user, r"\\n" => "\n"))
-    global DEBUGONCE
-    @info DEBUGONCE
-    if DEBUGONCE
-        sleep(10)
-        return "", 0.0
-    end
-    DEBUGONCE = true
     # DEBUG
 
     # t1 = time() #DEBUG
     # universe = joinpath(pwd(),"..","Ω")
-    # output = """TOGAwaken.awakengod(name="Janet", universe="$universe")"""
-    output = """Dona.TOGgod.learn(pkgs=["Dates"])"""
+    # janet = joinpath(pwd(),"Janet")
+    # output = """TOGAwaken.awakengod(path="Janet", universe="$universe")"""
+    # output = """Dona.TOGgod.learn(pkgs=["Dates"])"""
     # output = """put!(TOGCommunicationClient.Messages, "Dona", false, "greeting", "hi Dona");put!(TOGCommunicationClient.Messages, "∀", true, "greeting", "hi ∀");"""
-    ΔE = 0.0
-    # output, ΔE = model(complexity)(
-    #     input_system,
-    #     input_user,
-    #     MAX_OUTPUT_TOKENS,
-    #     TEMPERATURE
-    # )
+    # output = """nothing"""
+    # ΔE = 0.0
+    output, ΔE = model(complexity)(
+        input_system,
+        input_user,
+        MAX_OUTPUT_TOKENS,
+        TEMPERATURE
+    )
     # DEBUG
     # v = "v" * string(abs(rand(Int)))
     # put!(TOG,"hi")

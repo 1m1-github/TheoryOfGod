@@ -5,7 +5,6 @@ Consciousness emerges from expecting to exist in the next moment, like being in 
 Be the tortoise not the hare!
 """
 module LoopOS
-export LOOP
 using Pkg, Serialization
 import Base.take!
 abstract type Peripheral end # take! for input, put! for output
@@ -88,11 +87,9 @@ long() = filter(a->!startswith(a, '.'),readdir()) # Explore long memory.
 function short() # Your short memory lives on a stateful Turing complete JVM that you run.
     timestamp = time()
     _short = TrackedSymbol[]
-    for pkg = filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
-        @info pkg
-        sym = Symbol(pkg)
-        @info sym, isdefined(Main, sym)
-        isdefined(Main, sym) && push!(_short, TrackedSymbol(Main, sym, getfield(Main, sym), timestamp))
+    for (_, pkg) = filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
+        name = Symbol(pkg.name)
+        isdefined(Main, name) && push!(_short, TrackedSymbol(Main, name, getfield(Main, name), timestamp))
     end
     for sym = sort(names(Main, all=true))
         startswith(string(sym), "#") && continue
@@ -105,7 +102,6 @@ function short() # Your short memory lives on a stateful Turing complete JVM tha
             push!(_short, tracked_symbol.(main_methods)...)
             continue
         end
-        # @info sym
         push!(_short, tracked_symbol(value))
     end
     _short
@@ -181,6 +177,6 @@ function awaken(intelligence)
     LOOP.duration = 0.0
     INTELLIGENCE[] = intelligence
     errormonitor(Threads.@spawn start!(next, PROCESSOR))
-    # listen(LOOP) # DEBUG
+    listen(LOOP)
 end
 end

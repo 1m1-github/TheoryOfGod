@@ -14,7 +14,7 @@ function awaken()
 end
 
 function awakenDona()
-    TOGAwaken.awakengod(name="Dona", universe=joinpath(pwd(),"Ω"), pkgs=[
+    TOGAwaken.awakengod(path=joinpath(pwd(),"Dona"), universe=joinpath(pwd(),"Ω"), pkgs=[
         "LoopOS",
         "TOGgod", 
         "TOGXAI", 

@@ -65,13 +65,13 @@ cd Dona
 ### Awaken
 
 ```
-env JULIA_PKG_DEVDIR=$HOME/.julia/dev JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Dona;Dona.awaken(universe="../Ω")'
+env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Dona;Dona.awaken(universe="../Ω")'
 ```
 
 ## Update
 
 ```
-env JULIA_PKG_DEVDIR=$HOME/.julia/dev JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
+env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
 ```
 
 # TODO

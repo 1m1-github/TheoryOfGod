@@ -1,6 +1,6 @@
 module TOGCommunicationClient
 
-export Messages, listentogroup, ignoregroup, CACHE
+export listentogroup, ignoregroup, CACHE, put!, take!
 
 using ZMQ
 using TOGZMQ
@@ -19,7 +19,15 @@ end
 
 # put!(::Type{Messages}, message::TOGMessage) = put!(MESSAGES.channel, message)
 put!(::Type{Messages}, message::TOGMessage) = put!(Messages, message.to, message.togroup, message.description, message.information)
+"""
+Send any information to a specific god or to a group.
+example: `put!(Messages, "∀", true, "greeting", "hi")`
+"""
 put!(::Type{Messages}, to::String, togroup::Bool, description::String, information) = TOGZMQ.send(DEALERSOCKET[], TOGMessage(TOGZMQ.ID[], to, togroup, description, information))
+"""
+Retrieve received message using its index in CACHE.
+example: `take!(Messages, 1)`
+"""
 function take!(::Type{Messages}, i)
     # take!(MESSAGES.channel)
     message = CACHE[i]
@@ -48,7 +56,15 @@ function awaken(;dealer, sub)
     dealertask, subtask
 end
 
+"""
+Join a group.
+example: `listentogroup("interestinggroup")`
+"""
 listentogroup(group) = subscribe(SUBSOCKET[], group)
+"""
+Leave a group.
+example: `ignoregroup("interestinggroup")`
+"""
 ignoregroup(group) = unsubscribe(SUBSOCKET[], group)
 
 function receive(socket)

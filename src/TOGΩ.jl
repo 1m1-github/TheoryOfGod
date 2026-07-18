@@ -14,7 +14,9 @@ const Ωpath = joinpath(TOGAwaken.TOGDIR, "Ω")
 const Ω = isfile(Ωpath) ? deserialize(Ωpath) : 𝕋(T)
 
 __init__() = atexit(sleep)
-function sleep()
+function sleep(exitcode)
+    @info "sleep", exitcode
+    exitcode == TOGAwaken.ALREADYRUNNINGEXITCODE && return
     serialize(Ωpath, Ω)
     TOGAwaken.sleep()
 #     TOGObserveServer.sleep()

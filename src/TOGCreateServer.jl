@@ -1,7 +1,5 @@
 module TOGCreateServer
 
-export TOG
-
 # using StaticArrays
 using ZMQ
 using TOGZMQAPIServer

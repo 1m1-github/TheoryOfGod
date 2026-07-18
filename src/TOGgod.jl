@@ -14,7 +14,9 @@ const ARGS = Ref{NamedTuple}((;))
 
 __init__() = atexit(sleep)
 
-function sleep()
+function sleep(exitcode)
+    @info "sleep", exitcode
+    exitcode == TOGAwaken.ALREADYRUNNINGEXITCODE && return
     isempty(ARGS[]) && return
     serialize(".tog/short", LoopOS.short())
     TOGAwaken.sleep(path=ARGS[][:path])
@@ -35,7 +37,7 @@ function awaken(; args...)
     broadcastbrowserport = get(args, :broadcastbrowserport, TOGPort.openport())
     ARGS[] = merge(ARGS[], [:remotereplport=>remotereplport, :broadcastbrowserport=>broadcastbrowserport])
     universe = args[:universe]
-    name = args[:name]
+    name = basename(args[:path])
     intelligence = args[:intelligence]
     TOGAwaken.awaken()
     TOGZMQ.awaken(name=name)
@@ -79,7 +81,7 @@ function learn(; pkgs=String[], rmpkgs=String[])
     @info "learn"
     isempty(pkgs) || Pkg.add(pkgs)
     isempty(rmpkgs) || Pkg.rm(rmpkgs)
-    sleep()
+    sleep(0)
     @info "learn, after sleep"
     TOGAwaken.awakengod(; ARGS[]...)
     @info "learn, after awakengod"
