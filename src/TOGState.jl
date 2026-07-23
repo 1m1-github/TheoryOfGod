@@ -151,9 +151,9 @@ function state(t::Task)
     exception = istaskfailed(t) ? ",exception:$(state(t.exception))" : ""
     "Task(" * join(_state, ",") * exception * ")"
 end
-function state(x::Exception)
-    x isa TaskFailedException && return state(x.task.exception)
-    sprint(showerror, x)
+function state(e::Exception)
+    e isa TaskFailedException && return state(e.task.exception)
+    sprint(showerror, e, catch_backtrace())
 end
 function docs(method::Method, multidoc::Docs.MultiDoc)
     sig = method.sig

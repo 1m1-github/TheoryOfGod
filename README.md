@@ -71,7 +71,7 @@ env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia ju
 ## Update
 
 ```
-env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
+env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
 ```
 
 # TODO

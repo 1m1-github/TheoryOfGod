@@ -6,17 +6,23 @@ const CACHED = TrackedSymbol[]
 const VOLATILE = TrackedSymbol[]
 # const HASH = Dict{Tuple{Module, Symbol}, UInt}()
 
+function Base.copy(ts::TrackedSymbol)
+    value = try deepcopy(ts.value) catch _ ts.value end
+    TrackedSymbol(ts.m, ts.sym, value, ts.timestamp)
+end
+
 nonrefvalue(a) = a isa Ref ? nonrefvalue(a[]) : a
 function first_copy(_state::Vector{TrackedSymbol})
     for s = _state
         if s.m == Main.LoopOS
-            push!(VOLATILE, s)
+            push!(VOLATILE, copy(s))
         else
-            push!(CACHED, s)
+            push!(CACHED, copy(s))
         end
         # HASH[(s.m, s.sym)] = hash(nonrefvalue(s.value))
     end
-    copy(CACHED), copy(VOLATILE)
+    # copy(CACHED), copy(VOLATILE)
+    CACHED, VOLATILE
 end
 
 function same_found!(s::TrackedSymbol, _state::Vector{TrackedSymbol})
@@ -44,8 +50,12 @@ function cache!(_state::Vector{TrackedSymbol})
         same_found!(s, _state) && continue
         deleteat!(VOLATILE, i)
     end
-    push!(VOLATILE, _state...)
-    copy(CACHED), copy(VOLATILE)
+    # for s = _state
+    #     HASH[(s.m, s.sym)] = hash(nonrefvalue(s.value))
+    # end
+    push!(VOLATILE, copy(_state)...)
+    # copy(CACHED), copy(VOLATILE)
+    CACHED, VOLATILE
 end
 
 # cached = STATE_PRE * state(_STATE[1:CACHED_INDEX])

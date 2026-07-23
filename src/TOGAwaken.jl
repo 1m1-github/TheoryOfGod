@@ -35,7 +35,7 @@ function isawake(; path=".")
 end
 function awaken(; path=".")
     if isawake(path=path)
-        @error "god at $path is already awake."
+        @error "Already awake at $path."
         exit(ALREADYRUNNINGEXITCODE)
     end
     writepid(path=path)
