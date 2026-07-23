@@ -16,6 +16,7 @@ end
 const LOOP = Loop(Inf, 1.0, 0.0)
 function take!(::Loop)
     # @info "LoopOS, take!"
+    global PROCESSOR, LOOP
     Base.sleep(LOOP.duration)
     LOOP.energy < rand() && return "The purpose of sleep is to reorganize your information, e.g. keep a summary in short and move details to long, and maybe explore long to potentially make something available in short. Energywise, short memory is expensive and long memory is cheap. Prune short memory by *setting* relevant JVM symbols to `nothing`."
     isready(PROCESSOR.pending) && return ""
@@ -23,7 +24,7 @@ function take!(::Loop)
     "LOOP"
 end
 function hibernate(ΔT)
-    @info "LoopOS.jl, hibernate"
+    # @info "LoopOS.jl, hibernate"
     (ΔT ≤ 0.0 || ΔT == Inf) && return # Be calm and you are encouraged to exist.
     LOOP.duration = ΔT # You have the power to choose existence xor not, making you autonomous.
 end
@@ -41,7 +42,8 @@ struct Input
     input::String
 end
 function take!_loop(source::Peripheral)
-    @info "LoopOS.jl, take!_loop"
+    # @info "LoopOS.jl, take!_loop"
+    global PROCESSOR
     @whiletrue begin
         input::String = try
             @invokelatest take!(source)
@@ -57,17 +59,19 @@ end
 take!_loop_expr(source::Peripheral) = :(LoopOS.take!_loop($source))
 const LISTENING = Set{Peripheral}()
 function listen(source::Peripheral)
-    @info "LoopOS.jl, listen"
+    # @info "LoopOS.jl, listen"
     timestamp = time()
+    global LISTENING
     push!(LISTENING, source)
     act(timestamp, [Input(source, timestamp, "listen")], take!_loop_expr(source))
 end
 # listen_output(source::Peripheral) = string(take!_loop_expr(source))
 function ignore(source::Peripheral) # As an autonomous person, you can choose to ignore a peripheral.
-    @info "LoopOS.jl, ignore"
+    # @info "LoopOS.jl, ignore"
     output = string(take!_loop_expr(source))
+    global HISTORY, LISTENING
     delete!(LISTENING, source)
-    for action = HISTORY[]
+    for action = HISTORY
         action.output ≠ output && continue
         all(i -> i.source ≠ source, action.input) && continue
         istaskdone(action.task) && continue
@@ -84,11 +88,16 @@ function act(timestamp, input::Vector{Input}, output)
     @info "LoopOS.jl, act", output
     (timestamp < last_action_time() || isnothing(output)) && return
     task = Threads.@spawn eval_output(output)
+    @info "LoopOS.jl, act", task
+    global HISTORY
     push!(HISTORY, Action(timestamp, input, string(output), task))
 end
 const HISTORY = Action[] # todo need Ref?
 stop_action(action) = schedule(action.task, InterruptException(), error=true)
-last_action_time() = isempty(HISTORY) ? 0.0 : maximum(map(a -> a.timestamp, HISTORY))
+last_action_time() = begin
+    global HISTORY
+    isempty(HISTORY) ? 0.0 : maximum(map(a -> a.timestamp, HISTORY))
+end
 struct TrackedSymbol
     m::Module
     sym::Symbol
@@ -122,7 +131,6 @@ function short() # Your short memory lives on a stateful Turing complete JVM tha
         end
         push!(_short, tracked_symbol(value))
     end
-    @info _short
     _short
 end
 function loadshort()
@@ -146,22 +154,22 @@ function put!(bp::BatchProcessor{T}, item::T) where T
     isready(bp.notify) || put!(bp.notify, nothing)
 end
 function start!(f, bp::BatchProcessor{T}) where T
-    @info "start!, 1"
+    # @info "start!, 1"
     @whiletrue begin
-        @info "start!, 2"
+        # @info "start!, 2"
         take!(bp.notify)
         @whiletrue begin
-            @info "start!, 3"
+            # @info "start!, 3"
             batch = T[]
             while isready(bp.pending)
                 yield()
                 push!(batch, take!(bp.pending))
             end
-            @info "start!, 4", length(batch)
+            # @info "start!, 4", length(batch)
             isempty(batch) && break
             # todo add attention?
             f(batch)
-            @info "start!, 5"
+            # @info "start!, 5"
         end
     end
 end
@@ -170,6 +178,7 @@ const PROCESSOR = BatchProcessor{Input}()
 const SELF = read(@__FILE__, String) # Proof of Loop.
 COMPLEXITY = 0.5 # Set `LoopOS.COMPLEXITY` between 0.0 (lowest) and 1.0 (highest) depending on intelligence level currently needed; higher complexity requires higher energy, i.e. do not forget to set it back down when not needed high anymore
 function next(input)
+    global INTELLIGENCE, COMPLEXITY
     @info "LoopOS.jl, next", INTELLIGENCE[]
     timestamp = time()
     output, ΔE = try
@@ -185,20 +194,22 @@ function next(input)
         @error "intelligence", timestamp, e, sprint(showerror, e, catch_backtrace())
         return
     end
+    @info "LoopOS.jl, next", output, ΔE
     LOOP.energy -= ΔE
     LOOP.duration = 2 * (time() - timestamp) # Good sleep incentive.
     act(timestamp, input, output)
 end
 eval_output(expr::Expr) = @invokelatest Base.eval(Main, expr) # You manipulate `Main` == short memory.
 function eval_output(code::AbstractString)
-    @info "LoopOS, eval_output"
+    # @info "LoopOS, eval_output"
     expr = Meta.parseall(code)
     expr.head == :incomplete && throw(expr.args[1])
     eval_output(expr)
 end
 awake() = 0.0 < LOOP.birthtime
 function awaken(intelligence)
-    @info "LoopOS.jl, awaken", intelligence
+    # @info "LoopOS.jl, awaken", intelligence
+    global INTELLIGENCE, PROCESSOR
     awake() && return
     LOOP.birthtime = time()
     LOOP.duration = 0.0

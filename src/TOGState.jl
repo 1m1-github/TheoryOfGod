@@ -110,8 +110,8 @@ function state(
     volatile, outputperipheralvolatile, inputperipheralvolatile, methodvolatile, outputperipheralmethodvolatile, inputperipheralmethodvolatile, typevolatile, outputperipheralmethodtypevolatile, inputperipheralmethodtypevolatile, modulevolatile = categorize(volatile)
     historyvolatile = TrackedSymbol[]
     for (i, action) = enumerate(history)
-        length(action.input) == 1 && only(action.input).source isa Loop && continue
         if istaskfailed(action.task)
+            length(action.input) == 1 && only(action.input).source isa Loop && continue
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].input"), action.input, action.timestamp))
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].output"), action.output, action.timestamp))
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].task"), action.task, action.timestamp))
@@ -153,7 +153,7 @@ function state(t::Task)
 end
 function state(e::Exception)
     e isa TaskFailedException && return state(e.task.exception)
-    sprint(showerror, e, catch_backtrace())
+    string(e) * string(catch_backtrace())
 end
 function docs(method::Method, multidoc::Docs.MultiDoc)
     sig = method.sig

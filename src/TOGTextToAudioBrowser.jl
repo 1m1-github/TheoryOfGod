@@ -15,7 +15,7 @@ struct TextToAudioBrowser <: Peripheral end
 Speak audio using the browser
 """
 function put!(::Type{TextToAudioBrowser}, message::String)
-    @info "TOGTextToAudioBrowser.jl, put!"
+    @info "TOGTextToAudioBrowser.jl, put!", message
     audio = tts(message)
     mime = "audio/mpeg"
     b64 = base64encode(audio)

@@ -53,7 +53,7 @@ julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'u
 ### Update
 
 ```
-julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
+julia --optimize=3 --threads=auto --quiet --project=.tog --eval 'using Pkg;Pkg.update()'
 ```
 
 ## Dona

@@ -2,7 +2,8 @@ module TOGOmega
 
 # export TOGREPL
 
-const T = Float64
+# const T = Float64
+const T = Rational{BigInt}
 
 using Serialization
 using TOGExist: 𝕋
@@ -28,18 +29,12 @@ function awaken(; path=".", router=TOGAwaken.router(path=path), pub=TOGAwaken.pu
     @info "TOGOmega, awaken"
     TOGLogging.awaken()
     TOGAwaken.awaken()
-    @info "TOGOmega, awaken2"
     TOGZMQ.awaken(name="Ω")
-    @info "TOGOmega, awaken3"
     TOGObserveServer.awaken(socketlocation=togobserve, ω=Ω)
-    @info "TOGOmega, awaken4"
     TOGCreateServer.awaken(socketlocation=togcreate, ω=Ω)
-    @info "TOGOmega, awaken5"
     TOGCommunicationServer.awaken(router=router, pub=pub)
-    @info "TOGOmega, awaken6"
     # TOGREPL.awaken(name="Ω")
     isinteractive() ? nothing : wait(Condition())
-    @info "TOGOmega, awaken7"
 end
 
 end

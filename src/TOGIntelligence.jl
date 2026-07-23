@@ -66,28 +66,32 @@ function intelligence(;
     #     put!(TOG,"\$ integral_(-infinity)^(infinity) e^(-x^2) d x = sqrt(pi) \$")
     #     """)], "usage" => "")
     sleep(rand(3:10))
-    choice = rand(UInt) % 3
+    # choice = rand(UInt) % 3
     t = time()
-    output = if choice == 0
-        x = rand()
-        """
-        put!(TOGCommunicationClient.Messages, "∀", true, "rand value", "rand value is $x at $t")
-        """
-    elseif choice == 1
-        x = rand()
-        """
-        put!(TOGCommunicationClient.Messages, "Dona", false, "rand value for Dona", "rand value for Dona is $x at $t")
-        """
-    elseif choice == 2
-        x = rand()
-        """
-        put!(TOGCommunicationClient.Messages, "Janet", false, "rand value for Janet", "rand value for Janet is $x at $t")
-        """
-    end
+    # put!(TOGTextToAudioBrowser.TextToAudioBrowser, "hi")
+    output = """
+    put!(sdfDona.TOGgod.OCTAHEDRON[], "hi", "hi", [0.5,0.5], [0.2,0.2])
+    """
+    # output = if choice == 0
+    #     x = rand()
+    #     """
+    #     put!(TOGCommunicationClient.Messages, "∀", true, "rand value", "rand value is $x at $t")
+    #     """
+    # elseif choice == 1
+    #     x = rand()
+    #     """
+    #     put!(TOGCommunicationClient.Messages, "Dona", false, "rand value for Dona", "rand value for Dona is $x at $t")
+    #     """
+    # elseif choice == 2
+    #     x = rand()
+    #     """
+    #     put!(TOGCommunicationClient.Messages, "Janet", false, "rand value for Janet", "rand value for Janet is $x at $t")
+    #     """
+    # end
     ΔE = 0.001
     # t2 = time()
     # o = output * "\n" * JSON3.write(result["usage"]) * "\nΔE=$ΔE"
-    @info "TOGIntelligence.intelligence", choice, t, output
+    # @info "TOGIntelligence.intelligence", choice, t, output
     write(joinpath(LOGS, "latest-output.jl"), output)
     write(joinpath(LOGS, "$ts-output.jl"), output)
     # cp(joinpath(LOGS, "$ts-output.jl"), joinpath(LOGS, "latest-output.jl"), force=true)

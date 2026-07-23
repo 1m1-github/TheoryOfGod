@@ -63,7 +63,7 @@ for (_,pkg) = registry["packages"]
 end
 
 
-TOGLearning.updatepkg(name="TOGState", pkgs=["Revise"])
+TOGLearning.updatepkg(name="TOGAudioAnalogToDigitalBrowser", pkgs=["JSON3"])
 files(name) = [joinpath(ENV["HOME"], "TheoryOfGod", "src", name * ".jl")]
 TOGLearning.newpkg(name="TOGIntelligenceJanet", pkgs=["LoopOS", "TOGState", "TOGLogging"], files=files("TOGIntelligenceJanet"))
 

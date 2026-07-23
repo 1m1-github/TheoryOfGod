@@ -2,7 +2,8 @@ module TOGCreateClient
 
 export put!, TOGExplanation
 
-using ZMQ, PNGFiles, TOGZMQAPIClient, TOGTypst
+using ZMQ, PNGFiles, TOGZMQAPIClient
+using TOGTypst: typst
 using TOGOctahedron: Octahedron
 import Base: put!
 

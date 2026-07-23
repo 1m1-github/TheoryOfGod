@@ -27,14 +27,14 @@ put!(::Type{BroadcastBrowser}, js) = begin
     put!(BROADCASTBROWSER[].processor, js)
 end
 
+# window.WS = new WebSocket('wss://studio.tail16337b.ts.net')
 const HTMLINIT(port) = """
 <!DOCTYPE html>
 <html>
 <body>
 <script>
 window.SSE = new EventSource(`/events?width=\${document.documentElement.clientWidth}&height=\${document.documentElement.clientHeight}`)
-window.SSE.onmessage = (e) => {eval(e.data);console.log(e.data);}
-window.WS = new WebSocket('ws://localhost:$port')
+window.SSE.onmessage = (e) => {console.log(e.data);eval(e.data);}
 </script>
 </body>
 </html>
@@ -72,15 +72,17 @@ function handle_ws(stream, f)
     end
 end
 
-function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/websocket"=>println))
+function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/websocket"=>identity))
     @info "TOGBroadcastBrowser.jl, awaken"    
     TOGAwaken.writebroadcastbrowserport(port=port)
-    @async HTTP.listen!("0.0.0.0", port) do stream
-        if HTTP.WebSockets.isupgrade(stream.message)
-            handle_ws(stream, functions["/websocket"])
-        end
+    @async HTTP.listen!("127.0.0.1", port) do stream
+        # if HTTP.WebSockets.isupgrade(stream.message)
+        #     @async handle_ws(stream, functions["/websocket"])
+        #     return
+        # end
         target = stream.message.target
         uri = URI(target)
+        # @info "TOGBroadcastBrowser, target, uri", target, uri, uri.path, haskey(functions, uri.path)
         if target == "/"
             HTTP.setstatus(stream, 200)
             HTTP.setheader(stream, "Content-Type" => "text/html")
@@ -104,7 +106,7 @@ function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/webs
             HTTP.startwrite(stream)
         end
     end
-    HTTP.get("http://localhost:"*string(port)) # todo needed to reserve port?
+    # HTTP.get("http://localhost:"*string(port)) # todo needed to reserve port?
 end
 
 function sleep(; path=".")

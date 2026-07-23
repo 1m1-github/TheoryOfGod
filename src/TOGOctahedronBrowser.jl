@@ -45,8 +45,9 @@ browserlooptask(octahedron) = errormonitor(Threads.@spawn begin
         ϕ̇, α̇ = Base.invokelatest() do
             take!(octahedron)
         end
-        # @info unique(ϕ̇) # DEBUG
+        @info "unique(ϕ̇)", unique(ϕ̇) # DEBUG
         δ = Δ!(ϕ, α, ϕ̇, α̇)
+        @info "length(δ)", length(δ)
         isempty(δ) && continue
         js = "pixel=" * writeδ(δ, octahedron.♯[2]) * "\n" * SET_PIXELS_JS
         # @info "length(js)", length(js)
@@ -68,6 +69,9 @@ function Δ!(ϕ, α, ϕ̇, α̇)
         ϕ[i] = ϕ̇[i]
         α[i] = α̇[i]
         rgba = scalar2rgba(ϕ̇[i], α̇[i])
+        if rgba.r<1.0 || rgba.g<1.0 || rgba.b<1.0
+            @info "Δ!, non-white", i, rgba
+        end
         push!(δ, (i, (T(rgba.r), T(rgba.g), T(rgba.b), T(rgba.alpha))))
     end
     δ

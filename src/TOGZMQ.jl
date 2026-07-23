@@ -29,7 +29,7 @@ awaken(;name) = ID[] = name
 # end
 function send(socket::Socket, message::TOGMessage)
     # isempty(ID[]) && error("Run TOGZMQ.awaken() first.")
-    @info "TOGZMQ.send", socket, message
+    # @info "TOGZMQ.send", socket, message
     buffer = IOBuffer()
     # @info "TOGZMQ.send", sizeof(buffer)
     serialize(buffer, message.information)
@@ -64,7 +64,7 @@ function receive(socket::Socket)
     catch e
         e
     end
-    @info "TOGZMQ.receive", socket, information
+    # @info "TOGZMQ.receive", socket, information
     TOGMessage(from, to, togroup, description, information)
 end
 

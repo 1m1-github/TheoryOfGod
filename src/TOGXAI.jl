@@ -93,7 +93,13 @@ function sttws(;
     push!(headers, "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""")
     wss = HTTP.WebSockets.open(url, headers=headers)
     @async for msg in wss
-        output(JSON3.read(msg))
+        @info "msg", msg
+        try
+            output(JSON3.read(msg))
+        catch e 
+            @info e
+            # sprint(showerror, e, catch_backtrace())
+        end
     end, wss
 end
 

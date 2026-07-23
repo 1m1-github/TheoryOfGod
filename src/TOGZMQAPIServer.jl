@@ -23,7 +23,7 @@ end
 function receive(socket, functions)
     # @info "TOGZMQAPIServer.receive", socket, functions
     message = TOGZMQ.receive(socket)
-    @info "TOGZMQAPIServer.receive", message
+    # @info "TOGZMQAPIServer.receive", message
     output = try
         f = functions[message.information.f]
         # @info typeof(message.information.args), typeof(f)
@@ -35,7 +35,7 @@ function receive(socket, functions)
         showerror(stdout, e, bt)
         string(e)
     end
-    @info "TOGZMQAPIServer.receive", typeof(output)
+    # @info "TOGZMQAPIServer.receive", typeof(output)
     TOGZMQ.send(socket, TOGMessage(TOGZMQ.ID[], message.from, message.togroup, message.description, output))
 end
 

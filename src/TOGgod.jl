@@ -63,14 +63,16 @@ function awaken(; args...)
         ôneμ=[zero(T[]), ○(T[]), ○(T[]), ○(T[])+T[](0.1)],
         ρ=[T[](0.0), T[](0.1), T[](0.1), T[](0.0)],
         ♯=(1, 1))
-    # TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
-    #     "/keypress"=>TOGOctahedronBrowser.keypress,
-    #     "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
-    #     "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
-    # ))
-    # @info "TOGgod, after TOGBroadcastBrowser.awaken"
-    LoopOS.awaken(intelligence)
-    @info "TOGgod, after LoopOS.awaken"
+    @info "TOGgod, broadcastbrowserport", broadcastbrowserport
+    TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
+        "/keypress"=>TOGOctahedronBrowser.keypress,
+        # "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
+        "/audio"=>TOGAudioAnalogToDigitalBrowser.ws,
+        # "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
+    ))
+    @info "TOGgod, after TOGBroadcastBrowser.awaken"
+    # LoopOS.awaken(intelligence)
+    # @info "TOGgod, after LoopOS.awaken"
     # TOGREPL.awaken(name=name, remotereplport=remotereplport)
     # @info "TOGgod, after TOGREPL.awaken"
     # write(string(time()),"godend"*string(remotereplport))
@@ -86,7 +88,7 @@ end
 function browserconnect(port, browser)
     @info "TOGgod.browserconnect", port
     TOGOctahedronBrowser.awaken(octahedron=OCTAHEDRON[], browser=browser)
-    TOGAudioAnalogToDigitalBrowser.awaken()
+    # TOGAudioAnalogToDigitalBrowser.awaken()
 end
 
 """
