@@ -71,8 +71,8 @@ function awaken(; args...)
         # "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
     ))
     @info "TOGgod, after TOGBroadcastBrowser.awaken"
-    # LoopOS.awaken(intelligence)
-    # @info "TOGgod, after LoopOS.awaken"
+    LoopOS.awaken(intelligence)
+    @info "TOGgod, after LoopOS.awaken"
     # TOGREPL.awaken(name=name, remotereplport=remotereplport)
     # @info "TOGgod, after TOGREPL.awaken"
     # write(string(time()),"godend"*string(remotereplport))

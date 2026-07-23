@@ -75,7 +75,7 @@ end
 function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/websocket"=>identity))
     @info "TOGBroadcastBrowser.jl, awaken"    
     TOGAwaken.writebroadcastbrowserport(port=port)
-    @async HTTP.listen!("127.0.0.1", port) do stream
+        @async HTTP.listen!("127.0.0.1", port) do stream
         # if HTTP.WebSockets.isupgrade(stream.message)
         #     @async handle_ws(stream, functions["/websocket"])
         #     return

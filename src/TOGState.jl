@@ -111,7 +111,7 @@ function state(
     historyvolatile = TrackedSymbol[]
     for (i, action) = enumerate(history)
         if istaskfailed(action.task)
-            length(action.input) == 1 && only(action.input).source isa Loop && continue
+            # length(action.input) == 1 && only(action.input).source isa Loop && continue
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].input"), action.input, action.timestamp))
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].output"), action.output, action.timestamp))
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].task"), action.task, action.timestamp))
