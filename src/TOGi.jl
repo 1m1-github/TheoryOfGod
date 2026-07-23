@@ -6,7 +6,7 @@ import TOGHuman: LoopOS
 using TOGAwaken, TOGHuman
 
 function awaken(; universe="..")
-    # TOGΩ.awaken(path=universe)
+    # TOGOmega.awaken(path=universe)
     TOGHuman.awaken(name="i", universe=universe)
     args = merge(NamedTuple(;), [
         # :name => "Dona",

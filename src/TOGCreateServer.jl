@@ -4,7 +4,7 @@ module TOGCreateServer
 using ZMQ
 using TOGZMQAPIServer
 using TOGOctahedron: Octahedron, pyramid, box_aabb, ∃̇
-using TOG∃: ∃, ∃!
+using TOGExist: ∃, ∃!
 
 const SOCKET = Ref{Socket}()
 const TASK = Ref{Task}()

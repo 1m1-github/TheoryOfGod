@@ -6,7 +6,7 @@ using Pkg, Serialization
 using LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
 using LoopOS: Peripheral
 using TOGOctahedron: Octahedron
-using TOG∃: ○
+using TOGExist: ○
 import Base: put!
 
 "eltype of Ω."

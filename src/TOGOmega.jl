@@ -1,11 +1,11 @@
-module TOGΩ
+module TOGOmega
 
 # export TOGREPL
 
 const T = Float64
 
 using Serialization
-using TOG∃: 𝕋
+using TOGExist: 𝕋
 using TOGCommunicationServer, TOGAwaken, TOGLogging, TOGObserveServer, TOGCreateServer, TOGZMQ
 using TOGREPL
 using TOGMatrix, TOGOctahedron, TOGColor, Colors # DEBUG?
@@ -25,21 +25,21 @@ function sleep(exitcode)
     # TOGREPL.sleep()
 end
 function awaken(; path=".", router=TOGAwaken.router(path=path), pub=TOGAwaken.pub(path=path), togobserve=TOGAwaken.togobserve(path=path), togcreate=TOGAwaken.togcreate(path=path))
-    @info "TOGΩ, awaken"
+    @info "TOGOmega, awaken"
     TOGLogging.awaken()
     TOGAwaken.awaken()
-    @info "TOGΩ, awaken2"
+    @info "TOGOmega, awaken2"
     TOGZMQ.awaken(name="Ω")
-    @info "TOGΩ, awaken3"
+    @info "TOGOmega, awaken3"
     TOGObserveServer.awaken(socketlocation=togobserve, ω=Ω)
-    @info "TOGΩ, awaken4"
+    @info "TOGOmega, awaken4"
     TOGCreateServer.awaken(socketlocation=togcreate, ω=Ω)
-    @info "TOGΩ, awaken5"
+    @info "TOGOmega, awaken5"
     TOGCommunicationServer.awaken(router=router, pub=pub)
-    @info "TOGΩ, awaken6"
+    @info "TOGOmega, awaken6"
     # TOGREPL.awaken(name="Ω")
-    wait(Condition())
-    @info "TOGΩ, awaken7"
+    isinteractive() ? nothing : wait(Condition())
+    @info "TOGOmega, awaken7"
 end
 
 end

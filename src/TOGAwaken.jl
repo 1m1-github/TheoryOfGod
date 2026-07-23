@@ -66,7 +66,7 @@ function installΩ(;path)
         project=project,
         dev=joinpath(ENV["HOME"], ".julia", "dev"),
         depot=DEPOT_PATH[1],
-        code="""using Pkg;Pkg.add("TOGΩ")""")
+        code="""using Pkg;Pkg.add("TOGOmega")""")
 end
 function updateΩ(;path)
     @info "TOGAwaken.jl, updateΩ", path
@@ -88,7 +88,7 @@ function awakenΩ()
         dev=joinpath(ENV["HOME"], ".julia", "dev"),
         depot=DEPOT_PATH[1],
         # args=TOGAwaken.JULIA_ARGS_INTERACTIVE,
-        code="""using TOGΩ;TOGΩ.awaken()""", wait=false)
+        code="""using TOGOmega;TOGOmega.awaken()""", wait=false)
 end
 
 function installgod(; path, pkgs)

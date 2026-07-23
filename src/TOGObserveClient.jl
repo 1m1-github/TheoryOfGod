@@ -1,7 +1,7 @@
 module TOGObserveClient
 
 using ZMQ, TOGZMQAPIClient
-using TOG∃: ∃
+using TOGExist: ∃
 
 const SOCKET = Ref{Socket}()
 

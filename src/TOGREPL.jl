@@ -44,7 +44,7 @@ const NAME = Ref{String}()
 #     @show "connect", start_key, port, host
 #     connection = RemoteREPL.connect_remote(host, port)
 #     @show "connect", connection
-#     name = @remote(connection, TOGΩ.TOGREPL.NAME[])
+#     name = @remote(connection, TOGOmega.TOGREPL.NAME[])
 #     @show "connect", name
 #     initrepl(
 #         s -> RemoteREPL.remotecmd(connection, stdout, s),

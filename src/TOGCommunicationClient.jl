@@ -37,7 +37,7 @@ function take!(::Type{Messages}, i)
     deleteat!(CACHE, i)
     message
 end
-take!(::Messages, i) = take!(Messages, i)
+take!(::Messages, i=1) = take!(Messages, i)
 
 # __init__() = atexit(sleep)
 # function sleep()
@@ -54,7 +54,7 @@ function awaken(;dealer, sub)
     connect(SUBSOCKET[], sub)
     listentogroup("∀")
     # global MESSAGES
-    listen(MESSAGES)
+    # listen(MESSAGES)
     dealertask = errormonitor(@async @whiletrue receive(DEALERSOCKET[]))
     subtask = errormonitor(@async @whiletrue receive(SUBSOCKET[]))
     dealertask, subtask

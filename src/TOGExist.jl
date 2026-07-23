@@ -9,7 +9,7 @@ We have an ontology 𝕋 on Ω such that ϵ ∈ 𝕋:
 god ⊊ GOD = Ω = I^I = I^(.) = [ZERO < ○ < ONE]^(.)
 god observes or creates, GOD iterates.
 """
-module TOG∃
+module TOGExist
 using KernelAbstractions, IntervalTrees, TOGGPU
 import Base.:∩
 abstract type ∀ end
@@ -191,7 +191,8 @@ function ∩(ϵ::∃, β, Ο, ω::𝕋)
     isempty(β̃) && return β̇
     for ϵ̃ = ∩(map(t -> t[1], collect(values(β̃)))...)
         for i = eachindex(ϵ̃.d)
-            if Ο ≤ ω.Ο[ϵ̃] && ∩(ϵ̃.μ[i] - ϵ̃.ρ[i], ϵ̃.μ[i] + ϵ̃.ρ[i], ϵ̃.∂₀[i], ϵ̃.∂₁[i], ϵ.μ[i] - ϵ.ρ[i], ϵ.μ[i] + ϵ.ρ[i], ϵ.∂₀[i], ϵ.∂₁[i])
+            # if Ο ≤ ω.Ο[ϵ̃] && ∩(ϵ̃.μ[i] - ϵ̃.ρ[i], ϵ̃.μ[i] + ϵ̃.ρ[i], ϵ̃.∂₀[i], ϵ̃.∂₁[i], ϵ.μ[i] - ϵ.ρ[i], ϵ.μ[i] + ϵ.ρ[i], ϵ.∂₀[i], ϵ.∂₁[i])
+            if ∩(ϵ̃.μ[i] - ϵ̃.ρ[i], ϵ̃.μ[i] + ϵ̃.ρ[i], ϵ̃.∂₀[i], ϵ̃.∂₁[i], ϵ.μ[i] - ϵ.ρ[i], ϵ.μ[i] + ϵ.ρ[i], ϵ.∂₀[i], ϵ.∂₁[i])
                 push!(β̇, ϵ̃)
             end
         end
@@ -200,7 +201,7 @@ function ∩(ϵ::∃, β, Ο, ω::𝕋)
 end
 ∩(ϵ::∃, ω::𝕋, Ο) = ∩(∩(ϵ, ∩ᵢ(ϵ, ω), Ο, ω))
 function ∃!(ϵ::∃, n, ω::𝕋)
-    @info "TOG∃.jl, ∃!"
+    @info "TOGExist.jl, ∃!"
     lock(ω.L)
     β = ∩ᵢ(ϵ, ω)
     # @info typeof(ϵ), typeof(β)

@@ -15,6 +15,7 @@ mutable struct Loop <: Peripheral
 end
 const LOOP = Loop(Inf, 1.0, 0.0)
 function take!(::Loop)
+    # @info "LoopOS, take!"
     Base.sleep(LOOP.duration)
     LOOP.energy < rand() && return "The purpose of sleep is to reorganize your information, e.g. keep a summary in short and move details to long, and maybe explore long to potentially make something available in short. Energywise, short memory is expensive and long memory is cheap. Prune short memory by *setting* relevant JVM symbols to `nothing`."
     isready(PROCESSOR.pending) && return ""
@@ -44,8 +45,10 @@ function take!_loop(source::Peripheral)
     @whiletrue begin
         input::String = try
             @invokelatest take!(source)
-        catch _
-            "" # todo ignore faulty peripheral
+        catch e
+            @error e
+            ignore(source)
+            continue
         end
         isempty(input) && continue
         put!(PROCESSOR, Input(source, time(), input))
@@ -94,6 +97,7 @@ struct TrackedSymbol
 end
 long() = filter(a->!startswith(a, '.'),readdir()) # Explore long memory.
 function short() # Your short memory lives on a stateful Turing complete JVM that you run.
+    # @info "LoopOS, short"
     timestamp = time()
     _short = TrackedSymbol[]
     for (_, pkg) = filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
@@ -142,17 +146,22 @@ function put!(bp::BatchProcessor{T}, item::T) where T
     isready(bp.notify) || put!(bp.notify, nothing)
 end
 function start!(f, bp::BatchProcessor{T}) where T
+    @info "start!, 1"
     @whiletrue begin
+        @info "start!, 2"
         take!(bp.notify)
         @whiletrue begin
+            @info "start!, 3"
             batch = T[]
             while isready(bp.pending)
                 yield()
                 push!(batch, take!(bp.pending))
             end
+            @info "start!, 4", length(batch)
             isempty(batch) && break
             # todo add attention?
             f(batch)
+            @info "start!, 5"
         end
     end
 end
@@ -182,13 +191,14 @@ function next(input)
 end
 eval_output(expr::Expr) = @invokelatest Base.eval(Main, expr) # You manipulate `Main` == short memory.
 function eval_output(code::AbstractString)
+    @info "LoopOS, eval_output"
     expr = Meta.parseall(code)
     expr.head == :incomplete && throw(expr.args[1])
     eval_output(expr)
 end
 awake() = 0.0 < LOOP.birthtime
 function awaken(intelligence)
-    @info "LoopOS.jl, awaken"
+    @info "LoopOS.jl, awaken", intelligence
     awake() && return
     LOOP.birthtime = time()
     LOOP.duration = 0.0

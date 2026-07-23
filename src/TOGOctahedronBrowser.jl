@@ -3,7 +3,7 @@ module TOGOctahedronBrowser
 using TOGBroadcastBrowser: BroadcastBrowser
 using TOGOctahedron: Octahedron, take!
 using TOGMoveOctahedron: scaleup!, scaledown!, moveup!, movedown!, focusup!, focusdown!, jerkup!, jerkdown!, rotateup!, rotatedown!, step!, δN
-using TOG∃: ○
+using TOGExist: ○
 using TOGColor: scalar2rgba
 using LoopOS: @whiletrue
 

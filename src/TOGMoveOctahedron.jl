@@ -3,7 +3,7 @@ module TOGMoveOctahedron
 # using LoopOS: @whiletrue
 # using TOGZMQAPIServer: push!
 using TOGOctahedron: Octahedron, pyramid
-using TOG∃: 𝕋
+using TOGExist: 𝕋
 
 δN = 1
 δ(o::Octahedron) = δN * 0.01

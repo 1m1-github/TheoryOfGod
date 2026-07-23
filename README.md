@@ -47,7 +47,7 @@ cd Ω
 ### Awaken
 
 ```
-julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using TOGΩ;TOGΩ.awaken()'
+julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using TOGOmega;TOGOmega.awaken()'
 ```
 
 ### Update
