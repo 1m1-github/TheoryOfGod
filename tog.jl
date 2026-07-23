@@ -10,11 +10,32 @@ function awaken()
     awakenregistry()
     TOGAwaken.awakenΩ()
     awakenDona()
+    # awakenJanet()
     # TOGAwaken.awakengod(name="Dona", universe=joinpath(pwd(),"Ω"))
 end
 
 function awakenDona()
     TOGAwaken.awakengod(path=joinpath(pwd(),"Dona"), universe=joinpath(pwd(),"Ω"), pkgs=[
+        "LoopOS",
+        "TOGgod", 
+        "TOGXAI", 
+        "TOGAdvice", 
+        "TOGPowerOfAttorney", 
+        "TOGIntelligence", 
+        "TOGAwaken", 
+        "TOGOctahedron", 
+        "TOGCommunicationClient", 
+        "TOGLearning", 
+        "TOGCreateClient", 
+        "TOGBroadcastBrowser", 
+        "TOGColor", 
+        "TOGBasicTools",
+        "TOGTextToAudioBrowser",
+    ])
+end
+
+function awakenJanet()
+    TOGAwaken.awakengod(path=joinpath(pwd(),"Janet"), universe=joinpath(pwd(),"Ω"), pkgs=[
         "LoopOS",
         "TOGgod", 
         "TOGXAI", 
@@ -58,7 +79,7 @@ function awakenregistry()
     TOGLearning.newpkg(name="TOG∃", pkgs=["KernelAbstractions", "IntervalTrees", "TOGGPU"], files=$(files("TOG∃")))
     TOGLearning.newpkg(name="TOGAwaken", pkgs=["Sockets"], files=$(files("TOGAwaken")))
     TOGLearning.newpkg(name="TOGCaching", pkgs=["LoopOS"], files=$(files("TOGCaching")))
-    TOGLearning.newpkg(name="TOGState", pkgs=["LoopOS", "TOGCaching"], files=$(files("TOGState")))
+    TOGLearning.newpkg(name="TOGState", pkgs=["Revise", "LoopOS", "TOGCaching"], files=$(files("TOGState")))
     TOGLearning.newpkg(name="TOGZMQ", pkgs=["ZMQ", "Serialization", "LoopOS", "TOGState"], files=$(files("TOGZMQ")))
     TOGLearning.newpkg(name="TOGCommunicationServer", pkgs=["ZMQ", "LoopOS", "TOGZMQ"], files=$(files("TOGCommunicationServer")))
     TOGLearning.newpkg(name="TOGZMQAPIServer", pkgs=["ZMQ", "Serialization", "LoopOS", "TOGZMQ"], files=$(files("TOGZMQAPIServer")))

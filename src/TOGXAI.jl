@@ -21,7 +21,7 @@ function intelligence(
     temperature,
     model,
 )
-@info "TOGXAI.jl, intelligence"
+    @info "TOGXAI.jl, intelligence"
     headers = [
         "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",
         "Content-Type" => "application/json",
@@ -87,12 +87,14 @@ function sttws(;
     smart_turn_timeout=3000,
     language="en"
 )
-@info "TOGXAI.jl, sttws"
+    @info "TOGXAI.jl, sttws"
     url = "wss://" * URL * "/stt?interim_results=$(interim_results)&diarize=$(diarize)&filler_words=$(filler_words)&smart_turn=$(smart_turn)&smart_turn_timeout=$(smart_turn_timeout)&language=$(language)"
     headers = HTTP.Headers()
     push!(headers, "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""")
     wss = HTTP.WebSockets.open(url, headers=headers)
-    @async for msg in wss output(JSON3.read(msg)) end, wss
+    @async for msg in wss
+        output(JSON3.read(msg))
+    end, wss
 end
 
 """
@@ -123,7 +125,7 @@ function tts(text)
     response.body
 end
 
-function generateimage(;prompt, aspect_ratio="auto", resolution="1k")
+function generateimage(; prompt, aspect_ratio="auto", resolution="1k")
     @info "TOGXAI.jl, generateimage"
     headers = [
         "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",

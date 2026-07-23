@@ -1,11 +1,13 @@
 module TOGgod
 
-export learn, LoopOS, OCTAHEDRON, T
+export learn, LoopOS, OCTAHEDRON, T, put!
 
 using Pkg, Serialization
 using LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+using LoopOS: Peripheral
 using TOGOctahedron: Octahedron
 using TOG∃: ○
+import Base: put!
 
 "eltype of Ω."
 const T = Ref{DataType}()
@@ -13,7 +15,14 @@ const T = Ref{DataType}()
 const OCTAHEDRON = Ref{Octahedron}()
 const ARGS = Ref{NamedTuple}((;))
 
-__init__() = atexit(sleep)
+__init__() = atexit((n)->begin
+    @info "TOGgod, atexit"
+    sleep(n)
+end
+)
+
+struct Ω <: Peripheral end
+put!(::Type{Ω}, args...) = TOGCreateClient.put!(OCTAHEDRON[], args...)
 
 function sleep(exitcode)
     @info "TOGgod, sleep", exitcode
@@ -25,7 +34,7 @@ function sleep(exitcode)
     #     # TOGCreateClient.sleep()
     #     # TOGCommunicationClient.sleep()
     TOGBroadcastBrowser.sleep(path=ARGS[][:path])
-    TOGREPL.sleep(path=ARGS[][:path])
+    # TOGREPL.sleep(path=ARGS[][:path])
 end
 
 function awaken(; args...)
@@ -54,22 +63,24 @@ function awaken(; args...)
         ôneμ=[zero(T[]), ○(T[]), ○(T[]), ○(T[])+T[](0.1)],
         ρ=[T[](0.0), T[](0.1), T[](0.1), T[](0.0)],
         ♯=(1, 1))
-    TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
-        "/keypress"=>TOGOctahedronBrowser.keypress,
-        "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
-        "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
-    ))
-    @info "TOGgod, after TOGBroadcastBrowser.awaken"
+    # TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
+    #     "/keypress"=>TOGOctahedronBrowser.keypress,
+    #     "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
+    #     "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
+    # ))
+    # @info "TOGgod, after TOGBroadcastBrowser.awaken"
     LoopOS.awaken(intelligence)
     @info "TOGgod, after LoopOS.awaken"
-    TOGREPL.awaken(name=name, remotereplport=remotereplport)
-    @info "TOGgod, after TOGREPL.awaken"
+    # TOGREPL.awaken(name=name, remotereplport=remotereplport)
+    # @info "TOGgod, after TOGREPL.awaken"
     # write(string(time()),"godend"*string(remotereplport))
     # atreplinit(r -> begin
     #     @show "A", TOGAwaken.remotereplportfile(path=universe), isfile(TOGAwaken.remotereplportfile(path=universe))
     #     @show "B", TOGAwaken.readremotereplport(path=universe)
     #     isfile(TOGAwaken.remotereplportfile(path=universe)) && TOGREPL.connect(start_key="\\C-g", port=TOGAwaken.readremotereplport(path=universe))
     # end)
+    isinteractive() ? nothing : wait(Condition())
+    @info "TOGgod, after wait"
 end
 
 function browserconnect(port, browser)

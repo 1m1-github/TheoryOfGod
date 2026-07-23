@@ -1,6 +1,6 @@
 module TOGCommunicationClient
 
-export listentogroup, ignoregroup, CACHE, put!, take!
+export listentogroup, ignoregroup, CACHE, put!, take!, Messages
 
 using ZMQ
 using TOGZMQ
@@ -13,10 +13,12 @@ const DEALERSOCKET = Ref{Socket}()
 const SUBSOCKET = Ref{Socket}()
 
 struct Messages <: Peripheral
-    # channel::Channel{TOGMessage}
+    channel::Channel{TOGMessage}
 end
-# const MESSAGES = Messages(Channel{TOGMessage}())
+const MESSAGES = Messages(Channel{TOGMessage}())
 
+# put!(::Messages, message::TOGMessage)
+put!(::Messages, to::String, togroup::Bool, description::String, information) = put!(Messages, to, togroup, description, information)
 # put!(::Type{Messages}, message::TOGMessage) = put!(MESSAGES.channel, message)
 put!(::Type{Messages}, message::TOGMessage) = put!(Messages, message.to, message.togroup, message.description, message.information)
 """
@@ -52,7 +54,7 @@ function awaken(;dealer, sub)
     connect(SUBSOCKET[], sub)
     listentogroup("∀")
     # global MESSAGES
-    # listen(MESSAGES)
+    listen(MESSAGES)
     dealertask = errormonitor(@async @whiletrue receive(DEALERSOCKET[]))
     subtask = errormonitor(@async @whiletrue receive(SUBSOCKET[]))
     dealertask, subtask

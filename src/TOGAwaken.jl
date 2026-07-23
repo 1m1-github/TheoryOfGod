@@ -56,8 +56,8 @@ function julia(; code, path=".", project=joinpath(path, TOGDIR), dev=joinpath(pr
     end
 end
 
-function installΩ()
-    path = "Ω"
+function installΩ(;path)
+    @info "TOGAwaken.jl, installΩ", path
     project=TOGAwaken.TOGDIR
     isdir(joinpath(path, project)) && return
     isdir(path) || mkpath(path)
@@ -68,19 +68,22 @@ function installΩ()
         depot=DEPOT_PATH[1],
         code="""using Pkg;Pkg.add("TOGΩ")""")
 end
-function updateΩ()
+function updateΩ(;path)
+    @info "TOGAwaken.jl, updateΩ", path
     julia(
-        path="Ω",
+        path=path,
         project=TOGAwaken.TOGDIR,
         dev=joinpath(ENV["HOME"], ".julia", "dev"),
         depot=DEPOT_PATH[1],
         code="""using Pkg;Pkg.update()""")
 end
 function awakenΩ()
-    installΩ()
-    updateΩ()
+    @info "TOGAwaken.jl, awakenΩ"
+    path=joinpath(pwd(), "Ω")
+    installΩ(path=path)
+    updateΩ(path=path)
     julia(
-        path="Ω",
+        path=path,
         project=TOGAwaken.TOGDIR,
         dev=joinpath(ENV["HOME"], ".julia", "dev"),
         depot=DEPOT_PATH[1],

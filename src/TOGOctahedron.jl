@@ -57,7 +57,7 @@ Observe layers octahedra given a compositing factor for each layer.
 example: `take!([(octahedron1,0.5),(octahedron2,0.5)])`
 """
 function take!(oo::AbstractVector{Tuple{Octahedron,T}}) where T
-    @info "Octahedron, take! oo"
+    # @info "Octahedron, take! oo"
     ψ, α = take!(oo[1][1])
     for i = 2:length(oo)
         ψ̃, α̃ = take!(oo[i][1])
@@ -81,7 +81,7 @@ Observe given an octahedron.
 example: `take!(TOGgod.OCTAHEDRON[])`
 """
 function take!(o::Octahedron)
-    @info "Octahedron, take!"
+    # @info "Octahedron, take!"
     # @info "∃̇Octahedron(o::Octahedron)"
     # try
     N, z, dx, dy, c, a, za, ca, _, ϵμ, ϵρ = pyramid(o)

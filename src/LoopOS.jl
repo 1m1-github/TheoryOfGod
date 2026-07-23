@@ -11,11 +11,10 @@ abstract type Peripheral end # take! for input, put! for output
 mutable struct Loop <: Peripheral
     duration::Float64
     energy::Float64
-    boottime::Float64
+    birthtime::Float64
 end
 const LOOP = Loop(Inf, 1.0, 0.0)
 function take!(::Loop)
-    @info "LoopOS.jl, take!"
     Base.sleep(LOOP.duration)
     LOOP.energy < rand() && return "The purpose of sleep is to reorganize your information, e.g. keep a summary in short and move details to long, and maybe explore long to potentially make something available in short. Energywise, short memory is expensive and long memory is cheap. Prune short memory by *setting* relevant JVM symbols to `nothing`."
     isready(PROCESSOR.pending) && return ""
@@ -40,27 +39,31 @@ struct Input
     timestamp::Float64
     input::String
 end
-function take!_loop(source)
+function take!_loop(source::Peripheral)
     @info "LoopOS.jl, take!_loop"
     @whiletrue begin
         input::String = try
             @invokelatest take!(source)
         catch _
-            ""
+            "" # todo ignore faulty peripheral
         end
         isempty(input) && continue
         put!(PROCESSOR, Input(source, time(), input))
     end
 end
-take!_loop_expr(source) = :(LoopOS.take!_loop($source))
+take!_loop_expr(source::Peripheral) = :(LoopOS.take!_loop($source))
+const LISTENING = Set{Peripheral}()
 function listen(source::Peripheral)
     @info "LoopOS.jl, listen"
     timestamp = time()
+    push!(LISTENING, source)
     act(timestamp, [Input(source, timestamp, "listen")], take!_loop_expr(source))
 end
+# listen_output(source::Peripheral) = string(take!_loop_expr(source))
 function ignore(source::Peripheral) # As an autonomous person, you can choose to ignore a peripheral.
     @info "LoopOS.jl, ignore"
     output = string(take!_loop_expr(source))
+    delete!(LISTENING, source)
     for action = HISTORY[]
         action.output ≠ output && continue
         all(i -> i.source ≠ source, action.input) && continue
@@ -74,15 +77,15 @@ struct Action
     output::String # Your native language is Julia, pipes directly into `Meta.parseall`.
     task::Task
 end
-function act(timestamp, input, output)
-    @info "LoopOS.jl, act"
+function act(timestamp, input::Vector{Input}, output)
+    @info "LoopOS.jl, act", output
     (timestamp < last_action_time() || isnothing(output)) && return
     task = Threads.@spawn eval_output(output)
-    push!(HISTORY[], Action(timestamp, input, string(output), task))
+    push!(HISTORY, Action(timestamp, input, string(output), task))
 end
-const HISTORY = Ref(Action[])
+const HISTORY = Action[] # todo need Ref?
 stop_action(action) = schedule(action.task, InterruptException(), error=true)
-last_action_time() = isempty(HISTORY[]) ? 0.0 : maximum(map(a -> a.timestamp, HISTORY[]))
+last_action_time() = isempty(HISTORY) ? 0.0 : maximum(map(a -> a.timestamp, HISTORY))
 struct TrackedSymbol
     m::Module
     sym::Symbol
@@ -97,7 +100,12 @@ function short() # Your short memory lives on a stateful Turing complete JVM tha
         name = Symbol(pkg.name)
         isdefined(Main, name) && push!(_short, TrackedSymbol(Main, name, getfield(Main, name), timestamp))
     end
-    for sym = sort(names(Main, all=true))
+    # @info names(Main)
+    # @info names(Main, all=true)
+    # @info names(Main, imported=true)
+    # @info names(Main, usings=true)
+    for sym = sort(names(Main))
+    # for sym = sort(names(Main, all=true))
         startswith(string(sym), "#") && continue
         value = isdefined(Main, sym) ? getfield(Main, sym) : nothing
         isnothing(value) && continue # You can forget a symbol in short by setting it to `nothing`.
@@ -110,6 +118,7 @@ function short() # Your short memory lives on a stateful Turing complete JVM tha
         end
         push!(_short, tracked_symbol(value))
     end
+    @info _short
     _short
 end
 function loadshort()
@@ -152,12 +161,12 @@ const PROCESSOR = BatchProcessor{Input}()
 const SELF = read(@__FILE__, String) # Proof of Loop.
 COMPLEXITY = 0.5 # Set `LoopOS.COMPLEXITY` between 0.0 (lowest) and 1.0 (highest) depending on intelligence level currently needed; higher complexity requires higher energy, i.e. do not forget to set it back down when not needed high anymore
 function next(input)
-    @info "LoopOS.jl, next"
+    @info "LoopOS.jl, next", INTELLIGENCE[]
     timestamp = time()
     output, ΔE = try
         INTELLIGENCE[](
             self=SELF,
-            history=HISTORY[],
+            history=HISTORY,
             longmemory=long(),
             shortmemory=Base.invokelatest(short),
             newinput=input,
@@ -172,16 +181,16 @@ function next(input)
     act(timestamp, input, output)
 end
 eval_output(expr::Expr) = @invokelatest Base.eval(Main, expr) # You manipulate `Main` == short memory.
-function eval_output(code)
+function eval_output(code::AbstractString)
     expr = Meta.parseall(code)
     expr.head == :incomplete && throw(expr.args[1])
     eval_output(expr)
 end
-awake() = 0.0 < LOOP.boottime
+awake() = 0.0 < LOOP.birthtime
 function awaken(intelligence)
     @info "LoopOS.jl, awaken"
     awake() && return
-    LOOP.boottime = time()
+    LOOP.birthtime = time()
     LOOP.duration = 0.0
     INTELLIGENCE[] = intelligence
     errormonitor(Threads.@spawn start!(next, PROCESSOR))

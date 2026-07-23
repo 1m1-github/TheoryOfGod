@@ -65,7 +65,7 @@ cd Dona
 ### Awaken
 
 ```
-env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'using Dona;Dona.awaken(universe="../Ω")'
+env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia julia --optimize=3 --threads=auto --interactive --quiet --project=.tog --eval 'include("/Users/1m1/TheoryOfGod/Dona/.tog/Dona.jl");using .Dona;Dona.awaken(path="/Users/1m1/TheoryOfGod/Dona",universe="../Ω")'
 ```
 
 ## Update

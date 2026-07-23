@@ -10,7 +10,7 @@ awaken(socketlocation) = SOCKET[] = TOGZMQAPIClient.awaken(socketlocation)
 togtime() = TOGZMQAPIClient.call(SOCKET[], :time)
 togtype() = TOGZMQAPIClient.call(SOCKET[], :type)
 Base.:∩(ϵ::∃, Ο) = begin
-    @info "TOGObserveClient.jl, ∩"
+    # @info "TOGObserveClient.jl, ∩"
     TOGZMQAPIClient.call(SOCKET[], :∩, ϵ, Ο)
 end
 # sleep() = begin

@@ -13,8 +13,14 @@ import Base: take!, put!
 struct AudioAnalogToDigitalBrowser <: Peripheral
   channel::Channel{String}
 end
-take!(::AudioAnalogToDigitalBrowser) = take!(AUDIOANALOGTODIGITALBROWSER.channel)
-put!(::AudioAnalogToDigitalBrowser, message::String) = put!(AUDIOANALOGTODIGITALBROWSER.channel, message)
+take!(::AudioAnalogToDigitalBrowser) = begin
+  @info "TOGAudioAnalogToDigitalBrowser.jl, take!"
+  take!(AUDIOANALOGTODIGITALBROWSER.channel)
+end
+put!(::AudioAnalogToDigitalBrowser, message::String) = begin
+  @info "TOGAudioAnalogToDigitalBrowser.jl, put!", message
+  put!(AUDIOANALOGTODIGITALBROWSER.channel, message)
+end
 const AUDIOANALOGTODIGITALBROWSER = AudioAnalogToDigitalBrowser(Channel{String}())
 
 const WSTASK = Ref{Task}()
@@ -28,7 +34,7 @@ function awaken()
 end
 
 function output(data)
-  @info "TOGAudioAnalogToDigitalBrowser.jl, output"
+  @info "TOGAudioAnalogToDigitalBrowser.jl, output", data
   msg = string(Dict(
     :type => data["type"],
     :text => data["text"],
@@ -40,7 +46,7 @@ function output(data)
 end
 
 ws(msg) = begin
-  @info "TOGAudioAnalogToDigitalBrowser.jl, ws"
+  @info "TOGAudioAnalogToDigitalBrowser.jl, ws", msg
   HTTP.WebSockets.send(WS[], msg)
 end
 

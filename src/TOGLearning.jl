@@ -38,9 +38,9 @@ pkgs: Pkgs to be added (via name, url, path).
 files: Files to be copied over.
 """
 function newpkg(; name::String, files=String[], pkgs=String[], mvfiles=false)
-    @info "TOGLearning.jl, newpkg"
     path = pkgdir(name=name)
     isdir(path) && return
+    @info "TOGLearning.jl, newpkg"
     Pkg.generate(path)
     try
         changefiles(name=name, files=files, rmfiles=String[], cpmv=mvfiles ? mv : cp, init=true)

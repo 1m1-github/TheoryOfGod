@@ -33,7 +33,7 @@ const HTMLINIT(port) = """
 <body>
 <script>
 window.SSE = new EventSource(`/events?width=\${document.documentElement.clientWidth}&height=\${document.documentElement.clientHeight}`)
-window.SSE.onmessage = (e) => eval(e.data)
+window.SSE.onmessage = (e) => {eval(e.data);console.log(e.data);}
 window.WS = new WebSocket('ws://localhost:$port')
 </script>
 </body>

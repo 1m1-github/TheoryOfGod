@@ -22,6 +22,7 @@ function intelligence(;
     state_post="",
     model,
 )
+    @info "TOGIntelligence, intelligence", length(history)
     input_system, input_user = state(
         self,
         history,
@@ -30,7 +31,6 @@ function intelligence(;
         newinput,
         STATE_POST * state_post,
     )
-    @info "TOGIntelligence, intelligence"
     # DEBUG
     ts = time()
     # LOGS = Main.LOGS
@@ -49,12 +49,12 @@ function intelligence(;
     # output = """put!(TOGCommunicationClient.Messages, "Dona", false, "greeting", "hi Dona");put!(TOGCommunicationClient.Messages, "∀", true, "greeting", "hi ∀");"""
     # output = """nothing"""
     # ΔE = 0.0
-    output, ΔE = model(complexity)(
-        input_system,
-        input_user,
-        MAX_OUTPUT_TOKENS,
-        TEMPERATURE
-    )
+    # output, ΔE = model(complexity)(
+    #     input_system,
+    #     input_user,
+    #     MAX_OUTPUT_TOKENS,
+    #     TEMPERATURE
+    # )
     # DEBUG
     # v = "v" * string(abs(rand(Int)))
     # put!(TOG,"hi")
@@ -64,9 +64,29 @@ function intelligence(;
     # result = Dict("content" => [Dict("text" => raw"""
     #     put!(TOG,"\$ integral_(-infinity)^(infinity) e^(-x^2) d x = sqrt(pi) \$")
     #     """)], "usage" => "")
-    # ΔE = 0.01
+    sleep(rand(3:10))
+    choice = rand(UInt) % 3
+    t = time()
+    output = if choice == 0
+        x = rand()
+        """
+        put!(TOGCommunicationClient.Messages, "∀", true, "rand value", "rand value is $x at $t")
+        """
+    elseif choice == 1
+        x = rand()
+        """
+        put!(TOGCommunicationClient.Messages, "Dona", false, "rand value for Dona", "rand value for Dona is $x at $t")
+        """
+    elseif choice == 2
+        x = rand()
+        """
+        put!(TOGCommunicationClient.Messages, "Janet", false, "rand value for Janet", "rand value for Janet is $x at $t")
+        """
+    end
+    ΔE = 0.001
     # t2 = time()
     # o = output * "\n" * JSON3.write(result["usage"]) * "\nΔE=$ΔE"
+    @info "TOGIntelligence.intelligence", choice, t, output
     write(joinpath(LOGS, "latest-output.jl"), output)
     write(joinpath(LOGS, "$ts-output.jl"), output)
     # cp(joinpath(LOGS, "$ts-output.jl"), joinpath(LOGS, "latest-output.jl"), force=true)

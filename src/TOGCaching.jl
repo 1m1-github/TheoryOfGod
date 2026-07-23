@@ -4,7 +4,9 @@ using LoopOS: TrackedSymbol
 
 const CACHED = TrackedSymbol[]
 const VOLATILE = TrackedSymbol[]
+const HASH = Dict{Tuple{Module, Symbol}, UInt}()
 
+nonrefvalue(a) = a isa Ref ? nonrefvalue(a[]) : a
 function first_copy(_state::Vector{TrackedSymbol})
     for s = _state
         if s.m == Main.LoopOS
@@ -12,16 +14,16 @@ function first_copy(_state::Vector{TrackedSymbol})
         else
             push!(CACHED, s)
         end
+        HASH[(s.m, s.sym)] = hash(nonrefvalue(s.value))
     end
     copy(CACHED), copy(VOLATILE)
 end
 
 function same_found!(s::TrackedSymbol, _state::Vector{TrackedSymbol})
+    H = HASH[(s.m, s.sym)]
     for i = length(_state):-1:1
         _s = _state[i]
-        value = s.value isa Ref ? s.value[] : s.value
-        _value = _s.value isa Ref ? _s.value[] : _s.value
-        if s.m == _s.m && s.sym == _s.sym && value == _value
+        if s.m == _s.m && s.sym == _s.sym && H == hash(nonrefvalue(_s.value))
             deleteat!(_state, i)
             return true
         end

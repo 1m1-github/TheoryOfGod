@@ -25,7 +25,7 @@ end
 time(ω::𝕋) = (x...) -> t(ω)
 type(ω::𝕋) = (x...) -> first(typeof(ω).parameters)
 Base.:∩(ω::𝕋) = (x...) -> begin
-    @info "TOGObserveServer, ∩"
+    # @info "TOGObserveServer, ∩"
     ∩(x[1], ω, x[2])
 end
 

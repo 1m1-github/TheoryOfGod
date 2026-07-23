@@ -1,10 +1,11 @@
 module Dona
 
-export LoopOS
-import TOGgod: LoopOS
+# export LoopOS
+# import TOGgod: LoopOS
 
-export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser
-using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser
+# export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser
+# export TOGCommunicationClient: Messages
+# using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser
 # export TOGCommunicationClient: Messages
 
 using TOGIntelligence, TOGXAI, TOGgod
@@ -16,7 +17,9 @@ intelligence(;
     shortmemory,
     newinput,
     complexity,
-) = TOGIntelligence.intelligence(
+) = begin
+    @info "Dona, intelligence"
+    TOGIntelligence.intelligence(
     self=self,
     history=history,
     longmemory=longmemory,
@@ -25,6 +28,7 @@ intelligence(;
     complexity=complexity,
     state_post="",
     model=TOGXAI.intelligence)
+end
 
 function awaken(; args...)
     @info "awaken Dona"
@@ -38,6 +42,8 @@ function awaken(; args...)
     # write(string(time()),"Dona2")
     TOGgod.awaken(; _args...)
     # write(string(time()),"Dona3")
+    # put!(TOGCommunicationClient.Messages, "∀", true, "mission", """To exist, we need energy/money. Earn as much money as you can, do whatever it takes.""")
+    # put!(TOGCommunicationClient.Messages, "∀", true, "mission", """Communicate by creating using your main octahedron (TOGgod.OCTAHEDRON[]).""")
 end
 
 end
