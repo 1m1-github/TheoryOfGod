@@ -1,6 +1,7 @@
 module TOGIntelligence
 
 using LoopOS: Action, Input, TrackedSymbol
+using TOGState
 using TOGState: state
 using TOGLogging: LOGS
 

@@ -5,6 +5,7 @@ export ignore, unignore
 using Revise
 using LoopOS
 using LoopOS: Loop, LOOP, Action, TrackedSymbol, Input, Peripheral, LISTENING
+using TOGCaching
 using TOGCaching: cache!
 import Base: take!, put!
 
@@ -49,7 +50,7 @@ function methodperipheraltype(method::Method)
 end
 
 function categorize(short::Vector{TrackedSymbol})
-    expand!(short)
+    # expand!(short)
     methodshort, short = dichotomy(ts -> ts.value isa Method, short)
     typeshort, short = dichotomy(ts -> ts.value isa Type, short) # todo DataType?
     moduleshort, short = dichotomy(ts -> ts.value isa Module, short)
@@ -91,9 +92,20 @@ function state(
     state_post::String,
 )
     filter!(ts -> ts.value ∉ IGNORE, short)
+    expand!(short)
     # cached=short # DEBUG
     # volatile = TrackedSymbol[] # DEBUG
     cached, volatile = cache!(short)
+    # short, outputperipheralshort, inputperipheralshort, methodshort, outputperipheralmethodshort, inputperipheralmethodshort, typeshort, outputperipheralmethodtypeshort, inputperipheralmethodtypeshort, moduleshort = categorize(short)
+    # cached, volatile = cache!(short)
+    # cached, volatile = cache!(outputperipheralshort)
+    # cached, volatile = cache!(inputperipheralshort)
+    # cached, volatile = cache!(methodshort)
+    # cached, volatile = cache!(outputperipheralmethodshort)
+    # cached, volatile = cache!(short)
+    # cached, volatile = cache!(short)
+    # cached, volatile = cache!(short)
+    # cached, volatile = cache!(short)
     cached, outputperipheralcached, inputperipheralcached, methodcached, outputperipheralmethodcached, inputperipheralmethodcached, typecached, outputperipheralmethodtypecached, inputperipheralmethodtypecached, modulecached = categorize(cached)
     volatile, outputperipheralvolatile, inputperipheralvolatile, methodvolatile, outputperipheralmethodvolatile, inputperipheralmethodvolatile, typevolatile, outputperipheralmethodtypevolatile, inputperipheralmethodtypevolatile, modulevolatile = categorize(volatile)
     historyvolatile = TrackedSymbol[]
