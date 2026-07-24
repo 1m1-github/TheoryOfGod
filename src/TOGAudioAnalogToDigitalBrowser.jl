@@ -71,7 +71,7 @@ function output(data)
   put!(AUDIOANALOGTODIGITALBROWSER, string(msg))
 end
 
-ws(msg) = begin
+audio(msg) = begin
   # @info "TOGAudioAnalogToDigitalBrowser.jl, ws", msg
   # @info "ws(msg)", WS, WSTASK, length(msg)
   global WSSTARTED

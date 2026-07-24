@@ -67,7 +67,7 @@ function awaken(; args...)
     TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
         "/keypress"=>TOGOctahedronBrowser.keypress,
         # "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
-        "/audio"=>TOGAudioAnalogToDigitalBrowser.ws,
+        "/audio"=>TOGAudioAnalogToDigitalBrowser.audio,
         "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
     ))
     @info "TOGgod, after TOGBroadcastBrowser.awaken"

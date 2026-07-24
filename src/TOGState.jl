@@ -159,7 +159,7 @@ function state(t::Task)
 end
 function state(e::Exception)
     e isa TaskFailedException && return state(e.task.exception)
-    string(e) * string(catch_backtrace())
+    string(e) * "\n" * string(catch_backtrace())
 end
 function docs(method::Method, multidoc::Docs.MultiDoc)
     sig = method.sig
@@ -192,15 +192,13 @@ end
 function state(v::TrackedSymbol)
     value = v.value
     T = typeof(value)
-    ref = if T <: Ref
+    ref = ""
+    if T <: Ref
         ref = "[]"
         value = v.value[]
         T = typeof(value)
-    else
-        ""
     end
     T_str = T ∈ [Type, Method] ? "" : "::" * string(T)
-    # @info v, T
     _sizeofvalue = T ∈ [DataType, Type, Method, Module, UnionAll] ? 0 : sizeof(value)
     sizeofvalue = iszero(_sizeofvalue) ? "" : "(sizeof=" * string(sizeof(value)) * ")"
     _state = if value === LOOP && isinf(v.timestamp)
