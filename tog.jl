@@ -31,6 +31,7 @@ function awakenDona()
         "TOGColor", 
         "TOGBasicTools",
         "TOGTextToAudioBrowser",
+        "TOGVisualAnalogToDigitalBrowser",
     ])
 end
 

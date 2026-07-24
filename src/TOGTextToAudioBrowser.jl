@@ -12,7 +12,8 @@ import Base: put!
 struct TextToAudioBrowser <: Peripheral end
 
 """
-Speak audio using the browser
+Speak audio using the browser.
+example: `put!(TOGTextToAudioBrowser.TextToAudioBrowser, 'hi')`
 """
 function put!(::Type{TextToAudioBrowser}, message::String)
     @info "TOGTextToAudioBrowser.jl, put!", message

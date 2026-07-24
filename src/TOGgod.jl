@@ -68,7 +68,7 @@ function awaken(; args...)
         "/keypress"=>TOGOctahedronBrowser.keypress,
         # "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
         "/audio"=>TOGAudioAnalogToDigitalBrowser.ws,
-        # "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
+        "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
     ))
     @info "TOGgod, after TOGBroadcastBrowser.awaken"
     LoopOS.awaken(intelligence)
@@ -88,7 +88,7 @@ end
 function browserconnect(port, browser)
     @info "TOGgod.browserconnect", port
     TOGOctahedronBrowser.awaken(octahedron=OCTAHEDRON[], browser=browser)
-    # TOGAudioAnalogToDigitalBrowser.awaken()
+    TOGAudioAnalogToDigitalBrowser.awaken()
 end
 
 """

@@ -62,6 +62,33 @@ end
 
 ΔEnery(result, model) = result["usage"]["cost_in_usd_ticks"] / MAX_USD_IN_TICKS # depent on modelintelligence
 
+function imagetotext(;b64,mime="image/png",detail="high")
+    data_uri = "data:$mime;base64,$b64"
+    headers = [
+        "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",
+        "Content-Type" => "application/json",
+    ]
+    image = Dict(
+        "type" => "input_image",
+        "image_url" => data_uri,
+        "detail" => detail,
+    )
+    input = [
+        Dict("role" => "system", "content" => "This is what you see. Describe it for yourself."),
+        Dict("role" => "user", "content" => [image])
+    ]
+    body = Dict(
+        "model" => "grok-4.5",
+        "input" => input,
+    )
+
+    response = HTTP.post("https://" * URL * "/responses", headers, JSON3.write(body))
+    response_body = String(response.body)
+    result = JSON3.parse(response_body)
+
+    result["output"][2]["content"][1]["text"]
+end
+
 # """
 # """
 # stt(mp3filepath) = string(open(mp3filepath, "r") do io

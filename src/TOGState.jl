@@ -39,13 +39,19 @@ end
 isoutputperipheralmethod(sym::Symbol, method::Method) = sym == :put! && isperipheralmethod(method)
 isinputperipheralmethod(sym::Symbol, method::Method) = sym == :take! && isperipheralmethod(method)
 function isperipheralmethod(method::Method)
-    t = fieldtypes(method.sig)
-    length(t) == 1 && return false
-    arg = t[2]
+    # @info "isperipheralmethod", method
+    # t = fieldtypes(method.sig)
+    sig = Base.unwrap_unionall(method.sig)
+    params = sig.parameters
+    length(params) < 2 && return false
+    arg = params[2]
     arg <: Peripheral || arg <: Type{<:Peripheral}
 end
 function methodperipheraltype(method::Method)
-    arg = fieldtypes(method.sig)[2]
+    # arg = fieldtypes(method.sig)[2]
+    sig = Base.unwrap_unionall(method.sig)
+    params = sig.parameters
+    arg = params[2]
     arg <: Peripheral ? arg : arg.parameters[1]
 end
 

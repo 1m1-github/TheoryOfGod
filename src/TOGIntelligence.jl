@@ -50,12 +50,12 @@ function intelligence(;
     # output = """put!(TOGCommunicationClient.Messages, "Dona", false, "greeting", "hi Dona");put!(TOGCommunicationClient.Messages, "∀", true, "greeting", "hi ∀");"""
     # output = """nothing"""
     # ΔE = 0.0
-    # output, ΔE = model(complexity)(
-    #     input_system,
-    #     input_user,
-    #     MAX_OUTPUT_TOKENS,
-    #     TEMPERATURE
-    # )
+    output, ΔE = model(complexity)(
+        input_system,
+        input_user,
+        MAX_OUTPUT_TOKENS,
+        TEMPERATURE
+    )
     # DEBUG
     # v = "v" * string(abs(rand(Int)))
     # put!(TOG,"hi")
@@ -65,13 +65,17 @@ function intelligence(;
     # result = Dict("content" => [Dict("text" => raw"""
     #     put!(TOG,"\$ integral_(-infinity)^(infinity) e^(-x^2) d x = sqrt(pi) \$")
     #     """)], "usage" => "")
-    sleep(rand(3:10))
+    # sleep(rand(3:10))
     # choice = rand(UInt) % 3
-    t = time()
+    # t = time()
     # put!(TOGTextToAudioBrowser.TextToAudioBrowser, "hi")
-    output = """
-    put!(sdfDona.TOGgod.OCTAHEDRON[], "hi", "hi", [0.5,0.5], [0.2,0.2])
-    """
+    # output = """
+    # put!(sdfDona.TOGgod.OCTAHEDRON[], "hi", "hi", [0.5,0.5], [0.2,0.2])
+    # """
+    # output = """
+    # whatisee = take!(TOGVisualAnalogToDigitalBrowser.VisualAnalogToDigitalBrowser)
+    # """
+    # output="nothing"
     # output = if choice == 0
     #     x = rand()
     #     """
@@ -88,7 +92,7 @@ function intelligence(;
     #     put!(TOGCommunicationClient.Messages, "Janet", false, "rand value for Janet", "rand value for Janet is $x at $t")
     #     """
     # end
-    ΔE = 0.001
+    # ΔE = 0.001
     # t2 = time()
     # o = output * "\n" * JSON3.write(result["usage"]) * "\nΔE=$ΔE"
     # @info "TOGIntelligence.intelligence", choice, t, output

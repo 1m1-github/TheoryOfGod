@@ -3,9 +3,9 @@ module Dona
 export LoopOS
 import TOGgod: LoopOS
 
-export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser, TOGgod, TOGXAI
+export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser, TOGgod, TOGXAI, TOGVisualAnalogToDigitalBrowser
 # export TOGCommunicationClient: Messages
-using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser
+using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser
 # export TOGCommunicationClient: Messages
 
 using TOGIntelligence, TOGXAI, TOGgod
