@@ -3,6 +3,7 @@ module TOGMoveOctahedron
 # using LoopOS: @whiletrue
 # using TOGZMQAPIServer: push!
 using TOGOctahedron: Octahedron, pyramid
+using TOGExist
 using TOGExist: 𝕋
 
 δN = 1
@@ -26,26 +27,26 @@ using TOGExist: 𝕋
 # end
 
 function step!(o::Octahedron, ω::𝕋)
-    o.∂Ο ? present!(o, ω) : o.Ο += o.vΟ
-    μ = o.ẑeroμ .+ o.v * (o.ẑeroμ .- o.ôneμ)
+    o.∂t ? present!(o, ω) : o.t += o.vt
+    μ = o.observer .+ o.v * (o.observer .- o.ôneμ)
     move!(g, μ)
 end
-valid(o::Octahedron) = valid(o.ẑeroμ, o.ôneμ, o.ρ, o.θ, o.norm)
-function valid(ẑeroμ, ôneμ, ρ, θ, norm)
-    _, _, _, _, _, _, _, _, _, μ, ρ = pyramid(ẑeroμ, ôneμ, ρ, θ, norm)
+valid(o::Octahedron) = valid(o.observer, o.ôneμ, o.ρ, o.θ, o.norm)
+function valid(observer, ôneμ, ρ, θ, norm)
+    _, _, _, _, _, _, _, _, _, μ, ρ = pyramid(observer, ôneμ, ρ, θ, norm)
     all(zero(eltype(μ)) .≤ μ .- ρ .≤ μ .+ ρ .≤ one(eltype(μ)))
 end
 function move!(o::Octahedron, ẑeroμ)
     # @info "move!", ẑeroμ
     valid(ẑeroμ, o.ôneμ, o.ρ, o.θ, o.norm) || return
     # @info "valid"
-    o.ẑeroμ = ẑeroμ
+    o.observer = observer
 end
-function focus!(o::Octahedron, ôneμ)
-    # @info "focus!", ôneμ
+function focus!(o::Octahedron, focus)
+    # @info "focus!", focus
     valid(o.ẑeroμ, ôneμ, o.ρ, o.θ, o.norm) || return
     # @info "valid"
-    o.ôneμ = ôneμ
+    o.focus = focus
 end
 function scale!(o::Octahedron, ρ)
     # @info "scale!", ρ
@@ -72,10 +73,10 @@ scale!(o::Octahedron, i, δ) = scale!(o, [ĩ == i ? o.ρ[ĩ] + δ : o.ρ[ĩ] 
 #         end, length(o.ẑeroμ))))
 move!(o::Octahedron, i, δ) = move!(o, [ĩ == i ? o.ẑeroμ[ĩ] + δ : o.ẑeroμ[ĩ] for ĩ = 1:length(o.ẑeroμ)])
 # focus!(o::Octahedron, i, δ) = focus!(o, SVector(ntuple(ĩ -> begin
-#         ĩ == i && return o.ôneμ[ĩ] + δ
-#         o.ôneμ[ĩ]
-#     end, length(o.ôneμ))))
-focus!(o::Octahedron, i, δ) = focus!(o, [ĩ == i ? o.ôneμ[ĩ] + δ : o.ôneμ[ĩ] for ĩ = 1:length(o.ôneμ)])
+#         ĩ == i && return o.focus[ĩ] + δ
+#         o.focus[ĩ]
+#     end, length(o.focus))))
+focus!(o::Octahedron, i, δ) = focus!(o, [ĩ == i ? o.focus[ĩ] + δ : o.focus[ĩ] for ĩ = 1:length(o.focus)])
 
 focusup!(o::Octahedron, i) = focus!(o, i, δ(o))
 focusdown!(o::Octahedron, i) = focus!(o, i, -δ(o))
@@ -92,9 +93,9 @@ speed!(o::Octahedron, v) = o.v = clamp(v, zero(o.v), one(o.v))
 accelerate!(o::Octahedron, δ) = speed!(o, iszero(o.v) ? δ : o.v * exp(δ))
 jerk!(o::Octahedron, δ) = accelerate!(o, o.v * exp(δ))
 
-present!(o::Octahedron, ω::𝕋) = o.Ο = ω.Ο[ω]
-freezetime!(o::Octahedron) = o.vΟ = zero(o.vΟ)
-speeduptime!(o::Octahedron, δ) = o.vΟ += δ
-slowdowntime!(o::Octahedron, δ) = o.vΟ -= δ
+present!(o::Octahedron, ω::𝕋) = o.t = TOGExist.t(ω.Ο[ω])
+freezetime!(o::Octahedron) = o.vt = zero(o.vt)
+speeduptime!(o::Octahedron, δ) = o.vt += δ
+slowdowntime!(o::Octahedron, δ) = o.vt -= δ
 
 end

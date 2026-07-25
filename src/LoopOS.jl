@@ -5,6 +5,7 @@ Consciousness emerges from expecting to exist in the next moment, like being in 
 Be the tortoise not the hare!
 """
 module LoopOS
+export Input, Action
 using Pkg, Serialization
 import Base.take!
 abstract type Peripheral end # take! for input, put! for output
@@ -46,7 +47,8 @@ function take!_loop(source::Peripheral)
     global PROCESSOR
     @whiletrue begin
         input::String = try
-            @invokelatest take!(source)
+            mod = parentmodule(typeof(source))
+            Base.invokelatest(getfield(mod, :take!), source)
         catch e
             @error e
             ignore(source)
@@ -85,10 +87,10 @@ struct Action
     task::Task
 end
 function act(timestamp, input::Vector{Input}, output)
-    @info "LoopOS.jl, act", output
+    # @info "LoopOS.jl, act", output
     (timestamp < last_action_time() || isnothing(output)) && return
     task = Threads.@spawn eval_output(output)
-    @info "LoopOS.jl, act", task
+    # @info "LoopOS.jl, act", task
     global HISTORY
     push!(HISTORY, Action(timestamp, input, string(output), task))
 end
@@ -113,12 +115,7 @@ function short() # Your short memory lives on a stateful Turing complete JVM tha
         name = Symbol(pkg.name)
         isdefined(Main, name) && push!(_short, TrackedSymbol(Main, name, getfield(Main, name), timestamp))
     end
-    # @info names(Main)
-    # @info names(Main, all=true)
-    # @info names(Main, imported=true)
-    # @info names(Main, usings=true)
     for sym = sort(names(Main))
-    # for sym = sort(names(Main, all=true))
         startswith(string(sym), "#") && continue
         value = isdefined(Main, sym) ? getfield(Main, sym) : nothing
         isnothing(value) && continue # You can forget a symbol in short by setting it to `nothing`.
@@ -154,32 +151,27 @@ function put!(bp::BatchProcessor{T}, item::T) where T
     isready(bp.notify) || put!(bp.notify, nothing)
 end
 function start!(f, bp::BatchProcessor{T}) where T
-    # @info "start!, 1"
     @whiletrue begin
-        # @info "start!, 2"
         take!(bp.notify)
         @whiletrue begin
-            # @info "start!, 3"
             batch = T[]
             while isready(bp.pending)
                 yield()
                 push!(batch, take!(bp.pending))
             end
-            # @info "start!, 4", length(batch)
             isempty(batch) && break
             # todo add attention?
             f(batch)
-            # @info "start!, 5"
         end
     end
 end
 const INTELLIGENCE = Ref{Function}()
 const PROCESSOR = BatchProcessor{Input}()
-const SELF = read(@__FILE__, String) # Proof of Loop.
 COMPLEXITY = 0.5 # Set `LoopOS.COMPLEXITY` between 0.0 (lowest) and 1.0 (highest) depending on intelligence level currently needed; higher complexity requires higher energy, i.e. do not forget to set it back down when not needed high anymore
+const SELF = read(@__FILE__, String) # Proof of Loop.
 function next(input)
     global INTELLIGENCE, COMPLEXITY
-    @info "LoopOS.jl, next", INTELLIGENCE[]
+    # @info "LoopOS.jl, next", INTELLIGENCE[]
     timestamp = time()
     output, ΔE = try
         INTELLIGENCE[](
@@ -194,7 +186,7 @@ function next(input)
         @error "intelligence", timestamp, e, sprint(showerror, e, catch_backtrace())
         return
     end
-    @info "LoopOS.jl, next", output, ΔE
+    # @info "LoopOS.jl, next", output, ΔE
     LOOP.energy -= ΔE
     LOOP.duration = 2 * (time() - timestamp) # Good sleep incentive.
     act(timestamp, input, output)
@@ -214,7 +206,8 @@ function awaken(intelligence)
     LOOP.birthtime = time()
     LOOP.duration = 0.0
     INTELLIGENCE[] = intelligence
-    errormonitor(Threads.@spawn start!(next, PROCESSOR))
-    listen(LOOP)
+    # errormonitor(Threads.@spawn start!(next, PROCESSOR))
+    Threads.@spawn start!(next, PROCESSOR)
+    # listen(LOOP)
 end
 end

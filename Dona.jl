@@ -4,7 +4,7 @@ export LoopOS
 import TOGgod: LoopOS
 
 export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser, TOGgod, TOGXAI, TOGVisualAnalogToDigitalBrowser
-# export TOGCommunicationClient: Messages
+export TOGCommunicationClient: TOGMessage
 using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser
 # export TOGCommunicationClient: Messages
 

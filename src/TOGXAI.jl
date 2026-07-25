@@ -26,7 +26,6 @@ function intelligence(
         "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",
         "Content-Type" => "application/json",
     ]
-    # "x-grok-conv-id" => CID,
     input = [
         Dict("role" => "system", "content" => input_system),
         Dict("role" => "user", "content" => input_user),
@@ -37,7 +36,6 @@ function intelligence(
         # "reasoning" => Dict("effort" => "high"),
         "max_output_tokens" => max_output_tokens,
     )
-    # "temperature" => temperature,
     if !isempty(PREVIOUS_RESPONSE_ID[])
         body["previous_response_id"] = PREVIOUS_RESPONSE_ID[]
     end
@@ -55,14 +53,11 @@ function intelligence(
 
     PREVIOUS_RESPONSE_ID[] = result["id"]
     result["output"][2]["content"][1]["text"], ΔEnery(result, model)
-    # """
-    # TOGCommunicationClient.send("∀",true,"from",:w,"w","hi")
-    # """, 0.0
 end
 
 ΔEnery(result, model) = result["usage"]["cost_in_usd_ticks"] / MAX_USD_IN_TICKS # depent on modelintelligence
 
-function imagetotext(;b64,mime="image/png",detail="high")
+function imageb64totext(;b64,mime="image/png",detail="high")
     data_uri = "data:$mime;base64,$b64"
     headers = [
         "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""",
@@ -114,20 +109,13 @@ function sttws(;
     smart_turn_timeout=3000,
     language="en"
 )
-    @info "TOGXAI.jl, sttws"
+    # @info "TOGXAI.jl, sttws"
     url = "wss://" * URL * "/stt?interim_results=$(interim_results)&diarize=$(diarize)&filler_words=$(filler_words)&smart_turn=$(smart_turn)&smart_turn_timeout=$(smart_turn_timeout)&language=$(language)"
     headers = HTTP.Headers()
     push!(headers, "Authorization" => """Bearer $(ENV["XAI_API_KEY"])""")
     wss = HTTP.WebSockets.open(url, headers=headers)
-    @async for msg in wss
-        @info "msg", msg
-        try
-            output(JSON3.read(msg))
-        catch e 
-            @info e
-            # sprint(showerror, e, catch_backtrace())
-        end
-    end, wss
+    task = @async for msg in wss output(JSON3.read(msg)) end
+    task, wss
 end
 
 """

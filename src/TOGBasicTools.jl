@@ -4,9 +4,9 @@ export web_search, browse_page, download_file, run_shell, send_http_request, par
 
 using HTTP, JSON3, Base64, Dates, SMTPClient, Serialization, Gumbo, Cascadia
 
-"Uses DuckDuckGo API for searching returning a Dict with :title, :snippet and :url keys"
-function web_search(query::String; num_results=10)
-    @info "TOGBasicTools.jl, web_search"
+"Uses DuckDuckGo API for searching returning a Dict with :title, :snippet and :url keys/"
+function web_search(query::String; num_results::Int=10)
+    # @info "TOGBasicTools.jl, web_search"
     encoded_query = HTTP.URIs.escapeuri(query)
     url = "https://html.duckduckgo.com/html/?q=$(encoded_query)"
     response = HTTP.get(url)
@@ -25,7 +25,7 @@ function web_search(query::String; num_results=10)
     results
 end
 
-"Removes HTML tags to extract plain text"
+"Removes HTML tags to extract plain text."
 function browse_page(url::String)
     @info "TOGBasicTools.jl, browse_page"
     resp = HTTP.get(url)
@@ -62,15 +62,15 @@ function browse_page(url::String)
     clean_html(url, html)
 end
 
-"Handles binary download safely"
+"Handles binary download safely."
 download_file(url::String, local_path::String) = begin
    @info "TOGBasicTools.jl, download_file" 
     HTTP.download(url, local_path)
 end
 
-"run_shell(`echo 1`), throws on error"
+"run_shell(`echo 1`), throws on error."
 function run_shell(cmd::Cmd)::String
-    @info "TOGBasicTools.jl, run_shell"
+    # @info "TOGBasicTools.jl, run_shell"
     out = IOBuffer()
     err = IOBuffer()
     proc = open(pipeline(cmd; stdout=out, stderr=err), "r")
@@ -81,20 +81,20 @@ function run_shell(cmd::Cmd)::String
 end
 run_shell(command::String) = run_shell(Cmd(split(command)))
 
-"Supports common HTTP methods like GET POST"
-function send_http_request(method::String, url::String, headers=Dict(), body="")
-    @info "TOGBasicTools.jl, send_http_request"
+"Supports common HTTP methods like GET POST."
+function send_http_request(method::String, url::String, headers::Dict=Dict(), body::String="")
+    # @info "TOGBasicTools.jl, send_http_request"
     hpairs = Pair.(keys(headers), values(headers))
     resp = HTTP.request(method, url, hpairs, body)
     String(resp.body)
 end
 
-"Handles malformed JSON gracefully"
+"Handles malformed JSON gracefully."
 parse_json(json_str::String) = JSON3.read(json_str)
 
-"""`send_email(["<to@email.org>"], "body", "message")`"""
+"""`send_email(["<to@email.org>"], "body", "message")`."""
 function send_email(to::Vector{String}, subject::String, message::String)
-    @info "TOGBasicTools.jl, send_email"
+    # @info "TOGBasicTools.jl, send_email"
     from = "<email@1m1.io>"
     body = get_body(to, from, subject, message)
     # body = get_body(to, from, subject, message; cc, replyto)

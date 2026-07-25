@@ -1,6 +1,6 @@
 module TOGBroadcastBrowser
 
-export put!
+export put!, anybrowserconnected
 
 using HTTP, URIs, Sockets
 using LoopOS: BatchProcessor, start!, Peripheral
@@ -15,17 +15,17 @@ struct BroadcastBrowser <: Peripheral
     processor::BatchProcessor{String}
     BroadcastBrowser(stream, width, height) = new(stream, width, height, BatchProcessor{String}())
 end
-const BROADCASTBROWSER = Ref{BroadcastBrowser}()
-# const CLIENTS = Ref(Set{BroadcastBrowser}())
-# put!(::Type{BroadcastBrowser}, js) = [put!(client.processor, js) for client = CLIENTS[]]
+# const BROADCASTBROWSER = Ref{BroadcastBrowser}()
+const CLIENTS = Ref(Set{BroadcastBrowser}())
 """
-Run js on the browser.
+Run js on all connected browsers.
 example: `put!(BroadcastBrowser, "console.log('hi')")`.
 """
-put!(::Type{BroadcastBrowser}, js) = begin
-@info "TOGBroadcastBrowser.jl, put!"    
-    put!(BROADCASTBROWSER[].processor, js)
-end
+put!(::Type{BroadcastBrowser}, js::String) = [put!(client.processor, js) for client = CLIENTS[]]
+# put!(::Type{BroadcastBrowser}, js) = begin
+# @info "TOGBroadcastBrowser.jl, put!"    
+#     put!(BROADCASTBROWSER[].processor, js)
+# end
 
 # window.WS = new WebSocket('wss://studio.tail16337b.ts.net')
 const HTMLINIT(port) = """
@@ -72,8 +72,9 @@ function handle_ws(stream, f)
     end
 end
 
+anybrowserconnected = false
 function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/websocket"=>identity))
-    @info "TOGBroadcastBrowser.jl, awaken"    
+    # @info "TOGBroadcastBrowser.jl, awaken"    
     TOGAwaken.writebroadcastbrowserport(port=port)
         @async HTTP.listen!("127.0.0.1", port) do stream
         # if HTTP.WebSockets.isupgrade(stream.message)
@@ -92,11 +93,16 @@ function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/webs
             params = queryparams(uri)
             width = parse(Int, params["width"])
             height = parse(Int, params["height"])
-            BROADCASTBROWSER[] = BroadcastBrowser(stream, width, height)
-            # push!(CLIENTS[], bb)
-            root(port, BROADCASTBROWSER[])
-            handle_sse(BROADCASTBROWSER[])
-            # delete!(CLIENTS[], bb)
+            # BROADCASTBROWSER[] = BroadcastBrowser(stream, width, height)
+            bb = BroadcastBrowser(stream, width, height)
+            push!(CLIENTS[], bb)
+            anybrowserconnected = true
+            # root(port, BROADCASTBROWSER[])
+            # handle_sse(BROADCASTBROWSER[])
+            root(port, bb)
+            handle_sse(bb)
+            delete!(CLIENTS[], bb)
+            anybrowserconnected = !isempty(CLIENTS[])
         elseif haskey(functions, uri.path)
             functions[uri.path](read(stream))
             HTTP.setstatus(stream, 204)

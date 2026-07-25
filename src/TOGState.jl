@@ -39,8 +39,6 @@ end
 isoutputperipheralmethod(sym::Symbol, method::Method) = sym == :put! && isperipheralmethod(method)
 isinputperipheralmethod(sym::Symbol, method::Method) = sym == :take! && isperipheralmethod(method)
 function isperipheralmethod(method::Method)
-    # @info "isperipheralmethod", method
-    # t = fieldtypes(method.sig)
     sig = Base.unwrap_unionall(method.sig)
     params = sig.parameters
     length(params) < 2 && return false
@@ -48,15 +46,13 @@ function isperipheralmethod(method::Method)
     arg <: Peripheral || arg <: Type{<:Peripheral}
 end
 function methodperipheraltype(method::Method)
-    # arg = fieldtypes(method.sig)[2]
     sig = Base.unwrap_unionall(method.sig)
     params = sig.parameters
     arg = params[2]
-    arg <: Peripheral ? arg : arg.parameters[1]
+    arg <: Peripheral ? arg : arg.parameters[1] # todo might better check if arg is Type
 end
 
 function categorize(short::Vector{TrackedSymbol})
-    # expand!(short)
     methodshort, short = dichotomy(ts -> ts.value isa Method, short)
     typeshort, short = dichotomy(ts -> ts.value isa Type, short) # todo DataType?
     moduleshort, short = dichotomy(ts -> ts.value isa Module, short)
@@ -77,15 +73,15 @@ end
 function shortsections(short, outputperipheralshort, inputperipheralshort, methodshort, outputperipheralmethodshort, inputperipheralmethodshort, typeshort, outputperipheralmethodtypeshort, inputperipheralmethodtypeshort, moduleshort)
     sections = String[]
     !isempty(short) && push!(sections, state("SHORT MEMORY", short))
-    !isempty(short) && push!(sections, state("SHORT MEMORY OUTPUT PERIPHERALS", outputperipheralshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY INTPUT PERIPHERALS", inputperipheralshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY METHODS", methodshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY OUTPUT PERIPHERAL METHODS", outputperipheralmethodshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY INPUT PERIPHERAL METHODS", inputperipheralmethodshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY TYPES", typeshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY OUTPUT PERIPHERAL TYPES", outputperipheralmethodtypeshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY INPUT PERIPHERAL TYPES", inputperipheralmethodtypeshort))
-    !isempty(short) && push!(sections, state("SHORT MEMORY MODULES", moduleshort))
+    !isempty(outputperipheralshort) && push!(sections, state("SHORT MEMORY OUTPUT PERIPHERALS", outputperipheralshort))
+    !isempty(inputperipheralshort) && push!(sections, state("SHORT MEMORY INTPUT PERIPHERALS", inputperipheralshort))
+    !isempty(methodshort) && push!(sections, state("SHORT MEMORY METHODS", methodshort))
+    !isempty(outputperipheralmethodshort) && push!(sections, state("SHORT MEMORY OUTPUT PERIPHERAL METHODS", outputperipheralmethodshort))
+    !isempty(inputperipheralmethodshort) && push!(sections, state("SHORT MEMORY INPUT PERIPHERAL METHODS", inputperipheralmethodshort))
+    !isempty(typeshort) && push!(sections, state("SHORT MEMORY TYPES", typeshort))
+    # !isempty(outputperipheralmethodtypeshort) && push!(sections, state("SHORT MEMORY OUTPUT PERIPHERAL TYPES", outputperipheralmethodtypeshort))
+    # !isempty(inputperipheralmethodtypeshort) && push!(sections, state("SHORT MEMORY INPUT PERIPHERAL TYPES", inputperipheralmethodtypeshort))
+    # !isempty(short) && push!(sections, state("SHORT MEMORY MODULES", moduleshort))
     sections
 end
 
@@ -102,22 +98,11 @@ function state(
     # cached=short # DEBUG
     # volatile = TrackedSymbol[] # DEBUG
     cached, volatile = cache!(short)
-    # short, outputperipheralshort, inputperipheralshort, methodshort, outputperipheralmethodshort, inputperipheralmethodshort, typeshort, outputperipheralmethodtypeshort, inputperipheralmethodtypeshort, moduleshort = categorize(short)
-    # cached, volatile = cache!(short)
-    # cached, volatile = cache!(outputperipheralshort)
-    # cached, volatile = cache!(inputperipheralshort)
-    # cached, volatile = cache!(methodshort)
-    # cached, volatile = cache!(outputperipheralmethodshort)
-    # cached, volatile = cache!(short)
-    # cached, volatile = cache!(short)
-    # cached, volatile = cache!(short)
-    # cached, volatile = cache!(short)
     cached, outputperipheralcached, inputperipheralcached, methodcached, outputperipheralmethodcached, inputperipheralmethodcached, typecached, outputperipheralmethodtypecached, inputperipheralmethodtypecached, modulecached = categorize(cached)
     volatile, outputperipheralvolatile, inputperipheralvolatile, methodvolatile, outputperipheralmethodvolatile, inputperipheralmethodvolatile, typevolatile, outputperipheralmethodtypevolatile, inputperipheralmethodtypevolatile, modulevolatile = categorize(volatile)
     historyvolatile = TrackedSymbol[]
     for (i, action) = enumerate(history)
         if istaskfailed(action.task)
-            # length(action.input) == 1 && only(action.input).source isa Loop && continue
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].input"), action.input, action.timestamp))
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].output"), action.output, action.timestamp))
             push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].task"), action.task, action.timestamp))
@@ -143,8 +128,9 @@ state(m::Module) = string(nameof(m)) * "::Module"
 state(s::String) = "\"$s\""
 state(v::Vector) = "[" * join(state.(v), ",\n") * "]"
 state(v::Vector{T}) where T<:Number = "[" * join(string.(v), ", ") * "]"
-state(i::Input) = "LoopOS.Input($(os_time(i.timestamp)), $(state(i.source)), $(state(i.input)))"
-state(p::Peripheral) = state(typeof(p)) * "(" * (p ∈ LISTENING ? "" : "not") * "listening)"
+state(i::Input) = "LoopOS.Input($(os_time(i.timestamp)), $(typeof(i.source)), $(state(i.input)))"
+# state(p::Peripheral) = state(typeof(p)) * " (" * (p ∈ LISTENING ? "" : "not") * "listening)"
+# state(p::Peripheral) = string(typeof(p)) * " (" * (p ∈ LISTENING ? "" : "not") * "listening)"
 function state(a::Action)
     _state = "inputs=$(state(a.input))"
     _state *= "\n$(state(a.task))"
@@ -198,9 +184,9 @@ function state(v::TrackedSymbol)
         value = v.value[]
         T = typeof(value)
     end
-    T_str = T ∈ [Type, Method] ? "" : "::" * string(T)
-    _sizeofvalue = T ∈ [DataType, Type, Method, Module, UnionAll] ? 0 : sizeof(value)
-    sizeofvalue = iszero(_sizeofvalue) ? "" : "(sizeof=" * string(sizeof(value)) * ")"
+    T_str = T ∈ [DataType, Type, Method] ? "" : "::" * string(T)
+    _sizeofvalue = T ∈ [DataType, Type, Method, Module, UnionAll] ? 0 : Base.summarysize(value)
+    sizeofvalue = iszero(_sizeofvalue) ? "" : "(summarysize=" * string(Base.summarysize(value)) * "bytes)"
     _state = if value === LOOP && isinf(v.timestamp)
         _s = strip(sprint(dump, value))
         replace(_s, r": (\w+) " => s"::\1=") * " end"
@@ -208,7 +194,8 @@ function state(v::TrackedSymbol)
         state(value)
     end
     m = v.m == Main ? "" : string(v.m) * "."
-    os_time(v.timestamp) * "\n" * docs(v) * m * string(v.sym) * ref * T_str * sizeofvalue * "=" * _state
+    symrefTsize = T ∈ [Type, Method] ? "" : string(v.sym) * ref * T_str * sizeofvalue * "="
+    os_time(v.timestamp) * "\n" * docs(v) * m * symrefTsize * _state
 end
 function state(_state::Vector{TrackedSymbol})
     sort!(_state, lt=(s, _s) -> s.timestamp == _s.timestamp ? s.value isa Action : s.timestamp < _s.timestamp)

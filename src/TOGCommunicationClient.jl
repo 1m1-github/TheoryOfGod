@@ -1,6 +1,7 @@
 module TOGCommunicationClient
 
-export listentogroup, ignoregroup, CACHE, put!, take!, Messages
+export listentogroup, ignoregroup, CACHE, put!, readcache, Messages
+export TOGMessage
 
 using ZMQ
 using TOGZMQ
@@ -8,6 +9,9 @@ using TOGZMQ: TOGMessage, state
 using LoopOS: @whiletrue, Peripheral, listen
 import Base: put!, take!
 
+"""
+Received messages are cached here. Retrieve them with `readcache`.
+"""
 const CACHE = TOGMessage[]
 const DEALERSOCKET = Ref{Socket}()
 const SUBSOCKET = Ref{Socket}()
@@ -17,27 +21,24 @@ struct Messages <: Peripheral
 end
 const MESSAGES = Messages(Channel{TOGMessage}())
 
-# put!(::Messages, message::TOGMessage)
 put!(::Messages, to::String, togroup::Bool, description::String, information) = put!(Messages, to, togroup, description, information)
-# put!(::Type{Messages}, message::TOGMessage) = put!(MESSAGES.channel, message)
 put!(::Type{Messages}, message::TOGMessage) = put!(Messages, message.to, message.togroup, message.description, message.information)
 """
 Send any information to a specific god or to a group.
-example: `put!(Messages, "∀", true, "greeting", "hi")`
+example: `put!(TOGCommunicationClient.Messages, "∀", true, "greeting", "hi")`
 """
 put!(::Type{Messages}, to::String, togroup::Bool, description::String, information) = TOGZMQ.send(DEALERSOCKET[], TOGMessage(TOGZMQ.ID[], to, togroup, description, information))
 
 """
 Retrieve received message using its index in CACHE.
-example: `take!(Messages, 1)`
+example: `readcache(TOGCommunicationClient.Messages, index)`
 """
-function take!(::Type{Messages}, i)
-    @info "TOGCommunicationClient.jl, take!"
+function readcache(::Type{Messages}, i)
+    # @info "TOGCommunicationClient.jl, take!"
     message = CACHE[i]
     deleteat!(CACHE, i)
     message
 end
-# take!(::Messages, i) = take!(Messages, i)
 take!(::Messages) = state(take!(MESSAGES.channel))
 take!(::Type{Messages}) = take!(MESSAGES)
 
@@ -47,15 +48,14 @@ take!(::Type{Messages}) = take!(MESSAGES)
 #     close(SUBSOCKET[])
 # end
 function awaken(;dealer, sub)
-    @info "TOGCommunicationClient.jl, awaken"
+    # @info "TOGCommunicationClient.jl, awaken"
     DEALERSOCKET[] = Socket(DEALER)
     DEALERSOCKET[].routing_id = TOGZMQ.ID[]
-    # @info "TOGCommunicationClient.awaken", DEALERSOCKET[].routing_id
     SUBSOCKET[] = Socket(SUB)
     connect(DEALERSOCKET[], dealer)
     connect(SUBSOCKET[], sub)
     listentogroup("∀")
-    # global MESSAGES
+    global MESSAGES
     listen(MESSAGES)
     dealertask = errormonitor(@async @whiletrue receive(DEALERSOCKET[]))
     subtask = errormonitor(@async @whiletrue receive(SUBSOCKET[]))
@@ -63,20 +63,18 @@ function awaken(;dealer, sub)
 end
 
 """
-Join a group.
+Listen to messages from some group.
 example: `listentogroup("interestinggroup")`
 """
-listentogroup(group) = subscribe(SUBSOCKET[], group)
+listentogroup(group::String) = subscribe(SUBSOCKET[], group)
 """
-Leave a group.
+Stop listening to messages from some group.
 example: `ignoregroup("interestinggroup")`
 """
-ignoregroup(group) = unsubscribe(SUBSOCKET[], group)
+ignoregroup(group::String) = unsubscribe(SUBSOCKET[], group)
 
 function receive(socket)
-    @info "TOGCommunicationClient.jl, receive", socket
     message = TOGZMQ.receive(socket)
-    @info "TOGCommunicationClient.jl, received",  message.from, message.to, message.togroup, message.description, typeof(message.information)
     push!(CACHE, message)
     put!(MESSAGES.channel, message)
 end

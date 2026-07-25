@@ -13,20 +13,17 @@ const TASK = Ref{Task}()
     # TOGZMQAPIServer.sleep(SOCKET[])
 # end
 function awaken(;socketlocation, ω)
-    @info "TOGObserveServer.jl, awaken"
+    # @info "TOGObserveServer.jl, awaken"
     SOCKET[], TASK[] = TOGZMQAPIServer.awaken(socketlocation=socketlocation, functions=Dict(
         :time => time(ω),
-        :T => type(ω),
-        :type => type(ω),
+        # :T => type(ω),
+        # :type => type(ω),
         :∩ => ∩(ω),
     ))
 end
 
 time(ω::𝕋) = (x...) -> t(ω)
-type(ω::𝕋) = (x...) -> first(typeof(ω).parameters)
-Base.:∩(ω::𝕋) = (x...) -> begin
-    # @info "TOGObserveServer, ∩"
-    ∩(x[1], ω, x[2])
-end
+# type(ω::𝕋) = (x...) -> first(typeof(ω).parameters)
+Base.:∩(ω::𝕋) = (x...) -> ∩(x[1], ω, x[2])
 
 end

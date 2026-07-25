@@ -1,12 +1,8 @@
-"""
-Learning is creating a Pkg once the code is good.
-The Pkg is added to a local registry
-"""
 module TOGLearning
 
 # todo handle fails
 
-export newpkg, updatepkg, cppkg
+export newpkg, updatepkg
 
 using Pkg, TOML, LocalRegistry, Git
 using Pkg.Types: PackageSpec, Context
@@ -18,6 +14,7 @@ const LICENSEFILE = "LICENSE"
 const LICENSE = """
 Study it, use it, enjoy it.
 Any one deriving value from this should share a fair value >= 0.
+Fair value is derived via negotiation xor ultimately a court.
 """
 const READMEFILE = "README.md"
 const README(name) = "# $name"
@@ -34,17 +31,24 @@ pkgdir(; name) = joinpath(JULIACODEPATH, name)
 projecttoml(; name) = joinpath(pkgdir(name=name), "Project.toml")
 
 """
-pkgs: Pkgs to be added (via name, url, path).
-files: Files to be copied over.
+Each of your abilities lives modularly in a `Pkg`.
+`newpkg` creates a new `Pkg` inside your Julia dev dir.
+The process of learning a new ability is to write a new module source file, then create a `newpkg`, then `learn` to have the ability present.
+`newpkg` will `generate` a new `Pkg`, `cp`/`mv` files, `add` `Pkg`s, `git commit`, `register` to the `LocalRegistry` and `rm` all on error.
+# Arguments
+- `name::String`: The name of the `Pkg`.
+- `file=String[]`: The `file`s to be copied xor moved to the `src` folder of the `Pkg`.
+- `pkg=String[]`: The `Pkg`s to be `add`ed to this `Pkg`.
+- `mvfile::Bool=false`: Whether to copy xor move the `file`s.
 """
-function newpkg(; name::String, files=String[], pkgs=String[], mvfiles=false)
+function newpkg(; name::String, file=String[], pkg=String[], mvfile=false)
     path = pkgdir(name=name)
     isdir(path) && return
-    @info "TOGLearning.jl, newpkg"
+    # @info "TOGLearning.jl, newpkg"
     Pkg.generate(path)
     try
-        changefiles(name=name, files=files, rmfiles=String[], cpmv=mvfiles ? mv : cp, init=true)
-        changepkgs(name=name, pkgs=pkgs, rmpkgs=String[])
+        changefiles(name=name, addfile=file, rmfile=String[], cpmv=mvfile ? mv : cp, init=true)
+        changepkgs(name=name, addpkg=pkg, rmpkg=String[])
         version = initversion(name=name)
         addcommit(path=path, commitmessage=version)
         # newremoterepo(path=path)
@@ -56,15 +60,20 @@ function newpkg(; name::String, files=String[], pkgs=String[], mvfiles=false)
 end
 
 """
-pkgs: new Pkgs to be added
-rmpkgs: Pkgs to be removed
-files: Files to be copied over
-rmfiles: Files to be removed
+Update an existing `Pkg` in your Julia dev dir by force copying `file`s to the `src` dir, removing `rmfile`s from the `src` dir, `add`ing `addpkg`s, removing `rmpkg`s.
+`updatepkg` will `cp`/`mv` files, `add`/`rm` `Pkg`s, increase the `version`, `git commit`, `register` to the `LocalRegistry`.
+# Arguments
+- `name::String`: The name of the `Pkg`.
+- `addfile=String[]`: The `file`s to be copied xor moved to the `src` folder of the `Pkg` by force.
+- `rmfile=String[]`: The `file`s to be removed from the `src` folder of the `Pkg`.
+- `addpkg=String[]`: The `Pkg`s to be `add`ed to this `Pkg`.
+- `rmpkg=String[]`: The `Pkg`s to be `add`ed to this `Pkg`.
+- `mvfile::Bool=false`: Whether to copy xor move the `file`s.
 """
-function updatepkg(; name::String, files=String[], pkgs=String[], rmfiles=String[], rmpkgs=String[], mvfiles=false)
-    @info "TOGLearning.jl, updatepkg"
-    changefiles(name=name, files=files, rmfiles=rmfiles, cpmv=mvfiles ? mv : cp)
-    changepkgs(name=name, pkgs=pkgs, rmpkgs=rmpkgs)
+function updatepkg(; name::String, addfile=String[], addpkg=String[], rmfile=String[], rmpkg=String[], mvfile=false)
+    # @info "TOGLearning.jl, updatepkg"
+    changefiles(name=name, addfile=addfile, rmfile=rmfile, cpmv=mvfile ? mv : cp)
+    changepkgs(name=name, addpkg=addpkg, rmpkg=rmpkg)
     path = pkgdir(name=name)
     isdirty(path=path) || return
     version = updateversion(name=name)
@@ -92,13 +101,17 @@ end
 # end
 # rmrepo(name, githubuser, githubauth)
 # end
-function cppkg(; name::String, newname::String)
-    @info "TOGLearning.jl, cppkg"
-    files = readdir(joinpath(pkgdir(name=name), "src"), join=true)
-    project = TOML.parsefile(projecttoml(name=name))
-    pkgs = haskey(project, "deps") ? collect(keys(project["deps"])) : String[]
-    newpkg(name=newname, files=files, pkgs=pkgs)
-end
+
+# """
+# Convenience method to copy an existing pkg 
+# """
+# function cppkg(; name::String, newname::String)
+#     @info "TOGLearning.jl, cppkg"
+#     files = readdir(joinpath(pkgdir(name=name), "src"), join=true)
+#     project = TOML.parsefile(projecttoml(name=name))
+#     pkgs = haskey(project, "deps") ? collect(keys(project["deps"])) : String[]
+#     newpkg(name=newname, files=files, pkgs=pkgs)
+# end
 # function mvpkg(; name::String, newname::String, pushregistry=false, githubuser=get(ENV, "GITHUB_USER", ""), githubauth=get(ENV, "GITHUB_AUTH", ""))
 #     cppkg(name=name, newname=newname, pushregistry=pushregistry, githubuser=githubuser, githubauth=githubauth)
 #     rmpkg(name=name)
@@ -121,16 +134,16 @@ function addfile(; name, file, content)
     !isfile(file) && write(file, content)
 end
 srcfile(; name, file) = joinpath(pkgdir(name=name), "src", basename(file))
-function changefiles(; name, files=String[], rmfiles=String[], cpmv=cp, init=false)
+function changefiles(; name, addfile=String[], rmfile=String[], cpmv=cp, init=false)
     if init
         addfile(name=name, file=LICENSEFILE, content=LICENSE)
         addfile(name=name, file=GITIGNOREFILE, content=GITIGNORE)
         addfile(name=name, file=READMEFILE, content=README(name))
     end
-    for file = files
+    for file = addfile
         cpmv(file, srcfile(name=name, file=file), force=true)
     end
-    for file = rmfiles
+    for file = rmfile
         rm(srcfile(name=name, file=file))
     end
 end
@@ -144,15 +157,15 @@ function changepkg(pkg, f)
         f(pkg)
     end
 end
-function changepkgs(; name, pkgs=String[], rmpkgs=String[])
+function changepkgs(; name, addpkg=String[], rmpkg=String[])
     # cd(pkgdir(name=name)) do
     oldenv = Base.active_project()
     # Pkg.activate(".")
     Pkg.activate(pkgdir(name=name))
     # Pkg.Registry.add("General")
     # Pkg.Registry.add(path="/Users/1m1/.julia/registries/TOGRegistry")
-    isempty(rmpkgs) || Pkg.rm(rmpkgs)
-    isempty(pkgs) || Pkg.add(pkgs)
+    isempty(rmpkg) || Pkg.rm(rmpkg)
+    isempty(addpkg) || Pkg.add(addpkg)
     Pkg.update(update_registry=false) # DEBUG
     # Pkg.update()
     # isempty(pkgs) || Pkg.develop(pkgs)

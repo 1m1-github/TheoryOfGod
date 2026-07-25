@@ -1,6 +1,8 @@
 module TOGgod
 
-export learn, LoopOS, OCTAHEDRON, T, put!
+export learn, OCTAHEDRON, put!
+export LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+# export T
 
 using Pkg, Serialization
 using LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
@@ -9,23 +11,20 @@ using TOGOctahedron: Octahedron
 using TOGExist: ○
 import Base: put!
 
-"eltype of Ω."
-const T = Ref{DataType}()
-"Main octahedron."
+# const T = Ref{DataType}()
 const OCTAHEDRON = Ref{Octahedron}()
 const ARGS = Ref{NamedTuple}((;))
 
-__init__() = atexit((n)->begin
-    @info "TOGgod, atexit"
-    sleep(n)
-end
-)
+__init__() = atexit((n)->sleep(n))
 
 struct Ω <: Peripheral end
+"""
+Create inside your main octahedron. See the other `put!` methods for possible args.
+"""
 put!(::Type{Ω}, args...) = TOGCreateClient.put!(OCTAHEDRON[], args...)
 
 function sleep(exitcode)
-    @info "TOGgod, sleep", exitcode
+    # @info "TOGgod, sleep", exitcode
     exitcode == TOGAwaken.ALREADYRUNNINGEXITCODE && return
     isempty(ARGS[]) && return
     serialize(".tog/short", LoopOS.short())
@@ -39,8 +38,6 @@ end
 
 function awaken(; args...)
     TOGLogging.awaken()
-    # write(string(time()),"god"*string(args))
-    @info "TOGgod.awaken", args
     ARGS[] = merge(ARGS[], args)
     ARGS[] = merge(ARGS[], [:path=>pwd()])
     remotereplport = get(args, :remotereplport, TOGPort.openport())
@@ -54,54 +51,46 @@ function awaken(; args...)
     TOGObserveClient.awaken(TOGAwaken.togobserve(path=universe))
     TOGCreateClient.awaken(TOGAwaken.togcreate(path=universe))
     TOGCommunicationClient.awaken(dealer=TOGAwaken.router(path=universe), sub=TOGAwaken.pub(path=universe))
-    T[] = TOGObserveClient.togtype()
+    # T[] = TOGObserveClient.togtype()
     ϕ = MathConstants.golden
     OCTAHEDRON[] = Octahedron(
         t=TOGObserveClient.togtime(),
         d=[ϕ^-4, ϕ^-3, ϕ^-2, ϕ^-1],
-        ẑeroμ=[zero(T[]), ○(T[]), ○(T[]), ○(T[])],
-        ôneμ=[zero(T[]), ○(T[]), ○(T[]), ○(T[])+T[](0.1)],
-        ρ=[T[](0.0), T[](0.1), T[](0.1), T[](0.0)],
+        observer=[0, ○, ○, ○],
+        focus=[0, ○, ○, ○+0.1],
+        ρ=[0, 0.1, 0.1, 0],
         ♯=(1, 1))
-    @info "TOGgod, broadcastbrowserport", broadcastbrowserport
     TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
         "/keypress"=>TOGOctahedronBrowser.keypress,
         # "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
         "/audio"=>TOGAudioAnalogToDigitalBrowser.audio,
         "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
     ))
-    @info "TOGgod, after TOGBroadcastBrowser.awaken"
     LoopOS.awaken(intelligence)
-    @info "TOGgod, after LoopOS.awaken"
     # TOGREPL.awaken(name=name, remotereplport=remotereplport)
-    # @info "TOGgod, after TOGREPL.awaken"
-    # write(string(time()),"godend"*string(remotereplport))
-    # atreplinit(r -> begin
-    #     @show "A", TOGAwaken.remotereplportfile(path=universe), isfile(TOGAwaken.remotereplportfile(path=universe))
-    #     @show "B", TOGAwaken.readremotereplport(path=universe)
-    #     isfile(TOGAwaken.remotereplportfile(path=universe)) && TOGREPL.connect(start_key="\\C-g", port=TOGAwaken.readremotereplport(path=universe))
-    # end)
     isinteractive() ? nothing : wait(Condition())
-    @info "TOGgod, after wait"
 end
 
 function browserconnect(port, browser)
-    @info "TOGgod.browserconnect", port
+    # @info "TOGgod.browserconnect", port
     TOGOctahedronBrowser.awaken(octahedron=OCTAHEDRON[], browser=browser)
     TOGAudioAnalogToDigitalBrowser.awaken()
 end
 
 """
-Learn by adding or removing Pkgs from yourself.
+Learn by adding or removing Pkgs for yourself.
+# Arguments
+- `addpkg::Vector{String}`: `Pkg`s to be added.
+- `rmpkg::Vector{String}`: `Pkg`s to be removed.
 """
-function learn(; pkgs=String[], rmpkgs=String[])
-    @info "TOGgod, learn"
-    isempty(pkgs) || Pkg.add(pkgs)
-    isempty(rmpkgs) || Pkg.rm(rmpkgs)
+function learn(; addpkg::Vector{String}=String[], rmpkg::Vector{String}=String[])
+    # @info "TOGgod, learn"
+    isempty(addpkg) || Pkg.add(addpkg)
+    isempty(rmpkg) || Pkg.rm(rmpkg)
     sleep(0)
-    @info "TOGgod, learn, after sleep"
+    # @info "TOGgod, learn, after sleep"
     TOGAwaken.awakengod(; ARGS[]...)
-    @info "TOGgod, learn, after awakengod"
+    # @info "TOGgod, learn, after awakengod"
     exit(0)
 end
 

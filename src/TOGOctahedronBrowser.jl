@@ -1,11 +1,12 @@
 module TOGOctahedronBrowser
 
 using TOGBroadcastBrowser: BroadcastBrowser
-using TOGOctahedron: Octahedron, take!
+using TOGOctahedron: Octahedron, image
 using TOGMoveOctahedron: scaleup!, scaledown!, moveup!, movedown!, focusup!, focusdown!, jerkup!, jerkdown!, rotateup!, rotatedown!, step!, δN
 using TOGExist: ○
 using TOGColor: scalar2rgba
 using LoopOS: @whiletrue
+using Colors
 
 const JSKEYPRESS = """document.addEventListener('keydown', (e) => {fetch('/keypress', {method: 'POST',body: e.key})})"""
 
@@ -24,52 +25,29 @@ mutable struct Browser
     browser::Union{BroadcastBrowser,Nothing}
 end
 const BROWSER = Ref{Browser}()
-const OBSERVE = Ref(true)
+OBSERVE = true
 browserlooptask(octahedron) = errormonitor(Threads.@spawn begin
-    @info "TOGOctahedronBrowser, browserlooptask"
-    # t = time()
+    # @info "TOGOctahedronBrowser, browserlooptask"
     put!(BroadcastBrowser, JS(octahedron.♯[1], octahedron.♯[2]))
     put!(BroadcastBrowser, JSKEYPRESS)
-    # # put!(browser.processor, JS(o.♯[1], o.♯[2]))
-    T = first(typeof(octahedron).parameters)
-    ϕ = fill(○(T), octahedron.♯[1], octahedron.♯[2])
-    α = zeros(T, octahedron.♯[1], octahedron.♯[2])
+    img = fill(RGBA(0,0,0,0), octahedron.♯...)
     @whiletrue begin
-                try
-        #     #         # t̃ = time()
-        #     #         # dt = t̃ - t
-        #     #         # t = t̃
-        #     #         # step!(o)
-        # sleep(1) # DEBUG
-        OBSERVE[] || continue
-        ϕ̇, α̇ = Base.invokelatest() do
-            take!(octahedron)
-        end
-        # @info "unique(ϕ̇)", unique(ϕ̇) # DEBUG
-        δ = Δ!(ϕ, α, ϕ̇, α̇)
-        # @info "length(δ)", length(δ)
+        OBSERVE || continue
+        i̇mg = Base.invokelatest(image(octahedron))
+        δ = Δ!(img, i̇mg)
         isempty(δ) && continue
         js = "pixel=" * writeδ(δ, octahedron.♯[2]) * "\n" * SET_PIXELS_JS
-        # @info "length(js)", length(js)
         put!(BroadcastBrowser, js)
-                catch e
-                    bt = catch_backtrace()
-                    showerror(stderr, e, bt)
-                    sleep(1)
-                end
-                # break # DEBUG
     end
 end)
 
-function Δ!(ϕ, α, ϕ̇, α̇)
-    T = eltype(ϕ)
+function Δ!(img, i̇mg)
+    T = eltype(img[1,1].r)
     δ = Tuple{CartesianIndex{2},Tuple{T,T,T,T}}[]
     for i = CartesianIndices(ϕ̇)
-        ϕ[i] == ϕ̇[i] && α[i] == α̇[i] && continue
-        ϕ[i] = ϕ̇[i]
-        α[i] = α̇[i]
-        rgba = scalar2rgba(ϕ̇[i], α̇[i])
-        push!(δ, (i, (T(rgba.r), T(rgba.g), T(rgba.b), T(rgba.alpha))))
+        img[i] == i̇mg[i] && continue
+        img[i] = i̇mg[i]
+        push!(δ, (i, img.r, img.g, img.b, img.alpha))
     end
     δ
 end
@@ -109,7 +87,6 @@ ctx.putImageData(imageData, 0, 0)
 const CHANGE_MODE = Ref(2) # 0=ρ, 1=zero, 2=focus, 3=zero+focus
 const CHANGE_DIM_INDEX = Ref(2)
 function keypress(key)
-    # try # DEBUG
     o = BROWSER[].o
     if key == "ArrowUp"
         if CHANGE_MODE[] == 0
@@ -152,7 +129,7 @@ function keypress(key)
     # elseif key == "t"
         # step!(o)
     elseif key == "Backspace"
-        o.∂Ο = !o.∂Ο
+        o.∂t = !o.∂t
     elseif key ∈ ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         global CHANGE_DIM_INDEX[] = parse(UInt, key)
     else
@@ -161,21 +138,16 @@ function keypress(key)
     println("key=$key")
     println("CHANGE_MODE=$CHANGE_MODE[]")
     println("CHANGE_DIM_INDEX=$CHANGE_DIM_INDEX[]")
-    println("o.Ο=$(o.Ο)")
-    println("o.∂Ο=$(o.∂Ο)")
-    println("o.vΟ=$(o.vΟ)")
+    println("o.t=$(o.t)")
+    println("o.∂t=$(o.∂t)")
+    println("o.vt=$(o.vt)")
     println("o.v=$(o.v)")
-    println("ẑeroμ=$(o.ẑeroμ)")
-    println("ôneμ=$(o.ôneμ)")
+    println("observer=$(o.observer)")
+    println("focus=$(o.focus)")
     println("o.ρ=$(o.ρ)")
     println("o.θ=$(o.θ)")
     # println("δN=$δN")
-    println("o.norm(o.ôneμ.-o.ẑeroμ)=$(o.norm(o.ôneμ.-o.ẑeroμ))")
-# catch e 
-#     # @info e 
-#     bt = catch_backtrace()
-#     showerror(stdout, e, bt)
-# end
+    println("o.norm(o.focus.-o.ẑeroμ)=$(o.norm(o.focus.-o.ẑeroμ))")
 end
 
 end
