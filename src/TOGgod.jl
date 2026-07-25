@@ -74,7 +74,7 @@ end
 function browserconnect(port, browser)
     # @info "TOGgod.browserconnect", port
     TOGOctahedronBrowser.awaken(octahedron=OCTAHEDRON[], browser=browser)
-    TOGAudioAnalogToDigitalBrowser.awaken()
+    # TOGAudioAnalogToDigitalBrowser.awaken()
 end
 
 """

@@ -5,6 +5,7 @@ export put!, TOGCreateClientAdvice
 using ZMQ, PNGFiles, TOGZMQAPIClient
 using TOGTypst: typst
 using TOGOctahedron: Octahedron
+using TOGMatrix: rgbamatrix
 import Base: put!
 
 const SOCKET = Ref{Socket}()
@@ -36,8 +37,9 @@ end
 """
 Create a 2d RGBA Matrix.
 """
-function put!(o::Octahedron, name::String, mat::AbstractMatrix{PNGFiles.ColorTypes.RGBA}, μ::AbstractVector{<:Number}, ρ::AbstractVector{<:Number})
+function put!(o::Octahedron, name::String, mat::AbstractMatrix, μ::AbstractVector{<:Number}, ρ::AbstractVector{<:Number})
     # @info "TOGCreateClient.jl, put!"
+    ∂ = fill(true, length(μ))
     create(o, μ, ρ, rgbamatrix(mat), ∂, ∂, name)
 end
 
@@ -46,6 +48,7 @@ Create an arbitrary ϕ:Ω->I.
 """
 function put!(o::Octahedron, name::String, ϕ::Function, μ::AbstractVector{<:Number}, ρ::AbstractVector{<:Number})
     # @info "TOGCreateClient.jl, put!"
+    ∂ = fill(true, length(μ))
     create(o, μ, ρ, ϕ, ∂, ∂, name)
 end
 

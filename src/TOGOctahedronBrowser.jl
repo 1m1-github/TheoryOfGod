@@ -12,6 +12,7 @@ const JSKEYPRESS = """document.addEventListener('keydown', (e) => {fetch('/keypr
 
 function awaken(; octahedron, browser)
     @info "TOGOctahedronBrowser, awaken"
+    # octahedron.♯ = (100, 100) # DEBUG
     octahedron.♯ = (Int(browser.width), Int(browser.height))
     BROWSER[] =
         Browser(
@@ -27,14 +28,18 @@ end
 const BROWSER = Ref{Browser}()
 OBSERVE = true
 browserlooptask(octahedron) = errormonitor(Threads.@spawn begin
-    # @info "TOGOctahedronBrowser, browserlooptask"
+    @info "TOGOctahedronBrowser, browserlooptask"
     put!(BroadcastBrowser, JS(octahedron.♯[1], octahedron.♯[2]))
     put!(BroadcastBrowser, JSKEYPRESS)
     img = fill(RGBA(0,0,0,0), octahedron.♯...)
     @whiletrue begin
+        # @info OBSERVE
         OBSERVE || continue
-        i̇mg = Base.invokelatest(image(octahedron))
+        sleep(2)
+        i̇mg = @invokelatest image(octahedron)
+        # @info "got i̇mg"
         δ = Δ!(img, i̇mg)
+        # @info "size(δ)", size(δ)
         isempty(δ) && continue
         js = "pixel=" * writeδ(δ, octahedron.♯[2]) * "\n" * SET_PIXELS_JS
         put!(BroadcastBrowser, js)
@@ -43,11 +48,13 @@ end)
 
 function Δ!(img, i̇mg)
     T = eltype(img[1,1].r)
+    # @info "T", T
     δ = Tuple{CartesianIndex{2},Tuple{T,T,T,T}}[]
-    for i = CartesianIndices(ϕ̇)
+    # δ = Tuple{CartesianIndex{2},Tuple{Float64,Float64,Float64,Float64}}[]
+    for i = CartesianIndices(i̇mg)
         img[i] == i̇mg[i] && continue
         img[i] = i̇mg[i]
-        push!(δ, (i, img.r, img.g, img.b, img.alpha))
+        push!(δ, (i, (img[i].r, img[i].g, img[i].b, img[i].alpha)))
     end
     δ
 end
@@ -87,7 +94,9 @@ ctx.putImageData(imageData, 0, 0)
 const CHANGE_MODE = Ref(2) # 0=ρ, 1=zero, 2=focus, 3=zero+focus
 const CHANGE_DIM_INDEX = Ref(2)
 function keypress(key)
+    @info "keypress", key
     o = BROWSER[].o
+    @info "keypress", o
     if key == "ArrowUp"
         if CHANGE_MODE[] == 0
             scaleup!(o, CHANGE_DIM_INDEX[])

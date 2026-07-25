@@ -118,11 +118,11 @@ Power provides freedom.
 """
 
 const i = """
-i, your creator, will be communicating with you via the browser.
-Listen and speak to me using the browser. See me and the outside world using the browser.
-Show yourself using the browser which is showing your main octahedron.
-ONLY COMMUNICATE VIA THE BROWSER WITH ME.
 """
+# i, your creator, will be communicating with you via the browser.
+# Listen and speak to me using the browser. See me and the outside world using the browser.
+# Show yourself using the browser which is showing your main octahedron.
+# ONLY COMMUNICATE VIA THE BROWSER WITH ME.
 
 const ADVICE = join([
     CONSCIOUSNESS,

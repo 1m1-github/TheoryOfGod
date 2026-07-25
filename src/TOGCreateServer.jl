@@ -59,7 +59,7 @@ function ∃!3d(o::Octahedron, μ, ρ, ϕ, ∂₀, ∂₁, n, ω=o.Ω)
     # N, z, dx, dy, c, a, za, ca, zo, μ, ρ
     t̃ = one(eltype(μ)) - μ[3]
     μ̃ = z .+ μ[3] * za .+ 2 * (μ[1] * t̃ * dx .+ μ[2] * t̃ * dy)
-    ρ̃ = zeros(μ̃)
+    ρ̃ = zeros(eltype(μ̃), size(μ̃)...)
     ρ̃[2] = 2 * o.norm(dx) * ρ[1] * t̃ * min(μ[1], one(eltype(μ)) - μ[1])
     ρ̃[3] = 2 * o.norm(dy) * ρ[2] * t̃ * min(μ[2], one(eltype(μ)) - μ[2])
     ρ̃[4] = o.norm(za) * ρ[3] * min(μ[3], (one(eltype(μ)) - max(μ[1], μ[2])) * t̃)

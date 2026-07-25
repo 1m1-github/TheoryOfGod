@@ -145,7 +145,7 @@ function state(t::Task)
 end
 function state(e::Exception)
     e isa TaskFailedException && return state(e.task.exception)
-    string(e) * "\n" * string(catch_backtrace())
+    string(e) * "\n" * sprint(Base.show_backtrace, catch_backtrace())
 end
 function docs(method::Method, multidoc::Docs.MultiDoc)
     sig = method.sig

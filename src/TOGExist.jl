@@ -7,9 +7,9 @@ import Base.:∩
 
 abstract type ∀ end
 struct ∃{F} <: ∀
-    d::Vector{Rational{BigInt}}
-    μ::Vector{Rational{BigInt}}
-    ρ::Vector{Rational{BigInt}}
+    d::Vector{Float64}
+    μ::Vector{Float64}
+    ρ::Vector{Float64}
     ∂₀::Vector{Bool}
     ∂₁::Vector{Bool}
     ϕ::F
@@ -60,9 +60,9 @@ struct ∃{F} <: ∀
 end
 struct Φ{F}
     ϕ::F
-    d::Vector{Rational{BigInt}}
-    z::Vector{Rational{BigInt}}
-    o::Vector{Rational{BigInt}}
+    d::Vector{Float64}
+    z::Vector{Float64}
+    o::Vector{Float64}
     Φ(_ϕ, _d, _z, _o) = new{typeof(_ϕ)}(_ϕ, _d, _z, _o)
 end
 (ϕ::∀)(x) = ○
@@ -79,7 +79,7 @@ end
 function iscomputable(ϕ, N)
     try
         @kernel gpu(ϕ̃, x) = ϕ̃(x)
-        x = KernelAbstractions.zeros(TOGGPU.GPU_BACKEND, Float32, N)
+        x = KernelAbstractions.zeros(TOGGPU.GPU_BACKEND, Float64, N)
         gpu(TOGGPU.GPU_BACKEND, TOGGPU.GPU_BACKEND_WORKGROUPSIZE)(ϕ, x, ndrange=1)
         true
     catch e
@@ -89,12 +89,12 @@ function iscomputable(ϕ, N)
     end
 end
 struct 𝕋 <: ∀
-    ϵ::Dict{Rational{BigInt},IntervalMap{Rational{BigInt},Set{∃}}}
+    ϵ::Dict{Float64,IntervalMap{Float64,Set{∃}}}
     Ο::Dict{∀,BigInt}
     n::Dict{String,∀}
     L::ReentrantLock
     function 𝕋()
-        ϵ = Dict{Rational{BigInt},IntervalMap{Rational{BigInt},Set{∃}}}()
+        ϵ = Dict{Float64,IntervalMap{Float64,Set{∃}}}()
         Ο = Dict{∀,BigInt}()
         n = Dict{String,∀}()
         L = ReentrantLock()
@@ -108,7 +108,7 @@ t(Ο::Integer) = 1 - 1 / (1 + log(Ο))
 t(ϵ::∀, ω::𝕋) = t(ω.Ο[ϵ])
 t(ω::𝕋) = t(ω, ω)
 Ο(t::Number) = round(BigInt, exp(t / (1 - t)))
-○ = 1//2
+○ = 0.5
 ○̂ = x -> ○
 Base.copy!(ϵ::∃, ḋ, μ̇, ρ̇, n, ω::𝕋) = ∃!(∃(ḋ, μ̇, ρ̇, ϵ.∂₀, ϵ.∂₁, ϵ.ϕ), n, ω)
 function ∩ᵢ(z₁, o₁, ∂₁₀, ∂₁₁, z₂, o₂, ∂₂₀, ∂₂₁)
@@ -121,7 +121,7 @@ function ∩ᵢ(z₁, o₁, ∂₁₀, ∂₁₁, z₂, o₂, ∂₂₀, ∂₂�
     ∂₀₀ && ∂₀₁
 end
 function ∩ᵢ(ϵ::∃, ω::𝕋)
-    β = Dict{Rational{BigInt},Tuple{Union{Set{∃},Nothing},Vector{Function}}}()
+    β = Dict{Float64,Tuple{Union{Set{∃},Nothing},Vector{Function}}}()
     addonlyϵ(z, o, d) = ω.ϵ[d][(z, o)] = Set{∃}((ϵ,))
     addonlyϵ(x, d) = addonlyϵ(x, x, d)
     addintervalϵ(z, o, d) = push!(ω.ϵ[d][Interval(z, o)].value, ϵ)
@@ -132,7 +132,7 @@ function ∩ᵢ(ϵ::∃, ω::𝕋)
         if !haskey(ω.ϵ, d)
             β̇ = z ≤ ○ ≤ o ? nothing : Set{∃}()
             push!(command, () -> begin
-                ω.ϵ[d] = IntervalMap{Rational{BigInt},Set{∃}}()
+                ω.ϵ[d] = IntervalMap{Float64,Set{∃}}()
                 addonlyϵ(z, o, d)
             end)
             if z ≠ o
@@ -177,9 +177,12 @@ function ∩ᵢ(ϵ::∃, β, ω::𝕋, t::Number)
     β̃ = filter(β̇ -> !isnothing(β̇[2][1]), β)
     β̇ = Set{∃}()
     isempty(β̃) && return β̇
+    # Ο̇ = Ο(t)
     for ϵ̃ = ∩(map(t -> t[1], collect(values(β̃)))...)
+        # Οϵ̃ = ω.Ο[ϵ̃]
         for i = eachindex(ϵ̃.d)
-            if ω.Ο[ϵ̃] ≤ Ο(t) && ∩ᵢ(ϵ̃.μ[i] - ϵ̃.ρ[i], ϵ̃.μ[i] + ϵ̃.ρ[i], ϵ̃.∂₀[i], ϵ̃.∂₁[i], ϵ.μ[i] - ϵ.ρ[i], ϵ.μ[i] + ϵ.ρ[i], ϵ.∂₀[i], ϵ.∂₁[i])
+            # if Οϵ̃ ≤ Ο̇ && ∩ᵢ(ϵ̃.μ[i] - ϵ̃.ρ[i], ϵ̃.μ[i] + ϵ̃.ρ[i], ϵ̃.∂₀[i], ϵ̃.∂₁[i], ϵ.μ[i] - ϵ.ρ[i], ϵ.μ[i] + ϵ.ρ[i], ϵ.∂₀[i], ϵ.∂₁[i])
+            if ∩ᵢ(ϵ̃.μ[i] - ϵ̃.ρ[i], ϵ̃.μ[i] + ϵ̃.ρ[i], ϵ̃.∂₀[i], ϵ̃.∂₁[i], ϵ.μ[i] - ϵ.ρ[i], ϵ.μ[i] + ϵ.ρ[i], ϵ.∂₀[i], ϵ.∂₁[i])
                 push!(β̇, ϵ̃)
                 break
             end
@@ -189,19 +192,22 @@ function ∩ᵢ(ϵ::∃, β, ω::𝕋, t::Number)
 end
 ∩(ϵ::∃, ω::𝕋, t::Number) = ∩(∩ᵢ(ϵ, ∩ᵢ(ϵ, ω), ω, t))
 function ∃!(ϵ::∃, n::AbstractString, ω::𝕋)
-    lock(ω.L)
-    β = ∩ᵢ(ϵ, ω)
-    β̇ = ∩ᵢ(ϵ, β, ω, 0)
-    isempty(β̇) || ( unlock(ω.L); @error "Intersection found." )
-    for (_, f) = values(β), ḟ = f ḟ() end
-    # while Sys.free_memory() < Base.summarysize(ω) + Base.summarysize(ϵ) # todo rm oldest ϵ
-    #     rm!(ω)
-    # end
-    ω.Ο[ω] += 1
-    ω.Ο[ϵ] = ω.Ο[ω]
-    ω.n[n] = ϵ
-    unlock(ω.L)
-    ϵ
+    lock(ω.L) do
+        β = ∩ᵢ(ϵ, ω)
+        β̇ = ∩ᵢ(ϵ, β, ω, 0)
+        if !isempty(β̇)
+            @error "Intersection found."
+            return
+        end
+        for (_, f) = values(β), ḟ = f ḟ() end
+        # while Sys.free_memory() < Base.summarysize(ω) + Base.summarysize(ϵ) # todo rm oldest ϵ
+        #     rm!(ω)
+        # end
+        ω.Ο[ω] += 1
+        ω.Ο[ϵ] = ω.Ο[ω]
+        ω.n[n] = ϵ
+        ϵ
+    end
 end
 
 end
