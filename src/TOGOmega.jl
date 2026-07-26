@@ -9,7 +9,7 @@ using Serialization
 using TOGExist: 𝕋
 using TOGCommunicationServer, TOGAwaken, TOGLogging, TOGObserveServer, TOGCreateServer, TOGZMQ
 using TOGREPL
-using TOGMatrix, TOGOctahedron, TOGColor, Colors # DEBUG?
+using TOGMatrix, TOGOctahedron, TOGColor, Colors, ColorTypes # DEBUG?
 
 const Ωpath = joinpath(TOGAwaken.TOGDIR, "Ω")
 const Ω = isfile(Ωpath) ? deserialize(Ωpath) : 𝕋()

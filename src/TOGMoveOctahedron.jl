@@ -7,7 +7,7 @@ using TOGExist
 using TOGExist: 𝕋
 
 δN = 1
-δ(o::Octahedron) = δN * 0.01
+δ(o::Octahedron) = δN * 0.001
 
 # function awaken(;socket, o::Octahedron, ω::𝕋)
 # function awaken(;socket, o::Octahedron)
@@ -28,23 +28,23 @@ using TOGExist: 𝕋
 
 function step!(o::Octahedron, ω::𝕋)
     o.∂t ? present!(o, ω) : o.t += o.vt
-    μ = o.observer .+ o.v * (o.observer .- o.ôneμ)
+    μ = o.observer .+ o.v * (o.observer .- o.focus)
     move!(g, μ)
 end
-valid(o::Octahedron) = valid(o.observer, o.ôneμ, o.ρ, o.θ, o.norm)
-function valid(observer, ôneμ, ρ, θ, norm)
-    _, _, _, _, _, _, _, _, _, μ, ρ = pyramid(observer, ôneμ, ρ, θ, norm)
+valid(o::Octahedron) = valid(o.observer, o.focus, o.ρ, o.θ, o.norm)
+function valid(observer, focus, ρ, θ, norm)
+    _, _, _, _, _, _, _, _, _, μ, ρ = pyramid(observer, focus, ρ, θ, norm)
     all(zero(eltype(μ)) .≤ μ .- ρ .≤ μ .+ ρ .≤ one(eltype(μ)))
 end
-function move!(o::Octahedron, ẑeroμ)
+function move!(o::Octahedron, observer)
     # @info "move!", ẑeroμ
-    valid(ẑeroμ, o.ôneμ, o.ρ, o.θ, o.norm) || return
+    valid(observer, o.focus, o.ρ, o.θ, o.norm) || return
     # @info "valid"
     o.observer = observer
 end
 function focus!(o::Octahedron, focus)
     # @info "focus!", focus
-    valid(o.ẑeroμ, ôneμ, o.ρ, o.θ, o.norm) || return
+    valid(o.observer, focus, o.ρ, o.θ, o.norm) || return
     # @info "valid"
     o.focus = focus
 end
@@ -71,7 +71,7 @@ scale!(o::Octahedron, i, δ) = scale!(o, [ĩ == i ? o.ρ[ĩ] + δ : o.ρ[ĩ] 
 #             ĩ == i && return o.ẑeroμ[ĩ] + δ
 #             o.ẑeroμ[ĩ]
 #         end, length(o.ẑeroμ))))
-move!(o::Octahedron, i, δ) = move!(o, [ĩ == i ? o.ẑeroμ[ĩ] + δ : o.ẑeroμ[ĩ] for ĩ = 1:length(o.ẑeroμ)])
+move!(o::Octahedron, i, δ) = move!(o, [ĩ == i ? o.observer[ĩ] + δ : o.observer[ĩ] for ĩ = 1:length(o.observer)])
 # focus!(o::Octahedron, i, δ) = focus!(o, SVector(ntuple(ĩ -> begin
 #         ĩ == i && return o.focus[ĩ] + δ
 #         o.focus[ĩ]

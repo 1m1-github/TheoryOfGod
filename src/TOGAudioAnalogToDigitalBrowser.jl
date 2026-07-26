@@ -17,7 +17,7 @@ struct AudioAnalogToDigitalBrowser <: Peripheral
 end
 take!(::AudioAnalogToDigitalBrowser) = take!(AUDIOANALOGTODIGITALBROWSER.channel)
 put!(::AudioAnalogToDigitalBrowser, message::String) = put!(AUDIOANALOGTODIGITALBROWSER.channel, message)
-state(::AudioAnalogToDigitalBrowser) = ""
+state(::AudioAnalogToDigitalBrowser) = "" # todo does anything?
 const AUDIOANALOGTODIGITALBROWSER = AudioAnalogToDigitalBrowser(Channel{String}())
 
 const WSTASK = Ref{Task}()
@@ -26,7 +26,7 @@ const WS = Ref{HTTP.WebSockets.WebSocket}()
 function awaken()
   # @info "TOGAudioAnalogToDigitalBrowser.jl, awaken"
   put!(BroadcastBrowser, JSLISTEN)
-  WSTASK[], WS[] = sttws(output=output)
+  WSTASK[], WS[] = sttws(output=output, interim_results=false)
   listen(AUDIOANALOGTODIGITALBROWSER)
 end
 WSSTARTED = false
@@ -37,16 +37,18 @@ function output(data)
     WSSTARTED = true
     return
   end
-  msg = Dict(
-    :type => data["type"],
-    :text => data["text"],
-    :is_final => data["is_final"],
-    :speech_final => data["speech_final"],
-    :end_of_turn_confidence => data["end_of_turn_confidence"],
-  )
-  isempty(msg[:text]) && return
+  data["speech_final"] || return
+  # msg = Dict(
+  #   :type => data["type"],
+  #   :text => data["text"],
+  #   :is_final => data["is_final"],
+  #   :speech_final => data["speech_final"],
+  #   :end_of_turn_confidence => data["end_of_turn_confidence"],
+  # )
+  isempty(data["text"]) && return
   global AUDIOANALOGTODIGITALBROWSER
-  put!(AUDIOANALOGTODIGITALBROWSER, string(msg))
+  # put!(AUDIOANALOGTODIGITALBROWSER, string(msg))
+  put!(AUDIOANALOGTODIGITALBROWSER, data["text"])
 end
 
 audio(msg) = begin

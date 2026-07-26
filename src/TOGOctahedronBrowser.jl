@@ -11,7 +11,7 @@ using Colors
 const JSKEYPRESS = """document.addEventListener('keydown', (e) => {fetch('/keypress', {method: 'POST',body: e.key})})"""
 
 function awaken(; octahedron, browser)
-    @info "TOGOctahedronBrowser, awaken"
+    # @info "TOGOctahedronBrowser, awaken"
     # octahedron.♯ = (100, 100) # DEBUG
     octahedron.♯ = (Int(browser.width), Int(browser.height))
     BROWSER[] =
@@ -28,7 +28,7 @@ end
 const BROWSER = Ref{Browser}()
 OBSERVE = true
 browserlooptask(octahedron) = errormonitor(Threads.@spawn begin
-    @info "TOGOctahedronBrowser, browserlooptask"
+    # @info "TOGOctahedronBrowser, browserlooptask"
     put!(BroadcastBrowser, JS(octahedron.♯[1], octahedron.♯[2]))
     put!(BroadcastBrowser, JSKEYPRESS)
     img = fill(RGBA(0,0,0,0), octahedron.♯...)
@@ -93,10 +93,12 @@ ctx.putImageData(imageData, 0, 0)
 
 const CHANGE_MODE = Ref(2) # 0=ρ, 1=zero, 2=focus, 3=zero+focus
 const CHANGE_DIM_INDEX = Ref(2)
-function keypress(key)
-    @info "keypress", key
+function keypress(keybytes)
+    key = String(keybytes)
+    # @info "keypress", key, key == "ArrowUp"
     o = BROWSER[].o
-    @info "keypress", o
+    # @info "keypress", o
+    # try
     if key == "ArrowUp"
         if CHANGE_MODE[] == 0
             scaleup!(o, CHANGE_DIM_INDEX[])
@@ -144,6 +146,9 @@ function keypress(key)
     else
         return
     end
+    # catch e
+    #     @error string(e)* "\n" * sprint(Base.show_backtrace, catch_backtrace())
+    # end
     println("key=$key")
     println("CHANGE_MODE=$CHANGE_MODE[]")
     println("CHANGE_DIM_INDEX=$CHANGE_DIM_INDEX[]")
@@ -156,7 +161,7 @@ function keypress(key)
     println("o.ρ=$(o.ρ)")
     println("o.θ=$(o.θ)")
     # println("δN=$δN")
-    println("o.norm(o.focus.-o.ẑeroμ)=$(o.norm(o.focus.-o.ẑeroμ))")
+    println("o.norm(o.focus.-o.observer)=$(o.norm(o.focus.-o.observer))")
 end
 
 end

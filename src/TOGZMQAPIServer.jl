@@ -4,6 +4,7 @@ using ZMQ, Serialization
 using LoopOS: @whiletrue
 using TOGZMQ
 using TOGZMQ: TOGMessage
+using TOGLogging: exception_details
 
 struct APIData
     f::Symbol
@@ -20,16 +21,7 @@ function awaken(;socketlocation, functions)
     bind(socket, socketlocation)
     socket, errormonitor(@async @whiletrue receive(socket, functions))
 end
-function exception_details(e, bt = nothing)
-    estr = if e isa TaskFailedException
-        "TaskFailedException:\n" * exception_details(e.task.exception)
-    elseif e isa CompositeException
-        join(exception_details.(e.exceptions), "\n")
-    else
-        string(e)
-    end 
-    estr * "\n" * sprint(Base.show_backtrace, catch_backtrace())
-end
+
 function receive(socket, functions)
     message = TOGZMQ.receive(socket)
     output = try

@@ -35,4 +35,15 @@ function awaken()
     global_logger(logger)
 end
 
+function exception_details(e, bt = nothing)
+    estr = if e isa TaskFailedException
+        "TaskFailedException:\n" * exception_details(e.task.exception)
+    elseif e isa CompositeException
+        join(exception_details.(e.exceptions), "\n")
+    else
+        string(e)
+    end 
+    estr * "\n" * sprint(Base.show_backtrace, catch_backtrace())
+end
+
 end

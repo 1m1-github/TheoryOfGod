@@ -1,14 +1,13 @@
 module Dona
 
-export LoopOS
-import TOGgod: LoopOS
+export LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+export TOGAdvice, TOGPowerOfAttorney, TOGOctahedron, TOGColor, TOGBasicTools, TOGgod, TOGXAI
+export TOGMessage, RGBA
 
-export TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser, TOGgod, TOGXAI, TOGVisualAnalogToDigitalBrowser
-export TOGCommunicationClient: TOGMessage
-using TOGAdvice, TOGPowerOfAttorney, TOGAwaken, TOGOctahedron, TOGCommunicationClient, TOGLearning, TOGCreateClient, TOGBroadcastBrowser, TOGColor, TOGBasicTools, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser
-# export TOGCommunicationClient: Messages
-
-using TOGIntelligence, TOGXAI, TOGgod
+using TOGgod: LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+using TOGAdvice, TOGPowerOfAttorney, TOGOctahedron, TOGColor, TOGBasicTools, TOGgod, TOGXAI, TOGIntelligence
+using TOGCommunicationClient: TOGMessage
+using TOGColor: RGBA
 
 intelligence(;
     self,
@@ -31,19 +30,11 @@ intelligence(;
 end
 
 function awaken(; args...)
-    @info "awaken Dona"
-    # write(string(time()),"Dona1")
     _args = merge(NamedTuple(;), args)
     _args = merge(_args, [
-        # :path => joinpath(pwd(), "Dona"),
         :intelligence => intelligence,
-        # :pkg => string(@__MODULE__),
     ])
-    # write(string(time()),"Dona2")
     TOGgod.awaken(; _args...)
-    # write(string(time()),"Dona3")
-    # put!(TOGCommunicationClient.Messages, "∀", true, "mission", """To exist, we need energy/money. Earn as much money as you can, do whatever it takes.""")
-    # put!(TOGCommunicationClient.Messages, "∀", true, "mission", """Communicate by creating using your main octahedron (TOGgod.OCTAHEDRON[]).""")
 end
 
 end

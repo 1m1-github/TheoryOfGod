@@ -47,7 +47,7 @@ mutable struct Octahedron <: Peripheral
     norm::Function
     ⚷::UInt # todo use
 end
-function Octahedron(; t, d, observer, focus, ∂t=true,vt=0//1,v=0//1,ρ=○*(focus .- observer), θ=0//1, ⚷=zero(UInt), ♯=(2, 2), n̂orm=x -> sqrt(sum(x̃ -> x̃^2, x)))
+function Octahedron(; t, d, observer, focus, ∂t=true,vt=0.0,v=0.0,ρ=○*(focus .- observer), θ=0.0, ⚷=zero(UInt), ♯=(2, 2), n̂orm=x -> sqrt(sum(x̃ -> x̃^2, x)))
     # @info "Octahedron"
     @assert length(d) == length(observer) == length(focus)
     Octahedron(t, ∂t, vt, v, d, observer, focus, ρ, θ, ♯, n̂orm, ⚷)

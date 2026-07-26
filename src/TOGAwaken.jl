@@ -118,7 +118,7 @@ function updategod(; path)
 end
 """
 Awakens a `god`. If new, creates a folder, connects the `god` to a `universe` and adds `Pkg`s to it.
-Awaken `god`s to help you.
+Awaken `god`s to help you. These can be clones of yourself with differing abilities.
 example to connect to the same universe: `awakengod(path="Anna", pkg=["Dates"], universe=TOGgod.ARG[][:universe])`
 """
 function awakengod(; arg...)

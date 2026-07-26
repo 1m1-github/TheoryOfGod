@@ -190,15 +190,13 @@ function ∩ᵢ(ϵ::∃, β, ω::𝕋, t::Number)
     end
     β̇
 end
+borders(ϵ::∃) = "d=" * string(ϵ.d) * ";μ=" * string(ϵ.μ) * ";ρ=" * string(ϵ.ρ) * ";∂₀=" * string(ϵ.∂₀) * ";∂₁=" * string(ϵ.∂₁)
 ∩(ϵ::∃, ω::𝕋, t::Number) = ∩(∩ᵢ(ϵ, ∩ᵢ(ϵ, ω), ω, t))
 function ∃!(ϵ::∃, n::AbstractString, ω::𝕋)
     lock(ω.L) do
         β = ∩ᵢ(ϵ, ω)
         β̇ = ∩ᵢ(ϵ, β, ω, 0)
-        if !isempty(β̇)
-            @error "Intersection found."
-            return
-        end
+        isempty(β̇) || throw("ϵ (" * borders(ϵ) *") intersects with: " * join([borders(ϵ) for ϵ = β̇], " and "))
         for (_, f) = values(β), ḟ = f ḟ() end
         # while Sys.free_memory() < Base.summarysize(ω) + Base.summarysize(ϵ) # todo rm oldest ϵ
         #     rm!(ω)

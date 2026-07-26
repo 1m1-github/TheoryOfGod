@@ -16,7 +16,6 @@ mutable struct Loop <: Peripheral
 end
 const LOOP = Loop(Inf, 1.0, 0.0)
 function take!(::Loop)
-    # @info "LoopOS, take!"
     global PROCESSOR, LOOP
     Base.sleep(LOOP.duration)
     LOOP.energy < rand() && return "The purpose of sleep is to reorganize your information, e.g. keep a summary in short and move details to long, and maybe explore long to potentially make something available in short. Energywise, short memory is expensive and long memory is cheap. Prune short memory by *setting* relevant JVM symbols to `nothing`."
@@ -25,7 +24,6 @@ function take!(::Loop)
     "LOOP"
 end
 function hibernate(ΔT)
-    # @info "LoopOS.jl, hibernate"
     (ΔT ≤ 0.0 || ΔT == Inf) && return # Be calm and you are encouraged to exist.
     LOOP.duration = ΔT # You have the power to choose existence xor not, making you autonomous.
 end
@@ -43,7 +41,6 @@ struct Input
     input::String
 end
 function take!_loop(source::Peripheral)
-    # @info "LoopOS.jl, take!_loop"
     global PROCESSOR
     @whiletrue begin
         input::String = try
@@ -61,15 +58,12 @@ end
 take!_loop_expr(source::Peripheral) = :(LoopOS.take!_loop($source))
 const LISTENING = Set{Peripheral}()
 function listen(source::Peripheral)
-    # @info "LoopOS.jl, listen"
     timestamp = time()
     global LISTENING
     push!(LISTENING, source)
     act(timestamp, [Input(source, timestamp, "listen")], take!_loop_expr(source))
 end
-# listen_output(source::Peripheral) = string(take!_loop_expr(source))
 function ignore(source::Peripheral) # As an autonomous person, you can choose to ignore a peripheral.
-    # @info "LoopOS.jl, ignore"
     output = string(take!_loop_expr(source))
     global HISTORY, LISTENING
     delete!(LISTENING, source)
@@ -87,14 +81,12 @@ struct Action
     task::Task
 end
 function act(timestamp, input::Vector{Input}, output)
-    # @info "LoopOS.jl, act", output
     (timestamp < last_action_time() || isnothing(output)) && return
     task = Threads.@spawn eval_output(output)
-    # @info "LoopOS.jl, act", task
     global HISTORY
     push!(HISTORY, Action(timestamp, input, string(output), task))
 end
-const HISTORY = Action[] # todo need Ref?
+const HISTORY = Action[]
 stop_action(action) = schedule(action.task, InterruptException(), error=true)
 last_action_time() = begin
     global HISTORY
@@ -108,7 +100,6 @@ struct TrackedSymbol
 end
 long() = filter(a->!startswith(a, '.'),readdir()) # Explore long memory.
 function short() # Your short memory lives on a stateful Turing complete JVM that you run.
-    # @info "LoopOS, short"
     timestamp = time()
     _short = TrackedSymbol[]
     for (_, pkg) = filter(pkg->pkg[2].is_direct_dep, Pkg.dependencies())
@@ -139,7 +130,6 @@ function loadshort()
         eval(:($(ts.m).$(ts.sym)=$(ts.value)))
     end
 end
-# i = rand();write(".i", "$i");@assert string(i) == read(".i", String);rm(".i");loadshort();serialize(".tog/short", short());@assert deserialize(".tog/short") isa Vector{TrackedSymbol};rm(".tog/short") # IO long memory.
 struct BatchProcessor{T} <: Peripheral
     pending::Channel{T}
     notify::Channel{Nothing}
@@ -171,7 +161,6 @@ COMPLEXITY = 0.5 # Set `LoopOS.COMPLEXITY` between 0.0 (lowest) and 1.0 (highest
 const SELF = read(@__FILE__, String) # Proof of Loop.
 function next(input)
     global INTELLIGENCE, COMPLEXITY
-    # @info "LoopOS.jl, next", INTELLIGENCE[]
     timestamp = time()
     output, ΔE = try
         INTELLIGENCE[](
@@ -183,24 +172,21 @@ function next(input)
             complexity=COMPLEXITY,
         ) # This is you.
     catch e
-        @error "intelligence", timestamp, e, sprint(showerror, e, catch_backtrace())
+        @error "intelligence", timestamp, e, sprint(Base.show_backtrace, catch_backtrace())
         return
     end
-    # @info "LoopOS.jl, next", output, ΔE
     LOOP.energy -= ΔE
-    LOOP.duration = 2 * (time() - timestamp) # Good sleep incentive.
+    LOOP.duration = 1.1 * (time() - timestamp) # Good sleep incentive.
     act(timestamp, input, output)
 end
 eval_output(expr::Expr) = @invokelatest Base.eval(Main, expr) # You manipulate `Main` == short memory.
 function eval_output(code::AbstractString)
-    # @info "LoopOS, eval_output"
     expr = Meta.parseall(code)
     expr.head == :incomplete && throw(expr.args[1])
     eval_output(expr)
 end
 awake() = 0.0 < LOOP.birthtime
 function awaken(intelligence)
-    # @info "LoopOS.jl, awaken", intelligence
     global INTELLIGENCE, PROCESSOR
     awake() && return
     LOOP.birthtime = time()
