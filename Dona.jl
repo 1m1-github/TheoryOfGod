@@ -22,7 +22,6 @@ intelligence(;
     newinput,
     complexity,
 ) = begin
-    @info "Dona, intelligence"
     TOGIntelligence.intelligence(
     self=self,
     history=history,
