@@ -194,6 +194,6 @@ function awaken(intelligence)
     INTELLIGENCE[] = intelligence
     # errormonitor(Threads.@spawn start!(next, PROCESSOR))
     Threads.@spawn start!(next, PROCESSOR)
-    # listen(LOOP)
+    listen(LOOP)
 end
 end

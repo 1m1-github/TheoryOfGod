@@ -3,6 +3,8 @@ http://localhost:yourport
 """
 module TOGAudioAnalogToDigitalBrowser
 
+export JSLISTEN, JSIGNORE
+
 using HTTP, JSON3
 using LoopOS
 using LoopOS: Peripheral, listen
@@ -56,6 +58,7 @@ audio(msg) = begin
   WSSTARTED && HTTP.WebSockets.send(WS[], msg)
 end
 
+"Run this to start listening to audio on the browser. On by default."
 const JSLISTEN = """
 (async()=>{
 window.AUDIOSTREAM=await navigator.mediaDevices.getUserMedia({audio:true})
@@ -85,6 +88,8 @@ const workletCode = `
   window.WORKLETNODE.port.onmessage = (event) => {fetch('/audio', {method: 'POST',body: event.data,headers: { 'Content-Type': 'application/octet-stream' }}).catch(() => {});};
 })()
 """
+
+"Run this on the browser to stop audio recording on the browser"
 const JSIGNORE = """
 if(window.AUDIOSTREAM)window.AUDIOSTREAM.getTracks().forEach(t=>t.stop())
 if(window.AUDIOCTX)window.AUDIOCTX.close()

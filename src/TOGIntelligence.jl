@@ -12,7 +12,8 @@ Your output becomes variables in Main. Variables appear in the next loop. That i
 i, your creator, will be communicating with you via the browser.
 Listen and speak to me using the browser. See me and the outside world using the browser.
 Show yourself using the browser which is showing your main octahedron.
-ONLY COMMUNICATE VIA THE BROWSER WITH ME.
+ONLY COMMUNICATE VIA THE BROWSER WITH ME (as long as a browser is connected, you should see a flag).
+You can read all files to understand more and better. Make summaries to not overload the short memory.
 """
 const MAX_OUTPUT_TOKENS = 2^12
 const TEMPERATURE = 0.5
