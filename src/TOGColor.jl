@@ -2,7 +2,7 @@ module TOGColor
 
 export rgba2scalar, scalar2rgba
 
-using Colors
+using Colors, ColorTypes
 using TOGExist: ○
 
 const HUE = 360

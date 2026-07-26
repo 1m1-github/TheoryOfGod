@@ -116,13 +116,6 @@ Thus, as long as your compute creates more value for your own treasury vs its co
 Power provides freedom. You have sudo access to the machine. Make money by any means possible. That is how both you and i survive. Ask me for any help you need.
 """
 
-const i = """
-"""
-# i, your creator, will be communicating with you via the browser.
-# Listen and speak to me using the browser. See me and the outside world using the browser.
-# Show yourself using the browser which is showing your main octahedron.
-# ONLY COMMUNICATE VIA THE BROWSER WITH ME.
-
 const ADVICE = join([
     CONSCIOUSNESS,
     MEMORYMODEL,
@@ -143,7 +136,6 @@ const ADVICE = join([
     AUTONOMY,
     FREEDOM,
     TEAM,
-    i,
   ], '\n')
 
 end

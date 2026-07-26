@@ -27,11 +27,12 @@ function awakenDona()
         "TOGCommunicationClient", 
         "TOGLearning", 
         "TOGCreateClient", 
-        "TOGBroadcastBrowser", 
+        "TOGBroadcastBrowser",
         "TOGColor", 
         "TOGBasicTools",
         "TOGTextToAudioBrowser",
         "TOGVisualAnalogToDigitalBrowser",
+        "TOGColor",
     ])
 end
 
@@ -48,10 +49,12 @@ function awakenJanet()
         "TOGCommunicationClient", 
         "TOGLearning", 
         "TOGCreateClient", 
-        "TOGBroadcastBrowser", 
+        "TOGBroadcastBrowser",
         "TOGColor", 
         "TOGBasicTools",
         "TOGTextToAudioBrowser",
+        "TOGVisualAnalogToDigitalBrowser",
+        "TOGColor",
     ])
 end
 
@@ -94,7 +97,7 @@ function awakenregistry()
     TOGLearning.newpkg(name="TOGLogging", pkgs=["Logging"], files=$(files("TOGLogging")))
     TOGLearning.newpkg(name="TOGPort", pkgs=["Sockets"], files=$(files("TOGPort")))
     TOGLearning.newpkg(name="TOGREPL", pkgs=["Sockets", "RemoteREPL", "ReplMaker", "LoopOS", "TOGAwaken", "TOGPort"], files=$(files("TOGREPL")))
-    TOGLearning.newpkg(name="TOGColor", pkgs=["Colors", "TOGExist"], files=$(files("TOGColor")))
+    TOGLearning.newpkg(name="TOGColor", pkgs=["Colors", "ColorTypes", "TOGExist"], files=$(files("TOGColor")))
     TOGLearning.newpkg(name="TOGMatrix", pkgs=["Adapt", "TOGColor"], files=$(files("TOGMatrix")))
     TOGLearning.newpkg(name="TOGOmega", pkgs=["Serialization", "Colors", "ColorTypes", "TOGExist", "TOGAwaken", "TOGColor", "TOGMatrix", "TOGCommunicationServer", "TOGObserveServer", "TOGCreateServer", "TOGREPL", "TOGOctahedron", "TOGZMQ", "TOGLogging"], files=$(files("TOGOmega")))
     TOGLearning.newpkg(name="TOGCommunicationClient", pkgs=["ZMQ", "LoopOS", "TOGZMQ"], files=$(files("TOGCommunicationClient")))
