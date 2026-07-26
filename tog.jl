@@ -10,7 +10,7 @@ function awaken()
     awakenregistry()
     TOGAwaken.awakenΩ()
     awakenDona()
-    # awakenJanet()
+    awakenJanet()
     # TOGAwaken.awakengod(name="Dona", universe=joinpath(pwd(),"Ω"))
 end
 
