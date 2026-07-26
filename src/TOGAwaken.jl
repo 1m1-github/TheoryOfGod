@@ -124,7 +124,7 @@ example to connect to the same universe: `awakengod(path="Anna", pkg=["Dates"], 
 function awakengod(; arg...)
     # @info "TOGAwaken.jl, awakengod"
     path=arg[:path]
-    pkgs=get(arg, :pkg, String[])
+    pkg=get(arg, :pkg, String[])
     installgod(path=path, pkg=pkg)
     updategod(path=path)
     argpart = ["$k = $(repr(v))" for (k, v) in pairs(arg)]

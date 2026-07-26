@@ -24,12 +24,12 @@ using TOGLearning
 # allfile(; name) = joinpath(ENV["HOME"], "dev", name, "src", name * ".jl")
 allfile(; name) = joinpath(ENV["HOME"], "TheoryOfGod/dev", name, "src", name * ".jl")
 # allfile(; name) = joinpath(DEPOT_PATH[1], "dev", name, "src", name * ".jl")
-function newpkg(; name, pkgs=String[])
+function newpkg(; name, pkg=String[])
     setglobal!(Base.MainInclude, :err, nothing)
     TOGLearning.newpkg(
         name=name,
         files=[allfile(name=name)],
-        pkgs=pkgs,
+        pkg=pkg,
         mvfiles=false,
         githubuser="",
         )
@@ -54,7 +54,7 @@ end
 #     TOGLearning.pushremote(path=path)
 # end
 
-# develop all registered pkgs
+# develop all registered pkg
 using Pkg, TOML
 registry = TOML.parsefile(joinpath(DEPOT_PATH[1], "registries", "TOGRegistry", "Registry.toml"))
 for (_,pkg) = registry["packages"]
@@ -65,7 +65,7 @@ end
 TOGLearning.updatepkg(name="TOGColor", addpkg=["ColorTypes"], rmpkg=[])
 
 files(name) = [joinpath(ENV["HOME"], "TheoryOfGod", "src", name * ".jl")]
-TOGLearning.newpkg(name="TOGIntelligenceJanet", pkgs=["LoopOS", "TOGState", "TOGLogging"], files=files("TOGIntelligenceJanet"))
+TOGLearning.newpkg(name="TOGIntelligenceJanet", pkg=["LoopOS", "TOGState", "TOGLogging"], files=files("TOGIntelligenceJanet"))
 
 cd(joinpath(DEPOT_PATH[1], "dev"))
 
@@ -80,7 +80,7 @@ for filename = readdir(joinpath(ENV["HOME"], "TheoryOfGod", "src"), join=true)
     cp(filename, target, force=true)
 end
 
-# update all registered pkgs
+# update all registered pkg
 for pkg = readdir(joinpath(DEPOT_PATH[1], "dev"), join=true)
     isdir(pkg) || continue
     TOGLearning.isdirty(path=pkg) || continue
@@ -175,12 +175,12 @@ Pkg.Apps.add(path=joinpath(DEPOT_PATH[1], "dev", "TOGΩ"))
 # ====
 
 name="TOGΩ"
-pkgs=["Git", "GitHub"]
-pkgs=String[]
+pkg=["Git", "GitHub"]
+pkg=String[]
 TOGLearning.newpkg(
         name=name,
         files=[name * ".jl"],
-        pkgs=pkgs,
+        pkg=pkg,
         mvfiles=false,
     )
 Base.active_project()

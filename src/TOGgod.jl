@@ -78,7 +78,7 @@ function browserconnect(port, browser)
 end
 
 """
-Learn by adding or removing Pkgs for yourself.
+Learn by adding or removing pkg for yourself.
 To `learn`, the process is to create a new `Pkg` with `newpkg` after writing the corresponding source code file and then running `learn`, which will `add`/`rm` `Pkg`s and restart your Julia VM, which makes you sleep for a few seconds until you awake again with abilities added/removed.
 Your abilities are thus listed in the `.tog/Project.toml`.
 # Arguments

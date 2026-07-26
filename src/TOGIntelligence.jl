@@ -51,7 +51,7 @@ function intelligence(;
     # universe = joinpath(pwd(),"..","Ω")
     # janet = joinpath(pwd(),"Janet")
     # output = """TOGAwaken.awakengod(path="Janet", universe="$universe")"""
-    # output = """Dona.TOGgod.learn(pkgs=["Dates"])"""
+    # output = """Dona.TOGgod.learn(pkg=["Dates"])"""
     # output = """put!(TOGCommunicationClient.Messages, "Dona", false, "greeting", "hi Dona");put!(TOGCommunicationClient.Messages, "∀", true, "greeting", "hi ∀");"""
     # output = """nothing"""
     # ΔE = 0.0

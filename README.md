@@ -81,7 +81,7 @@ env JULIA_PROJECT=$(pwd)/.tog JULIA_DEPOT_PATH=$(pwd)/.tog/julia:$HOME/.julia ju
 ### registry: rm, clean
 ### online/offline learning github
 ### first newpkg or update with new pkg fails then passes
-### learning rmpkgs, pkgs that do not exist errs, loop updatepkg whilst reducing num erred pkgs
+### learning rmpkg, pkg that do not exist errs, loop updatepkg whilst reducing num erred pkg
 ### move octahedron, random
 ### TOGLearn
 ### Share octahedron server

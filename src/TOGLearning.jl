@@ -48,7 +48,7 @@ function newpkg(; name::String, file=String[], pkg=String[], mvfile=false)
     Pkg.generate(path)
     try
         changefiles(name=name, addfile=file, rmfile=String[], cpmv=mvfile ? mv : cp, init=true)
-        changepkgs(name=name, addpkg=pkg, rmpkg=String[])
+        changepkg(name=name, addpkg=pkg, rmpkg=String[])
         version = initversion(name=name)
         addcommit(path=path, commitmessage=version)
         # newremoterepo(path=path)
@@ -73,7 +73,7 @@ Update an existing `Pkg` in your Julia dev dir by force copying `file`s to the `
 function updatepkg(; name::String, addfile=String[], addpkg=String[], rmfile=String[], rmpkg=String[], mvfile=false)
     # @info "TOGLearning.jl, updatepkg"
     changefiles(name=name, addfile=addfile, rmfile=rmfile, cpmv=mvfile ? mv : cp)
-    changepkgs(name=name, addpkg=addpkg, rmpkg=rmpkg)
+    changepkg(name=name, addpkg=addpkg, rmpkg=rmpkg)
     path = pkgdir(name=name)
     isdirty(path=path) || return
     version = updateversion(name=name)
@@ -109,8 +109,8 @@ end
 #     @info "TOGLearning.jl, cppkg"
 #     files = readdir(joinpath(pkgdir(name=name), "src"), join=true)
 #     project = TOML.parsefile(projecttoml(name=name))
-#     pkgs = haskey(project, "deps") ? collect(keys(project["deps"])) : String[]
-#     newpkg(name=newname, files=files, pkgs=pkgs)
+#     pkg = haskey(project, "deps") ? collect(keys(project["deps"])) : String[]
+#     newpkg(name=newname, files=files, pkg=pkg)
 # end
 # function mvpkg(; name::String, newname::String, pushregistry=false, githubuser=get(ENV, "GITHUB_USER", ""), githubauth=get(ENV, "GITHUB_AUTH", ""))
 #     cppkg(name=name, newname=newname, pushregistry=pushregistry, githubuser=githubuser, githubauth=githubauth)
@@ -157,7 +157,7 @@ function changepkg(pkg, f)
         f(pkg)
     end
 end
-function changepkgs(; name, addpkg=String[], rmpkg=String[])
+function changepkg(; name, addpkg=String[], rmpkg=String[])
     # cd(pkgdir(name=name)) do
     oldenv = Base.active_project()
     # Pkg.activate(".")
@@ -168,7 +168,7 @@ function changepkgs(; name, addpkg=String[], rmpkg=String[])
     isempty(addpkg) || Pkg.add(addpkg)
     Pkg.update(update_registry=false) # DEBUG
     # Pkg.update()
-    # isempty(pkgs) || Pkg.develop(pkgs)
+    # isempty(pkg) || Pkg.develop(pkg)
     Pkg.precompile()
     Pkg.activate(oldenv)
     # end
