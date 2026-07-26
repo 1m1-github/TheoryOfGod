@@ -32,7 +32,6 @@ function awakenDona()
         "TOGBasicTools",
         "TOGTextToAudioBrowser",
         "TOGVisualAnalogToDigitalBrowser",
-        "TOGColor",
     ])
 end
 
@@ -54,7 +53,6 @@ function awakenJanet()
         "TOGBasicTools",
         "TOGTextToAudioBrowser",
         "TOGVisualAnalogToDigitalBrowser",
-        "TOGColor",
     ])
 end
 
