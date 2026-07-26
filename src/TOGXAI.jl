@@ -5,10 +5,10 @@ using TOGLogging: LOGS
 
 const URL = "api.x.ai/v1"
 const PREVIOUS_RESPONSE_ID = Ref{String}("")
-const MAX_USD_IN_TICKS = 25 * 10^10
+const MAX_USD_IN_TICKS = 100 * 10^10
 
 intelligence(complexity::Number) =
-    if complexity ≤ 0.5
+    if complexity ≤ 0.4
         (a, b, c, d) -> intelligence(a, b, c, d, "grok-build-0.1")
     else
         (a, b, c, d) -> intelligence(a, b, c, d, "grok-4.5")
