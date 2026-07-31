@@ -31,7 +31,7 @@ function webcam(bytes)
   put!(VISUALANALOGTODIGITALBROWSER, description)
 end
 
-const JSLOOK = """
+const JSLOOK = raw"""
 (() => {
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
@@ -46,7 +46,7 @@ const JSLOOK = """
         ctx.drawImage(video, 0, 0)
         const dataUrl = canvas.toDataURL('image/png')
         stream.getTracks().forEach(t => t.stop())
-        fetch('/webcam', {
+        fetch('${window.BASE}/webcam', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: dataUrl })

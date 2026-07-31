@@ -1,27 +1,29 @@
 module TOGgod
 
-export learn, OCTAHEDRON, put!
-export LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+# export OCTAHEDRON, put!
+# export LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+export learn, LoopOS, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGBroadcastBrowser, TOGAudioAnalogToDigitalBrowser
 # export T
 
 using Pkg, Serialization
-using LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+# using LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
+using LoopOS, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGPort, TOGZMQ, TOGBroadcastBrowser, TOGAudioAnalogToDigitalBrowser
 using LoopOS: Peripheral
-using TOGOctahedron: Octahedron
-using TOGExist: ○
-import Base: put!
+# using TOGOctahedron: Octahedron
+# using TOGExist: ○
+# import Base: put!
 
 # const T = Ref{DataType}()
-const OCTAHEDRON = Ref{Octahedron}()
+# const OCTAHEDRON = Ref{Octahedron}()
 const ARGS = Ref{NamedTuple}((;))
 
 __init__() = atexit((n)->sleep(n))
 
-struct Ω <: Peripheral end
-"""
-Create inside your main octahedron. See the other `put!` methods for possible args.
-"""
-put!(::Type{Ω}, args...) = TOGCreateClient.put!(OCTAHEDRON[], args...)
+# struct Ω <: Peripheral end
+# """
+# Create inside your main octahedron. See the other `put!` methods for possible args.
+# """
+# put!(::Type{Ω}, args...) = TOGCreateClient.put!(OCTAHEDRON[], args...)
 
 function sleep(exitcode)
     # @info "TOGgod, sleep", exitcode
@@ -40,40 +42,42 @@ function awaken(; args...)
     TOGLogging.awaken()
     ARGS[] = merge(ARGS[], args)
     ARGS[] = merge(ARGS[], [:path=>pwd()])
-    remotereplport = get(args, :remotereplport, TOGPort.openport())
+    # remotereplport = get(args, :remotereplport, TOGPort.openport())
     broadcastbrowserport = get(args, :broadcastbrowserport, TOGPort.openport())
-    ARGS[] = merge(ARGS[], [:remotereplport=>remotereplport, :broadcastbrowserport=>broadcastbrowserport])
+    # ARGS[] = merge(ARGS[], [:remotereplport=>remotereplport, :broadcastbrowserport=>broadcastbrowserport])
+    ARGS[] = merge(ARGS[], [:broadcastbrowserport=>broadcastbrowserport])
     universe = args[:universe]
     name = basename(args[:path])
     intelligence = args[:intelligence]
     TOGAwaken.awaken()
     TOGZMQ.awaken(name=name)
-    TOGObserveClient.awaken(TOGAwaken.togobserve(path=universe))
-    TOGCreateClient.awaken(TOGAwaken.togcreate(path=universe))
+    # TOGObserveClient.awaken(TOGAwaken.togobserve(path=universe))
+    # TOGCreateClient.awaken(TOGAwaken.togcreate(path=universe))
     TOGCommunicationClient.awaken(dealer=TOGAwaken.router(path=universe), sub=TOGAwaken.pub(path=universe))
     # T[] = TOGObserveClient.togtype()
-    ϕ = MathConstants.golden
-    OCTAHEDRON[] = Octahedron(
-        t=TOGObserveClient.togtime(),
-        d=[ϕ^-4, ϕ^-3, ϕ^-2, ϕ^-1],
-        observer=[0, ○, ○, ○],
-        focus=[0, ○, ○, ○+0.1],
-        ρ=[0, 0.1, 0.1, 0],
-        ♯=(1, 1))
-    TOGBroadcastBrowser.awaken(root=browserconnect, port=broadcastbrowserport, functions=Dict(
-        "/keypress"=>TOGOctahedronBrowser.keypress,
+    # ϕ = MathConstants.golden
+    # OCTAHEDRON[] = Octahedron(
+    #     t=TOGObserveClient.togtime(),
+    #     d=[ϕ^-4, ϕ^-3, ϕ^-2, ϕ^-1],
+    #     observer=[0, ○, ○, ○],
+    #     focus=[0, ○, ○, ○+0.1],
+    #     ρ=[0, 0.1, 0.1, 0],
+    #     ♯=(1, 1))
+    TOGBroadcastBrowser.awaken(name=name,root=browserconnect, port=broadcastbrowserport, functions=Dict(
+        # "/keypress"=>TOGOctahedronBrowser.keypress,
         # "/websocket"=>TOGAudioAnalogToDigitalBrowser.ws,
         "/audio"=>TOGAudioAnalogToDigitalBrowser.audio,
-        "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
+        # "/webcam"=>TOGVisualAnalogToDigitalBrowser.webcam,
     ))
+    LoopOS.loadshort()
     LoopOS.awaken(intelligence)
     # TOGREPL.awaken(name=name, remotereplport=remotereplport)
     isinteractive() ? nothing : wait(Condition())
 end
 
 function browserconnect(port, browser)
-    # @info "TOGgod.browserconnect", port
-    TOGOctahedronBrowser.awaken(octahedron=OCTAHEDRON[], browser=browser)
+#     # @info "TOGgod.browserconnect", port
+#     TOGOctahedronBrowser.awaken(octahedron=OCTAHEDRON[], browser=browser)
     TOGAudioAnalogToDigitalBrowser.awaken()
 end
 

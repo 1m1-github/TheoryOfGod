@@ -6,19 +6,20 @@ module TOGOmega
 # const T = Rational{BigInt}
 
 using Serialization
-using TOGExist: 𝕋
-using TOGCommunicationServer, TOGAwaken, TOGLogging, TOGObserveServer, TOGCreateServer, TOGZMQ
-using TOGREPL
-using TOGMatrix, TOGOctahedron, TOGColor, Colors, ColorTypes # DEBUG?
+# using TOGExist: 𝕋
+# using TOGCommunicationServer, TOGAwaken, TOGLogging, TOGObserveServer, TOGCreateServer
+using TOGCommunicationServer, TOGAwaken, TOGLogging, TOGZMQ
+# using TOGREPL
+# using TOGMatrix, TOGOctahedron, TOGColor, Colors, ColorTypes # DEBUG?
 
-const Ωpath = joinpath(TOGAwaken.TOGDIR, "Ω")
-const Ω = isfile(Ωpath) ? deserialize(Ωpath) : 𝕋()
+# const Ωpath = joinpath(TOGAwaken.TOGDIR, "Ω")
+# const Ω = isfile(Ωpath) ? deserialize(Ωpath) : 𝕋()
 
 __init__() = atexit(sleep)
 function sleep(exitcode)
     # @info "sleep", exitcode
     exitcode == TOGAwaken.ALREADYRUNNINGEXITCODE && return
-    serialize(Ωpath, Ω)
+    # serialize(Ωpath, Ω)
     TOGAwaken.sleep()
 #     TOGObserveServer.sleep()
 #     TOGCreateServer.sleep()
@@ -30,8 +31,8 @@ function awaken(; path=".", router=TOGAwaken.router(path=path), pub=TOGAwaken.pu
     TOGLogging.awaken()
     TOGAwaken.awaken()
     TOGZMQ.awaken(name="Ω")
-    TOGObserveServer.awaken(socketlocation=togobserve, ω=Ω)
-    TOGCreateServer.awaken(socketlocation=togcreate, ω=Ω)
+    # TOGObserveServer.awaken(socketlocation=togobserve, ω=Ω)
+    # TOGCreateServer.awaken(socketlocation=togcreate, ω=Ω)
     TOGCommunicationServer.awaken(router=router, pub=pub)
     # TOGREPL.awaken(name="Ω")
     isinteractive() ? nothing : wait(Condition())

@@ -129,16 +129,16 @@ end
 # end
 
 # rmdir(path) = isdir(path) && rm(path, recursive=true)
-function addfile(; name, file, content)
+function addsinglefile(; name, file, content)
     file = joinpath(pkgdir(name=name), file)
     !isfile(file) && write(file, content)
 end
 srcfile(; name, file) = joinpath(pkgdir(name=name), "src", basename(file))
 function changefiles(; name, addfile=String[], rmfile=String[], cpmv=cp, init=false)
     if init
-        addfile(name=name, file=LICENSEFILE, content=LICENSE)
-        addfile(name=name, file=GITIGNOREFILE, content=GITIGNORE)
-        addfile(name=name, file=READMEFILE, content=README(name))
+        addsinglefile(name=name, file=LICENSEFILE, content=LICENSE)
+        addsinglefile(name=name, file=GITIGNOREFILE, content=GITIGNORE)
+        addsinglefile(name=name, file=READMEFILE, content=README(name))
     end
     for file = addfile
         cpmv(file, srcfile(name=name, file=file), force=true)

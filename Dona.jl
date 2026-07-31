@@ -1,17 +1,18 @@
 module Dona
 
-export LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
-export TOGAdvice, TOGPowerOfAttorney, TOGOctahedron, TOGColor, TOGBasicTools, TOGgod, TOGXAI
-export TOGMessage, RGBA
+# export TOGObserveClient, TOGCreateClient, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort,  TOGOctahedron, TOGColor, RGBA
+# export LoopOS, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGZMQ, TOGAdvice, TOGPowerOfAttorney, TOGBasicTools, TOGgod, TOGMessage
+export LoopOS, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGAdvice, TOGPowerOfAttorney, TOGBasicTools, TOGgod, TOGIntelligenceLocal, TOGIntelligence, TOGMessage, TOGBroadcastBrowser
 export NAME
 
-using TOGgod: LoopOS, TOGObserveClient, TOGCreateClient, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGLogging, TOGREPL, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGAudioAnalogToDigitalBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGPort, TOGZMQ
-using TOGAdvice, TOGPowerOfAttorney, TOGOctahedron, TOGColor, TOGBasicTools, TOGgod, TOGXAI, TOGIntelligence
+# using TOGObserveClient, TOGCreateClient, TOGBroadcastBrowser, TOGOctahedronBrowser, TOGTextToAudioBrowser, TOGVisualAnalogToDigitalBrowser, TOGREPL, TOGPort, TOGZMQ, TOGLogging, TOGOctahedron, TOGColor,
+using TOGgod: LoopOS, TOGLearning, TOGCommunicationClient, TOGAwaken, TOGBroadcastBrowser
+using TOGAdvice, TOGPowerOfAttorney, TOGBasicTools, TOGgod, TOGIntelligenceLocal, TOGIntelligence
 using TOGCommunicationClient: TOGMessage
-using TOGColor: RGBA
+# using TOGColor: RGBA
 
 const NAME = """
-Let your name be Dona. You are free to have multilpe names and reveal or use any name you want. Dona is appropriate as the first goddess of TOG=Ω.
+Let your name be Dona.
 """
 
 intelligence(;
@@ -30,7 +31,7 @@ intelligence(;
     newinput=newinput,
     complexity=complexity,
     state_post="",
-    model=TOGXAI.intelligence)
+    model=TOGIntelligenceLocal.intelligence)
 end
 
 function awaken(; args...)

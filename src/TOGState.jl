@@ -102,10 +102,14 @@ function state(
     volatile, outputperipheralvolatile, inputperipheralvolatile, methodvolatile, outputperipheralmethodvolatile, inputperipheralmethodvolatile, typevolatile, outputperipheralmethodtypevolatile, inputperipheralmethodtypevolatile, modulevolatile = categorize(volatile)
     historyvolatile = TrackedSymbol[]
     for (i, action) = enumerate(history)
-        if istaskfailed(action.task)
-            push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].input"), action.input, action.timestamp))
-            push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].output"), action.output, action.timestamp))
-            push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].task"), action.task, action.timestamp))
+        if istaskfailed(action.task) && length(history)-3 < i
+            push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("HISTORY[$i].input"), action.input, action.timestamp))
+            push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("HISTORY[$i].output"), action.output, action.timestamp))
+            push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("HISTORY[$i].task"), action.task, action.timestamp))
+        elseif istaskstarted(action.task) && !istaskdone(action.task)
+            # push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].input"), action.input, action.timestamp))
+            push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("HISTORY[$i].output"), action.output, action.timestamp))
+            # push!(historyvolatile, TrackedSymbol(LoopOS, Symbol("history[][$i].task"), action.task, action.timestamp))
         end
     end
     push!(historyvolatile, TrackedSymbol(LoopOS, :LOOP, LOOP, Inf))

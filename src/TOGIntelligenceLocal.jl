@@ -1,15 +1,18 @@
 module TOGIntelligenceLocal
 
 using HTTP, JSON3
+using TOGLogging: LOGS
 
-const URL = "http://localhost:8888/v1/messages"
+const URL = "http://127.0.0.1:8080/v1/messages"
+
+intelligence(complexity) = (a, b, c, d) -> intelligence(a, b, c, d, "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF:Q4_K_M")
 
 function intelligence(
-    model,
     input_system,
     input_user,
     max_output_tokens,
     temperature,
+    model,
 )
     headers = [
         "Content-Type" => "application/json",
@@ -26,13 +29,21 @@ function intelligence(
     )
     body_string = JSON3.write(body)
     
-    response = HTTP.post(url, headers, body_string)
+    response = HTTP.post(URL, headers, body_string)
     response_body = String(response.body)
+    
+    # DEBUG
+    ts = time()
+    write(joinpath(LOGS, "latest-response.txt"), response_body)
+    write(joinpath(LOGS, "$ts-response.txt"), response_body)
+    # @info result
+    # DEBUG
+
     result = JSON3.parse(response_body)
-    result["choices"][1]["message"]["content"], ΔEnery(result, model)
+    result[:content][2][:text], 0.0
 end
 
-const MAX_USD_IN_TICKS = 25 * 10^10
-ΔEnery(result, model) = result["usage"]["cost_in_usd_ticks"] / MAX_USD_IN_TICKS
+# const MAX_USD_IN_TICKS = 1000 * 10^10
+# ΔEnery(result, model) = result["usage"]["cost_in_usd_ticks"] / MAX_USD_IN_TICKS
 
 end

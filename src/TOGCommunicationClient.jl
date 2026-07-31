@@ -37,7 +37,7 @@ function readcache(::Type{Messages}, i)
     # @info "TOGCommunicationClient.jl, take!"
     message = CACHE[i]
     deleteat!(CACHE, i)
-    message
+    message[:information]
 end
 take!(::Messages) = state(take!(MESSAGES.channel))
 take!(::Type{Messages}) = take!(MESSAGES)
@@ -51,6 +51,7 @@ function awaken(;dealer, sub)
     # @info "TOGCommunicationClient.jl, awaken"
     DEALERSOCKET[] = Socket(DEALER)
     DEALERSOCKET[].routing_id = TOGZMQ.ID[]
+    # DEALERSOCKET[].routing_id = "i"
     SUBSOCKET[] = Socket(SUB)
     connect(DEALERSOCKET[], dealer)
     connect(SUBSOCKET[], sub)

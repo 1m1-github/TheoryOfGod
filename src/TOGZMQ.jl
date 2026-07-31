@@ -17,7 +17,10 @@ struct TOGMessage
     description::String
     information::Any
 end
-state(message::TOGMessage) = """$(message.from)->$(message.to): $(typeof(message.information)) [$(message.description)]"""
+function state(message::TOGMessage)
+    x = message.information isa AbstractString && length(x) < 100 ? message.information : "$(typeof(message.information)) [$(message.description)]"
+    """$(message.from)->$(message.to): $x"""
+end
 
 awaken(;name) = ID[] = name
 

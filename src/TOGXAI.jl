@@ -42,7 +42,6 @@ function intelligence(
 
     response = HTTP.post("https://" * URL * "/responses", headers, JSON3.write(body))
     response_body = String(response.body)
-    result = JSON3.parse(response_body)
 
     # DEBUG
     ts = time()
@@ -51,6 +50,7 @@ function intelligence(
     # @info result
     # DEBUG
 
+    result = JSON3.parse(response_body)
     PREVIOUS_RESPONSE_ID[] = result["id"]
     result["output"][2]["content"][1]["text"], ΔEnery(result, model)
 end

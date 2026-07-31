@@ -68,7 +68,11 @@ download_file(url::String, local_path::String) = begin
     HTTP.download(url, local_path)
 end
 
-"run_shell(`echo 1`), throws on error."
+"""
+run_shell(`echo 1`).
+Use `expanduser` instead of `~`.
+`throw`s on error.
+"""
 function run_shell(cmd::Cmd)::String
     # @info "TOGBasicTools.jl, run_shell"
     out = IOBuffer()

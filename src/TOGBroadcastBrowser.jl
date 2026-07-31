@@ -18,7 +18,7 @@ end
 # const BROADCASTBROWSER = Ref{BroadcastBrowser}()
 const CLIENTS = Ref(Set{BroadcastBrowser}())
 """
-Run js on all connected browsers.
+Run `js` on all connected browsers. If `anybrowserconnected`, you can use it to communicate via `js`.
 example: `put!(BroadcastBrowser, "console.log('hi')")`.
 """
 put!(::Type{BroadcastBrowser}, js::String) = [put!(client.processor, js) for client = CLIENTS[]]
@@ -28,12 +28,14 @@ put!(::Type{BroadcastBrowser}, js::String) = [put!(client.processor, js) for cli
 # end
 
 # window.WS = new WebSocket('wss://studio.tail16337b.ts.net')
-const HTMLINIT(port) = """
+const HTMLINIT(port) = raw"""
 <!DOCTYPE html>
 <html>
 <body>
 <script>
-window.SSE = new EventSource(`/events?width=\${document.documentElement.clientWidth}&height=\${document.documentElement.clientHeight}`)
+window.BASE = window.location.pathname.replace(/\/$/, "")
+console.log(window.BASE);
+window.SSE = new EventSource(`${window.BASE}/events?width=${document.documentElement.clientWidth}&height=${document.documentElement.clientHeight}`)
 window.SSE.onmessage = (e) => {console.log(e.data);eval(e.data);}
 </script>
 </body>
@@ -73,17 +75,18 @@ function handle_ws(stream, f)
 end
 
 anybrowserconnected = false
-function awaken(; root::Function, port=TOGPort.openport(), functions=Dict("/websocket"=>identity))
+function awaken(; name, root::Function, port=TOGPort.openport(), functions=Dict("/websocket"=>identity))
     # @info "TOGBroadcastBrowser.jl, awaken"    
+    run(`tailscale serve --bg --https=443 --set-path=/$name http://127.0.0.1:$port`)
     TOGAwaken.writebroadcastbrowserport(port=port)
-        @async HTTP.listen!("127.0.0.1", port) do stream
+    @async HTTP.listen!("127.0.0.1", port) do stream
         # if HTTP.WebSockets.isupgrade(stream.message)
         #     @async handle_ws(stream, functions["/websocket"])
         #     return
         # end
         target = stream.message.target
         uri = URI(target)
-        # @info "TOGBroadcastBrowser, target, uri", target, uri, uri.path, haskey(functions, uri.path)
+        @info "TOGBroadcastBrowser, target, uri", target, uri, uri.path, haskey(functions, uri.path)
         if target == "/"
             HTTP.setstatus(stream, 200)
             HTTP.setheader(stream, "Content-Type" => "text/html")
